@@ -32,3 +32,20 @@ def test_projected_orbit_center_is_principal_point():
     )
     assert np.allclose(pixels, np.asarray((173.0, 130.0)), atol=1e-8)
 
+
+def test_vectorized_projection_matches_camera_pose_definition():
+    intrinsic = np.asarray(((530.0, 0.0, 173.0), (0.0, 525.0, 130.0), (0.0, 0.0, 1.0)))
+    times = np.asarray((0.1, 0.35, 0.8, 1.2))
+    points = np.asarray(((0.2, -0.1, 0.4), (-0.3, 0.2, -0.5),
+                         (0.1, 0.4, 0.2), (-0.2, -0.3, 0.1)))
+    rotation_vector = np.asarray((0.03, -0.02, 0.01))
+    actual = project_points(
+        points, times, 0.42, 10.0, rotation_vector, intrinsic,
+    )
+    expected = []
+    for point, timestamp in zip(points, times):
+        rotation, center = camera_pose(timestamp, 0.42, 10.0, rotation_vector)
+        camera = rotation @ (point - center)
+        pixel = intrinsic @ camera
+        expected.append(pixel[:2] / pixel[2])
+    assert np.allclose(actual, np.asarray(expected), atol=1e-10)

@@ -8,6 +8,7 @@ import math
 
 import numpy as np
 from scipy.optimize import least_squares
+from scipy.sparse import lil_matrix
 from scipy.spatial import cKDTree
 from scipy.spatial.transform import Rotation
 
@@ -75,17 +76,34 @@ def project_points(points: np.ndarray, times: np.ndarray, frequency_hz: float,
                    intrinsic: np.ndarray) -> np.ndarray:
     """Project one point per timestamp into its virtual camera."""
 
+    if points.shape[0] != times.shape[0]:
+        raise ValueError("points and times must have equal lengths")
+    phases = 2.0 * math.pi * frequency_hz * np.asarray(times, dtype=np.float64)
+    cosine, sine = np.cos(phases), np.sin(phases)
+    centers = orbit_radius * np.column_stack((cosine, sine, np.zeros_like(cosine)))
+    base = np.zeros((times.size, 3, 3), dtype=np.float64)
+    base[:, 0, 0], base[:, 0, 1] = -sine, cosine
+    base[:, 1, 2] = -1.0
+    base[:, 2, 0], base[:, 2, 1] = -cosine, -sine
+    offset = Rotation.from_rotvec(np.asarray(rotation_vector)).as_matrix()
+    rotations = np.einsum("ij,njk->nik", offset, base)
+    camera = np.einsum("nij,nj->ni", rotations, points - centers)
+    pixel = camera @ intrinsic.T
     result = np.full((points.shape[0], 2), np.nan, dtype=np.float64)
-    for index, (point, timestamp) in enumerate(zip(points, times)):
-        rotation, center = camera_pose(
-            float(timestamp), frequency_hz, orbit_radius, rotation_vector,
-        )
-        camera = rotation @ (point - center)
-        if camera[2] <= 1e-9:
-            continue
-        pixel = intrinsic @ camera
-        result[index] = pixel[:2] / pixel[2]
+    visible = camera[:, 2] > 1e-9
+    result[visible] = pixel[visible, :2] / pixel[visible, 2, None]
     return result
+
+
+def _bundle_adjustment_sparsity(owners: np.ndarray, landmark_count: int):
+    """Encode which pose/landmark variables affect each image residual."""
+
+    pattern = lil_matrix((2 * owners.size, 3 + 3 * landmark_count), dtype=np.int8)
+    pattern[:, :3] = 1
+    for observation, owner in enumerate(owners):
+        pattern[2 * observation:2 * observation + 2,
+                3 + 3 * owner:3 + 3 * owner + 3] = 1
+    return pattern.tocsr()
 
 
 def triangulate_track(track: FeatureTrack, frequency_hz: float, orbit_radius: float,
@@ -182,6 +200,7 @@ def reconstruct(
     optimized = least_squares(
         residual, initial, loss="huber", f_scale=config.huber_scale_px,
         max_nfev=config.optimization_iterations, method="trf",
+        jac_sparsity=_bundle_adjustment_sparsity(owners, points.shape[0]),
     )
     rotation_vector = optimized.x[:3]
     points = optimized.x[3:].reshape((-1, 3))
@@ -314,4 +333,3 @@ def _invalid_alignment(reason: str) -> PointCloudAlignment:
         np.empty((0, 3)), math.nan, np.eye(3), np.zeros(3),
         math.nan, math.nan, False, reason,
     )
-
