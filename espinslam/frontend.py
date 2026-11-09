@@ -212,7 +212,113 @@ class EventFrontend:
                 ), reverse=True)
                 del tracks[self.config.max_tracks:]
         tracks.sort(key=lambda track: track.track_id)
+        informative = sum(
+            len(track.observations) >= self.config.cluster_min_samples
+            for track in tracks
+        )
+        if informative < 4:
+            tracks = self._frame_tracking_fallback(sequence)
         return tracks
+
+    def _event_frame(self, sequence: EventSequence, start: int, stop: int) -> np.ndarray:
+        counts = np.zeros((self.height, self.width), dtype=np.float32)
+        np.add.at(counts, (sequence.y[start:stop], sequence.x[start:stop]), 1.0)
+        counts = np.log1p(counts)
+        maximum = float(counts.max())
+        if maximum > 0:
+            counts *= 255.0 / maximum
+        return cv2.GaussianBlur(counts.astype(np.uint8), (3, 3), 0.0)
+
+    def _frame_tracking_fallback(self, sequence: EventSequence) -> list[FeatureTrack]:
+        """Track event-frame corners when the native-style clusters are sparse."""
+
+        if sequence.event_count < 20 or sequence.duration_seconds <= 0:
+            return []
+        start_time = float(sequence.t[0])
+        edges = np.arange(
+            start_time,
+            float(sequence.t[-1]) + self.config.fallback_frame_seconds,
+            self.config.fallback_frame_seconds,
+        )
+        if edges.size < 3:
+            return []
+        offsets = np.searchsorted(sequence.t, edges)
+        tracks: list[FeatureTrack] = []
+        active_tracks: list[FeatureTrack] = []
+        previous_points: np.ndarray | None = None
+        previous_frame: np.ndarray | None = None
+        next_track_id = 0
+        for frame_index in range(edges.size - 1):
+            start, stop = int(offsets[frame_index]), int(offsets[frame_index + 1])
+            if stop <= start:
+                continue
+            frame = self._event_frame(sequence, start, stop)
+            timestamp = 0.5 * (float(edges[frame_index]) + float(edges[frame_index + 1]))
+            if previous_frame is not None and previous_points is not None and previous_points.size:
+                current, status, _ = cv2.calcOpticalFlowPyrLK(
+                    previous_frame, frame, previous_points, None,
+                    winSize=(21, 21), maxLevel=3,
+                    criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 20, 0.01),
+                )
+                if current is None or status is None:
+                    previous_points = None
+                    active_tracks = []
+                else:
+                    status = status.reshape(-1).astype(bool)
+                    points = current.reshape((-1, 2))
+                    status &= (
+                        (points[:, 0] >= 0) & (points[:, 0] < self.width)
+                        & (points[:, 1] >= 0) & (points[:, 1] < self.height)
+                    )
+                    kept_points, kept_tracks = [], []
+                    for valid, point, track in zip(status, points, active_tracks):
+                        if not valid:
+                            continue
+                        track.append(
+                            Observation(timestamp, float(point[0]), float(point[1]), 1),
+                            self.config.retain_observations_per_track,
+                        )
+                        kept_points.append(point)
+                        kept_tracks.append(track)
+                    previous_points = (
+                        np.asarray(kept_points, dtype=np.float32).reshape((-1, 1, 2))
+                        if kept_points else None
+                    )
+                    active_tracks = kept_tracks
+            if frame_index % 5 == 0 or previous_points is None:
+                mask = np.full((self.height, self.width), 255, dtype=np.uint8)
+                if previous_points is not None:
+                    for point in previous_points.reshape((-1, 2)):
+                        cv2.circle(mask, tuple(np.rint(point).astype(int)), 6, 0, -1)
+                remaining = max(0, self.config.fallback_max_features - len(active_tracks))
+                added = cv2.goodFeaturesToTrack(
+                    frame, maxCorners=remaining, qualityLevel=0.01, minDistance=6.0,
+                    mask=mask, blockSize=5,
+                ) if remaining else None
+                if added is not None:
+                    new_points = added.reshape((-1, 2))
+                    new_tracks = []
+                    for point in new_points:
+                        track = FeatureTrack(next_track_id, [
+                            Observation(timestamp, float(point[0]), float(point[1]), 1),
+                        ])
+                        next_track_id += 1
+                        tracks.append(track)
+                        new_tracks.append(track)
+                    active_tracks.extend(new_tracks)
+                    if previous_points is None:
+                        previous_points = added.astype(np.float32)
+                    else:
+                        previous_points = np.concatenate((
+                            previous_points, added.astype(np.float32),
+                        ), axis=0)
+            previous_frame = frame
+        tracks = [
+            track for track in tracks
+            if len(track.observations) >= self.config.cluster_min_samples
+        ]
+        tracks.sort(key=lambda track: len(track.observations), reverse=True)
+        return tracks[:self.config.max_tracks]
 
 
 def track_observation_array(tracks: list[FeatureTrack]) -> np.ndarray:
@@ -225,4 +331,3 @@ def track_observation_array(tracks: list[FeatureTrack]) -> np.ndarray:
     if not values:
         return np.empty((0, 4), dtype=np.float64)
     return np.asarray(sorted(values), dtype=np.float64)
-

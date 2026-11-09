@@ -109,16 +109,20 @@ class FrontendConfig:
     track_max_gap_seconds: float = 0.080
     max_tracks: int = 500
     retain_observations_per_track: int = 1000
+    fallback_frame_seconds: float = 0.020
+    fallback_max_features: int = 300
 
     def __post_init__(self) -> None:
         for name in (
             "chunk_events", "fast_threshold", "max_corners_per_chunk",
             "cluster_min_samples", "max_tracks", "retain_observations_per_track",
+            "fallback_max_features",
         ):
             _positive_integer(f"frontend.{name}", getattr(self, name))
         for name in (
             "surface_decay_seconds", "density_radius_px",
             "track_merge_radius_px", "track_max_gap_seconds",
+            "fallback_frame_seconds",
         ):
             _finite(f"frontend.{name}", getattr(self, name), positive=True)
 

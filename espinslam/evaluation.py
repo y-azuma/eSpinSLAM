@@ -275,6 +275,7 @@ def evaluate(
         ),
         "implementation_differences": [
             "OpenCV FAST on polarity time surfaces replaces the unpublished native eFAST code.",
+            "Sparse eFAST/HDBSCAN output falls back to event-frame Lucas-Kanade tracks.",
             "SciPy robust least-squares replaces the paper's GTSAM backend.",
             "Raw-event loop alignment is a bounded fallback when Python feature tracks are sparse.",
         ],
@@ -289,4 +290,3 @@ def evaluate(
     }
     _write_json(output_dir / "metrics.json", report)
     return report
-

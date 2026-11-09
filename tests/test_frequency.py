@@ -10,8 +10,8 @@ def test_loop_closure_recovers_periodic_spatial_tracks():
     frequency_hz = 0.5
     times = np.arange(0.0, 5.0, 0.01)
     phase = 2.0 * math.pi * frequency_hz * times
-    x = 173.0 + 65.0 * np.cos(phase) + 8.0 * np.cos(3.0 * phase)
-    y = 130.0 + 42.0 * np.sin(phase) + 5.0 * np.sin(2.0 * phase)
+    x = np.rint(173.0 + 65.0 * np.cos(phase) + 8.0 * np.cos(3.0 * phase))
+    y = np.rint(130.0 + 42.0 * np.sin(phase) + 5.0 * np.sin(2.0 * phase))
     polarity = ((np.arange(times.size) // 5) % 2).astype(np.float64)
     observations = np.column_stack((times, x, y, polarity))
     estimator = LoopClosureFrequencyEstimator(FrequencyConfig(
@@ -36,4 +36,3 @@ def test_short_observation_abstains():
     ))
     result = LoopClosureFrequencyEstimator(FrequencyConfig()).estimate(observations)
     assert not result.valid
-

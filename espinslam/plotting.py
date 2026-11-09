@@ -28,7 +28,8 @@ def _finite_pairs(rows: list[dict], truth: str, prediction: str) -> tuple[np.nda
 
 
 def _empty_axis(axis, message: str = "No valid estimates") -> None:
-    axis.text(0.5, 0.5, message, ha="center", va="center", transform=axis.transAxes)
+    writer = getattr(axis, "text2D", axis.text)
+    writer(0.5, 0.5, message, ha="center", va="center", transform=axis.transAxes)
     axis.set_xticks([])
     axis.set_yticks([])
 
@@ -223,4 +224,3 @@ def create_report_plots(predictions: list[dict], time_summary: list[dict],
     plot_reprojection(predictions, outputs[7])
     plot_pointcloud(reference, aligned, outputs[8], pointcloud_sequence_id)
     return outputs
-

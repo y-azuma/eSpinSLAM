@@ -27,6 +27,9 @@ The original paper uses GTSAM and a native asynchronous eFAST implementation.
 This reproduction uses SciPy least-squares and an OpenCV time-surface FAST
 front-end so that it remains reviewable and runnable from Python. These two
 engineering substitutions are recorded in every evaluation report.
+When the Python eFAST/HDBSCAN path yields fewer than four usable tracks, an
+event-frame Lucas-Kanade tracker is used as an explicit, reported fallback so
+the 3D backend can still be evaluated rather than silently producing a map.
 
 ## Evaluation
 
@@ -57,4 +60,3 @@ the TOPSPIN benchmark.
 - No validation or test result changes the estimator's search range or
   hyperparameters.
 - The manifest test partition is never replaced by train or validation rows.
-

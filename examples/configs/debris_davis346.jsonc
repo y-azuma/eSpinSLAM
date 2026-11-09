@@ -20,7 +20,9 @@
     "track_merge_radius_px": 9.0,
     "track_max_gap_seconds": 0.080,
     "max_tracks": 500,
-    "retain_observations_per_track": 1000
+    "retain_observations_per_track": 1000,
+    "fallback_frame_seconds": 0.020,
+    "fallback_max_features": 300
   },
   "frequency": {
     "min_hz": 0.10,
