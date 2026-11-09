@@ -24,6 +24,14 @@ def test_similarity_icp_resolves_monocular_transform():
     assert result.icp_rmse_m < 1e-5
 
 
+def test_similarity_icp_rejects_collapsed_cloud():
+    reference = np.asarray(((0.0, 0.0, 0.0), (1.0, 0.0, 0.0),
+                            (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)))
+    result = align_similarity_icp(np.zeros((8, 3)), reference)
+    assert not result.valid
+    assert "degenerate extent" in result.reason
+
+
 def test_projected_orbit_center_is_principal_point():
     intrinsic = np.asarray(((500.0, 0.0, 173.0), (0.0, 500.0, 130.0), (0.0, 0.0, 1.0)))
     pixels = project_points(

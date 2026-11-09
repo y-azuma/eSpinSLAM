@@ -254,7 +254,8 @@ def _fuse_landmarks(points: np.ndarray, track_ids: np.ndarray,
     )
 
 
-def _umeyama(source: np.ndarray, target: np.ndarray) -> tuple[float, np.ndarray, np.ndarray]:
+def _umeyama(source: np.ndarray, target: np.ndarray,
+             *, estimate_scale: bool = True) -> tuple[float, np.ndarray, np.ndarray]:
     source_mean, target_mean = source.mean(axis=0), target.mean(axis=0)
     source_centered, target_centered = source - source_mean, target - target_mean
     covariance = target_centered.T @ source_centered / source.shape[0]
@@ -264,7 +265,10 @@ def _umeyama(source: np.ndarray, target: np.ndarray) -> tuple[float, np.ndarray,
         sign[-1] = -1
     rotation = u @ np.diag(sign) @ vt
     variance = float(np.mean(np.sum(source_centered ** 2, axis=1)))
-    scale = float(np.sum(singular * sign) / max(variance, 1e-12))
+    scale = (
+        float(np.sum(singular * sign) / max(variance, 1e-12))
+        if estimate_scale else 1.0
+    )
     translation = target_mean - scale * (rotation @ source_mean)
     return scale, rotation, translation
 
@@ -272,6 +276,11 @@ def _umeyama(source: np.ndarray, target: np.ndarray) -> tuple[float, np.ndarray,
 def _pca_axes(points: np.ndarray) -> np.ndarray:
     _, vectors = np.linalg.eigh(np.cov((points - points.mean(axis=0)).T))
     return vectors[:, ::-1]
+
+
+def _rms_radius(points: np.ndarray) -> float:
+    centered = points - points.mean(axis=0)
+    return float(np.sqrt(np.mean(np.sum(centered ** 2, axis=1))))
 
 
 def align_similarity_icp(predicted: np.ndarray, reference: np.ndarray,
@@ -284,6 +293,12 @@ def align_similarity_icp(predicted: np.ndarray, reference: np.ndarray,
         return _invalid_alignment("reference point cloud has fewer than four points")
     predicted = np.asarray(predicted, dtype=np.float64)
     reference = np.asarray(reference, dtype=np.float64)
+    predicted_radius = _rms_radius(predicted)
+    reference_radius = _rms_radius(reference)
+    if predicted_radius <= 1e-9:
+        return _invalid_alignment("predicted point cloud has degenerate extent")
+    if reference_radius <= 1e-9:
+        return _invalid_alignment("reference point cloud has degenerate extent")
     reference_tree = cKDTree(reference)
     source_axes, target_axes = _pca_axes(predicted), _pca_axes(reference)
     best: tuple[float, np.ndarray, float, np.ndarray, np.ndarray] | None = None
@@ -293,13 +308,17 @@ def align_similarity_icp(predicted: np.ndarray, reference: np.ndarray,
             orientation = target_axes @ permutation_matrix @ np.diag(signs) @ source_axes.T
             if np.linalg.det(orientation) < 0:
                 continue
-            scale = float(np.std(reference) / max(np.std(predicted), 1e-12))
+            scale = reference_radius / predicted_radius
             translation = reference.mean(axis=0) - scale * (orientation @ predicted.mean(axis=0))
             aligned = scale * (predicted @ orientation.T) + translation
             for _ in range(iterations):
                 _, nearest = reference_tree.query(aligned, k=1)
+                # Monocular scale is fixed once from the global cloud extent.
+                # Re-estimating it from one-way nearest neighbors lets ICP
+                # collapse every point onto one reference point and report a
+                # spuriously perfect RMSE.
                 step_scale, step_rotation, step_translation = _umeyama(
-                    aligned, reference[nearest],
+                    aligned, reference[nearest], estimate_scale=False,
                 )
                 updated = step_scale * (aligned @ step_rotation.T) + step_translation
                 if np.max(np.linalg.norm(updated - aligned, axis=1)) < 1e-7:
