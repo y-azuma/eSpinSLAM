@@ -115,10 +115,13 @@ def main() -> None:
         estimate = np.asarray(predictions[name], dtype=np.float64)
         metrics = rotation_metrics(actual, estimate, actual.size)
         results.append({"name": name, "frequency": asdict(variant), **metrics})
+    # Coverage is part of correctness: never reward a candidate merely because it
+    # abstains on difficult sequences.  All full-coverage candidates are ranked
+    # before MAE/RMSE are considered.
     results.sort(key=lambda item: (
+        -item["coverage"],
         math.inf if item["mae_rad_s"] is None else item["mae_rad_s"],
         math.inf if item["rmse_rad_s"] is None else item["rmse_rad_s"],
-        -item["coverage"],
     ))
     args.output_dir.mkdir(parents=True, exist_ok=True)
     with (args.output_dir / "tuning_candidates.csv").open("w", newline="", encoding="utf-8") as stream:
@@ -133,7 +136,7 @@ def main() -> None:
         "test_rows_read": False,
         "validation_sequence_count": len(validation),
         "train_label_frequency_prior_hz": [low, high],
-        "objective": "minimum validation MAE, then RMSE, then maximum coverage",
+        "objective": "maximum validation coverage, then minimum MAE and RMSE",
         "selected": results[0],
         "candidates": results,
         "runtime_seconds": time.monotonic() - started,

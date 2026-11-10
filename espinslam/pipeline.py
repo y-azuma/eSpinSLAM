@@ -22,6 +22,7 @@ class ESpinSLAMResult:
     observation_seconds: float
     event_count: int
     tracks: list[FeatureTrack]
+    frequency_observations: np.ndarray
     frequency: FrequencyEstimate
     reconstruction: Reconstruction
 
@@ -94,5 +95,5 @@ class ESpinSLAM:
             )
         return ESpinSLAMResult(
             sequence.sequence_id, sequence.duration_seconds, sequence.event_count,
-            tracks, frequency, reconstruction,
+            tracks, frequency_observations, frequency, reconstruction,
         )

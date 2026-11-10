@@ -183,7 +183,12 @@ def evaluate(
         })
         for observation_seconds in config.evaluation.observation_times_seconds:
             prefix = sequence.before(observation_seconds)
-            estimate = model.estimate_frequency(prefix)
+            prefix_observations = result.frequency_observations[
+                result.frequency_observations[:, 0] <= prefix.t[-1]
+            ] if prefix.event_count else np.empty((0, 4), dtype=np.float64)
+            estimate = model.estimate_frequency(
+                prefix, observations=prefix_observations,
+            )
             time_predictions.append({
                 "sequence_id": sequence.sequence_id,
                 "observation_seconds": float(observation_seconds),

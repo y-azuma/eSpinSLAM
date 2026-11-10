@@ -73,3 +73,29 @@ def test_frequency_history_is_independent_of_backend_track_retention():
     values = frontend.frequency_observation_array()
     assert values.shape == (2, 4)
     assert np.isclose(np.ptp(values[:, 0]), 4.8)
+
+
+def test_pipeline_exposes_causal_frequency_observations():
+    from espinslam.config import ESpinSLAMConfig
+    from espinslam.data import EventSequence
+    from espinslam.pipeline import ESpinSLAM
+
+    times = np.linspace(0.0, 2.5, 300)
+    sequence = EventSequence(
+        sequence_id="causal",
+        t=times,
+        x=np.rint(173.0 + 40.0 * np.cos(2.0 * np.pi * 0.4 * times)).astype(np.int16),
+        y=np.rint(130.0 + 30.0 * np.sin(2.0 * np.pi * 0.4 * times)).astype(np.int16),
+        p=(np.arange(times.size) & 1).astype(np.int8),
+        omega_rad_s=2.0 * np.pi * 0.4,
+        width=346,
+        height=260,
+        metadata={},
+        event_path=__file__,
+    )
+    result = ESpinSLAM(ESpinSLAMConfig()).process(
+        sequence, reconstruct_structure=False,
+    )
+    assert result.frequency_observations.ndim == 2
+    assert result.frequency_observations.shape[1] == 4
+    assert np.all(result.frequency_observations[:, 0] <= sequence.t[-1])
