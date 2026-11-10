@@ -97,11 +97,15 @@ class LoopClosureFrequencyEstimator:
         finite_indices = np.flatnonzero(valid)
         minimum_score = float(np.min(scores[valid]))
         median_score = float(np.median(scores[valid]))
-        tie_tolerance = max(1e-8, 0.01 * max(median_score - minimum_score, 0.0))
+        tie_tolerance = max(
+            1e-12,
+            self.config.equivalent_score_fraction
+            * max(median_score - minimum_score, 0.0),
+        )
         equivalent = finite_indices[scores[valid] <= minimum_score + tie_tolerance]
-        # A full pose also aligns after two or more revolutions. Prefer the
-        # shortest equally good recurrence, which is the fundamental period
-        # unless object symmetry creates a genuinely indistinguishable pose.
+        # Prefer the first recurrence among numerically equivalent candidates.
+        # A non-zero equivalence band is optional because a broad band can turn
+        # a merely similar high-frequency harmonic into the selected period.
         best_index = int(equivalent[np.argmax(frequencies[equivalent])])
         # Quadratic refinement reduces bank discretization without a new label
         # dependency. The bank remains the bounded initialization mechanism.

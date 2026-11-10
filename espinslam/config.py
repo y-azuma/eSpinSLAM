@@ -137,6 +137,7 @@ class FrequencyConfig:
     max_alignment_samples: int = 4000
     spatial_tolerance_px: float = 6.0
     temporal_tolerance_seconds: float = 0.030
+    equivalent_score_fraction: float = 0.0
     loop_std_threshold_hz: float = 0.001
     loop_history: int = 20
 
@@ -158,6 +159,11 @@ class FrequencyConfig:
             "frequency.temporal_tolerance_seconds",
             self.temporal_tolerance_seconds,
             positive=True,
+        )
+        _finite(
+            "frequency.equivalent_score_fraction",
+            self.equivalent_score_fraction,
+            non_negative=True,
         )
         _finite(
             "frequency.loop_std_threshold_hz",

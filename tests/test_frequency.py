@@ -36,3 +36,13 @@ def test_short_observation_abstains():
     ))
     result = LoopClosureFrequencyEstimator(FrequencyConfig()).estimate(observations)
     assert not result.valid
+
+
+def test_equivalence_band_is_disabled_by_default():
+    config = FrequencyConfig()
+    assert config.equivalent_score_fraction == 0.0
+
+
+def test_equivalence_band_must_be_non_negative():
+    with np.testing.assert_raises(ValueError):
+        FrequencyConfig(equivalent_score_fraction=-0.01)
