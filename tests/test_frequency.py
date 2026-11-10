@@ -4,6 +4,7 @@ import numpy as np
 
 from espinslam.config import FrequencyConfig
 from espinslam.frequency import LoopClosureFrequencyEstimator
+from espinslam.frontend import _cluster_candidates
 
 
 def test_loop_closure_recovers_periodic_spatial_tracks():
@@ -46,3 +47,16 @@ def test_equivalence_band_is_disabled_by_default():
 def test_equivalence_band_must_be_non_negative():
     with np.testing.assert_raises(ValueError):
         FrequencyConfig(equivalent_score_fraction=-0.01)
+
+
+def test_minimal_candidate_cluster_is_handled_without_hdbscan():
+    from espinslam.config import FrontendConfig
+
+    values = np.asarray([
+        [0.00, 10.0, 20.0, 1.0],
+        [0.01, 11.0, 21.0, 1.0],
+        [0.02, 12.0, 22.0, 1.0],
+    ])
+    observations = _cluster_candidates(values, FrontendConfig(cluster_min_samples=3))
+    assert len(observations) == 1
+    assert observations[0].x == 11.0

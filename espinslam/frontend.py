@@ -114,17 +114,30 @@ def _cluster_candidates(candidates: np.ndarray, config: FrontendConfig) -> list[
 
     if candidates.shape[0] < config.cluster_min_samples:
         return []
+    if candidates.shape[0] == config.cluster_min_samples:
+        return [Observation(
+            t=float(np.median(candidates[:, 0])),
+            x=float(np.median(candidates[:, 1])),
+            y=float(np.median(candidates[:, 2])),
+            polarity=int(np.rint(np.median(candidates[:, 3]))),
+        )]
     scaled = np.column_stack((
         candidates[:, 1] / config.density_radius_px,
         candidates[:, 2] / config.density_radius_px,
         (candidates[:, 0] - candidates[:, 0].min()) / config.track_max_gap_seconds,
     ))
-    labels = HDBSCAN(
-        min_cluster_size=config.cluster_min_samples,
-        min_samples=max(1, config.cluster_min_samples - 1),
-        cluster_selection_epsilon=1.0,
-        allow_single_cluster=True,
-    ).fit_predict(scaled)
+    try:
+        labels = HDBSCAN(
+            min_cluster_size=config.cluster_min_samples,
+            min_samples=max(1, config.cluster_min_samples - 1),
+            cluster_selection_epsilon=1.0,
+            allow_single_cluster=True,
+        ).fit_predict(scaled)
+    except (TypeError, ValueError):
+        # Some sklearn/Numpy combinations fail inside HDBSCAN for degenerate
+        # equal-distance trees. Treat the chunk as uninformative so the
+        # explicitly reported frame-tracking fallback can take over.
+        return []
     observations: list[Observation] = []
     for label in sorted(set(labels) - {-1}):
         values = candidates[labels == label]
