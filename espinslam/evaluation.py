@@ -271,6 +271,10 @@ def evaluate(
         "evaluation_split": config.data.evaluation_split,
         "data_leakage_controls": {
             "inference_inputs": ["events", "sensor geometry", "camera intrinsics"],
+            "selection_only": [
+                "training-label frequency range with a fixed 10% span margin",
+                "validation labels for loop-alignment tolerances",
+            ],
             "evaluation_only": ["omega_rad_s", "Blender geometry", "camera pose CSV", "bounding boxes"],
             "test_tuning": False,
         },

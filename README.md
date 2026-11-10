@@ -39,7 +39,7 @@ before reading the held-out test results. Only rows marked `test` in
 
 ```bash
 python scripts/evaluate.py \
-  --config examples/configs/debris_davis346.jsonc \
+  --config examples/configs/debris_davis346_improved.jsonc \
   --data-root datasets/20261031_debris_rotation_v3_davis346 \
   --manifest datasets/20261031_debris_rotation_v3_davis346/manifest.csv \
   --output-dir runs/1110
@@ -52,11 +52,17 @@ camera and stationary circular-orbit assumptions. The report therefore labels
 this as an out-of-model robustness evaluation rather than a reproduction of
 the TOPSPIN benchmark.
 
+The paper-geometry diagnostic, validation procedure, final 200-sequence test
+results, and failure analysis are recorded in
+[`reports/1110_espinslam_improvement.md`](reports/1110_espinslam_improvement.md).
+
 ## Data-leakage policy
 
 - Frequency and point-cloud inference use events and camera intrinsics only.
 - `omega_rad_s`, bounding boxes, Blender poses, and CAD geometry are used only
   after inference for metrics and visualization.
-- No validation or test result changes the estimator's search range or
-  hyperparameters.
+- Train labels determine a padded frequency-search prior. Validation labels
+  select paper-compatible loop-alignment tolerances. These choices are fixed
+  before the held-out test is read.
+- Test results never change the estimator's search range or hyperparameters.
 - The manifest test partition is never replaced by train or validation rows.
