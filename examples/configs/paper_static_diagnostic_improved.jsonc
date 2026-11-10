@@ -1,0 +1,61 @@
+{
+  "data": {
+    "sensor_size": [346, 260],
+    "max_duration_seconds": 10.0,
+    "evaluation_split": "test"
+  },
+  "camera": {
+    "fx": 528.6111111111,
+    "fy": 528.6111111111,
+    "cx": 173.0,
+    "cy": 130.0
+  },
+  "frontend": {
+    "chunk_events": 1000,
+    "surface_decay_seconds": 0.030,
+    "fast_threshold": 18,
+    "max_corners_per_chunk": 100,
+    "density_radius_px": 6.0,
+    "cluster_min_samples": 3,
+    "track_merge_radius_px": 9.0,
+    "track_max_gap_seconds": 0.080,
+    "max_tracks": 500,
+    "retain_observations_per_track": 1000,
+    "fallback_frame_seconds": 0.020,
+    "fallback_max_features": 300
+  },
+  "frequency": {
+    "min_hz": 0.2503143474406859,
+    "max_hz": 0.5831601663251069,
+    "candidate_count": 141,
+    "max_alignment_samples": 4000,
+    "spatial_tolerance_px": 3.0,
+    "temporal_tolerance_seconds": 0.015,
+    "equivalent_score_fraction": 0.0,
+    "loop_std_threshold_hz": 0.001,
+    "loop_history": 20
+  },
+  "backend": {
+    "orbit_radius": 10.0,
+    "min_track_observations": 3,
+    "max_landmarks": 250,
+    "huber_scale_px": 2.0,
+    "max_mean_reprojection_error_px": 10.0,
+    "landmark_merge_radius": 0.01,
+    "optimization_cadence_revolutions": 0.1,
+    "optimization_iterations": 60
+  },
+  "evaluation": {
+    "observation_times_seconds": [1.0, 1.5, 2.0, 3.0, 5.0, 7.5, 10.0],
+    "pointcloud_max_reference_points": 30000,
+    "failure_policy": "report_and_mark_invalid"
+  },
+  "logging": {
+    "wandb": false,
+    "wandb_mode": "offline",
+    "wandb_project": "snn-research",
+    "wandb_entity": null,
+    "wandb_run_name": "espinslam-paper-static-diagnostic-improved",
+    "wandb_tags": ["espinslam", "paper-static", "diagnostic-only", "validation-selected"]
+  }
+}
