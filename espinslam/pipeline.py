@@ -56,8 +56,10 @@ class ESpinSLAM:
         self.frequency_estimator = LoopClosureFrequencyEstimator(config.frequency)
 
     def estimate_frequency(self, sequence: EventSequence,
-                           *, tracks: list[FeatureTrack] | None = None) -> FrequencyEstimate:
-        observations = track_observation_array(tracks or [])
+                           *, tracks: list[FeatureTrack] | None = None,
+                           observations: np.ndarray | None = None) -> FrequencyEstimate:
+        if observations is None:
+            observations = track_observation_array(tracks or [])
         if observations.shape[0] < 20:
             observations = _sample_raw_observations(
                 sequence, self.config.frequency.max_alignment_samples,
@@ -75,7 +77,10 @@ class ESpinSLAM:
 
         frontend = EventFrontend(sequence.width, sequence.height, self.config.frontend)
         tracks = frontend.process(sequence)
-        frequency = self.estimate_frequency(sequence, tracks=tracks)
+        frequency_observations = frontend.frequency_observation_array()
+        frequency = self.estimate_frequency(
+            sequence, tracks=tracks, observations=frequency_observations,
+        )
         if reconstruct_structure and frequency.valid:
             reconstruction = reconstruct(
                 tracks, frequency.frequency_hz, self.config.camera.matrix(),
@@ -91,4 +96,3 @@ class ESpinSLAM:
             sequence.sequence_id, sequence.duration_seconds, sequence.event_count,
             tracks, frequency, reconstruction,
         )
-

@@ -4,7 +4,7 @@ import numpy as np
 
 from espinslam.config import FrequencyConfig
 from espinslam.frequency import LoopClosureFrequencyEstimator
-from espinslam.frontend import _cluster_candidates
+from espinslam.frontend import EventFrontend, Observation, _cluster_candidates
 
 
 def test_loop_closure_recovers_periodic_spatial_tracks():
@@ -60,3 +60,16 @@ def test_minimal_candidate_cluster_is_handled_without_hdbscan():
     observations = _cluster_candidates(values, FrontendConfig(cluster_min_samples=3))
     assert len(observations) == 1
     assert observations[0].x == 11.0
+
+
+def test_frequency_history_is_independent_of_backend_track_retention():
+    from espinslam.config import FrontendConfig
+
+    frontend = EventFrontend(346, 260, FrontendConfig())
+    frontend._frequency_history.extend((
+        Observation(0.1, 10.0, 20.0, 1),
+        Observation(4.9, 11.0, 21.0, 0),
+    ))
+    values = frontend.frequency_observation_array()
+    assert values.shape == (2, 4)
+    assert np.isclose(np.ptp(values[:, 0]), 4.8)

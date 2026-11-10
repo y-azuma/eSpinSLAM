@@ -65,8 +65,11 @@ def _variants(base: FrequencyConfig, low: float, high: float) -> list[tuple[str,
 
 
 def _bounded_observations(sequence, frontend_config, limit: int) -> np.ndarray:
-    tracks = EventFrontend(sequence.width, sequence.height, frontend_config).process(sequence)
-    values = track_observation_array(tracks)
+    frontend = EventFrontend(sequence.width, sequence.height, frontend_config)
+    tracks = frontend.process(sequence)
+    values = frontend.frequency_observation_array()
+    if values.shape[0] < 20:
+        values = track_observation_array(tracks)
     if values.shape[0] < 20:
         count = min(sequence.event_count, limit)
         indices = np.linspace(0, sequence.event_count - 1, count).round().astype(np.int64)

@@ -157,6 +157,7 @@ class EventFrontend:
         self.width = int(width)
         self.height = int(height)
         self.config = config
+        self._frequency_history: list[Observation] = []
         self.detector = cv2.FastFeatureDetector_create(
             threshold=config.fast_threshold,
             nonmaxSuppression=True,
@@ -218,6 +219,7 @@ class EventFrontend:
             candidates = _density_filter(candidates, self.config.density_radius_px)
             observations = _cluster_candidates(candidates, self.config)
             if observations:
+                self._frequency_history.extend(observations)
                 next_track_id = self._associate(tracks, observations, next_track_id)
             if len(tracks) > self.config.max_tracks:
                 tracks.sort(key=lambda track: (
@@ -232,6 +234,16 @@ class EventFrontend:
         if informative < 4:
             tracks = self._frame_tracking_fallback(sequence)
         return tracks
+
+    def frequency_observation_array(self) -> np.ndarray:
+        """Return the paper's cumulative filtered feature pool over all chunks."""
+
+        if not self._frequency_history:
+            return np.empty((0, 4), dtype=np.float64)
+        return np.asarray([
+            (value.t, value.x, value.y, value.polarity)
+            for value in self._frequency_history
+        ], dtype=np.float64)
 
     def _event_frame(self, sequence: EventSequence, start: int, stop: int) -> np.ndarray:
         counts = np.zeros((self.height, self.width), dtype=np.float32)
