@@ -153,6 +153,7 @@ def evaluate(
     time_predictions: list[dict] = []
     pointcloud_rows: list[dict] = []
     representative: tuple[float, str, PointCloudAlignment] | None = None
+    raw_representative: tuple[int, str, np.ndarray] | None = None
 
     def condition_fields(sequence):
         """Retain audit-only scene conditions for diagnostic stratification."""
@@ -234,13 +235,20 @@ def evaluate(
             "similarity_scale": _nullable(alignment.scale),
             "failure_reason": alignment.reason,
         })
-        if alignment.valid:
+        points = result.reconstruction.points
+        if points.size:
+            payload = {"predicted": points.astype(np.float32)}
+            if alignment.valid:
+                payload.update({
+                    "aligned": alignment.aligned_points.astype(np.float32),
+                    "reference": reference.astype(np.float32),
+                })
             np.savez_compressed(
-                output_dir / f"pointcloud_{sequence.sequence_id}.npz",
-                predicted=result.reconstruction.points.astype(np.float32),
-                aligned=alignment.aligned_points.astype(np.float32),
-                reference=reference.astype(np.float32),
+                output_dir / f"pointcloud_{sequence.sequence_id}.npz", **payload,
             )
+            if raw_representative is None or points.shape[0] > raw_representative[0]:
+                raw_representative = (points.shape[0], sequence.sequence_id, points.copy())
+        if alignment.valid:
             if representative is None or alignment.icp_rmse_m < representative[0]:
                 representative = (alignment.icp_rmse_m, sequence.sequence_id, alignment)
         print(
@@ -270,11 +278,20 @@ def evaluate(
         values = rotation_metrics(subset_truth, subset_prediction, len(subset))
         time_summary.append({"observation_seconds": observation_seconds, **values})
 
-    aligned = representative[2].aligned_points if representative else None
-    pointcloud_sequence_id = representative[1] if representative else None
+    if representative:
+        plot_reference = reference
+        plotted_points = representative[2].aligned_points
+        pointcloud_sequence_id = representative[1]
+    elif raw_representative:
+        plot_reference = None
+        plotted_points = raw_representative[2]
+        pointcloud_sequence_id = raw_representative[1]
+    else:
+        plot_reference = plotted_points = None
+        pointcloud_sequence_id = None
     plot_paths = create_report_plots(
         predictions, time_summary, output_dir,
-        reference=reference, aligned=aligned,
+        reference=plot_reference, aligned=plotted_points,
         pointcloud_sequence_id=pointcloud_sequence_id,
     )
     _write_csv(output_dir / "predictions.csv", predictions)

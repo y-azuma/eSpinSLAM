@@ -171,9 +171,27 @@ def plot_pointcloud(reference: np.ndarray | None, aligned: np.ndarray | None,
         fig.add_subplot(1, 3, 2),
         fig.add_subplot(1, 3, 3),
     )
-    if reference is None or aligned is None or not aligned.size:
+    if aligned is None or not aligned.size:
         for axis in axes:
             _empty_axis(axis, "No valid 3D reconstruction")
+    elif reference is None:
+        # Without released CAD ground truth, show the reconstruction in its
+        # native similarity gauge.  This is a qualitative shape diagnostic,
+        # not a metric-scale or ICP-accuracy claim.
+        axes[0].scatter(aligned[:, 0], aligned[:, 1], aligned[:, 2],
+                        s=15, color="#d62728", label="eSpinSLAM")
+        axes[0].set_xlabel("X [arbitrary scale]")
+        axes[0].set_ylabel("Y [arbitrary scale]")
+        axes[0].set_zlabel("Z [arbitrary scale]")
+        axes[0].legend()
+        axes[1].scatter(aligned[:, 0], aligned[:, 1], s=15, color="#d62728")
+        axes[1].set_xlabel("X [arbitrary scale]")
+        axes[1].set_ylabel("Y [arbitrary scale]")
+        axes[1].set_aspect("equal", adjustable="box")
+        axes[2].scatter(aligned[:, 0], aligned[:, 2], s=15, color="#d62728")
+        axes[2].set_xlabel("X [arbitrary scale]")
+        axes[2].set_ylabel("Z [arbitrary scale]")
+        axes[2].set_aspect("equal", adjustable="box")
     else:
         if reference.shape[0] > 8000:
             indices = np.linspace(0, reference.shape[0] - 1, 8000).round().astype(int)
@@ -196,7 +214,8 @@ def plot_pointcloud(reference: np.ndarray | None, aligned: np.ndarray | None,
         axes[2].set_xlabel("X [m]")
         axes[2].set_ylabel("Z [m]")
         axes[2].set_aspect("equal", adjustable="box")
-    fig.suptitle(f"Similarity-aligned sparse 3D reconstruction{': ' + sequence_id if sequence_id else ''}")
+    qualifier = "Similarity-aligned" if reference is not None else "Unaligned (shape only)"
+    fig.suptitle(f"{qualifier} sparse 3D reconstruction{': ' + sequence_id if sequence_id else ''}")
     _save(fig, output)
 
 
