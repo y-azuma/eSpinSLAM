@@ -144,6 +144,12 @@ def main() -> None:
     (args.output_dir / "tuning_results.json").write_text(
         json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8",
     )
+    selected_config = config.as_dict()
+    selected_config["frequency"] = results[0]["frequency"]
+    (args.output_dir / "selected_config.json").write_text(
+        json.dumps(selected_config, indent=2, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
     print(json.dumps(report, indent=2, allow_nan=False))
 
 
