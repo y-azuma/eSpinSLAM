@@ -154,6 +154,19 @@ def evaluate(
     pointcloud_rows: list[dict] = []
     representative: tuple[float, str, PointCloudAlignment] | None = None
 
+    def condition_fields(sequence):
+        """Retain audit-only scene conditions for diagnostic stratification."""
+        names = (
+            "source_group_id", "object_id", "physical_object_id",
+            "scene_id", "perspective", "speed_class",
+            "provenance.label_status",
+        )
+        return {
+            name: sequence.metadata[name]
+            for name in names
+            if sequence.metadata.get(name) not in {None, ""}
+        }
+
     for index, row in enumerate(rows, 1):
         sequence = load_event_sequence(
             row, data_root, config.data.sensor_size,
@@ -163,6 +176,7 @@ def evaluate(
         prediction = result.omega_rad_s if result.valid else math.nan
         predictions.append({
             "sequence_id": sequence.sequence_id,
+            **condition_fields(sequence),
             "omega_true_rad_s": sequence.omega_rad_s,
             "omega_pred_rad_s": _nullable(prediction),
             "omega_true_deg_s": math.degrees(sequence.omega_rad_s),
@@ -191,6 +205,7 @@ def evaluate(
             )
             time_predictions.append({
                 "sequence_id": sequence.sequence_id,
+                **condition_fields(sequence),
                 "observation_seconds": float(observation_seconds),
                 "available_seconds": prefix.duration_seconds,
                 "omega_true_rad_s": sequence.omega_rad_s,
@@ -210,6 +225,7 @@ def evaluate(
         )
         pointcloud_rows.append({
             "sequence_id": sequence.sequence_id,
+            **condition_fields(sequence),
             "valid": alignment.valid,
             "landmark_count": int(result.reconstruction.points.shape[0]),
             "reprojection_error_px": _nullable(result.reconstruction.mean_reprojection_error_px),
