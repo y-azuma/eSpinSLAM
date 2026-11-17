@@ -18,7 +18,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--max-sequences", type=int, default=0)
-    parser.add_argument("--reference-pointcloud", type=Path)
+    parser.add_argument(
+        "--reference-pointcloud",
+        type=Path,
+        help=(
+            "Single CAD-derived point cloud for every sequence. If omitted, "
+            "each manifest reference_pointcloud_path is used independently."
+        ),
+    )
     parser.add_argument("--wandb", action="store_true")
     return parser.parse_args()
 

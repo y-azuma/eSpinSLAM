@@ -21,7 +21,7 @@ W&B logging, and reproducible Docker execution.
 6. Multi-view triangulation, robust reprojection refinement, outlier removal,
    and landmark fusion.
 7. Rotation-speed metrics, time-to-accuracy curves, reprojection error, and
-   similarity-ICP alignment to the Blender reference point cloud.
+   similarity-ICP alignment to a global or per-sequence CAD surface point cloud.
 
 The original paper uses GTSAM and a native asynchronous eFAST implementation.
 This reproduction uses SciPy least-squares and an OpenCV time-surface FAST
@@ -45,6 +45,23 @@ python scripts/evaluate.py \
   --output-dir runs/1110
 ```
 
+When `manifest.csv` contains `reference_pointcloud_path`, each held-out
+sequence is aligned to its own CAD-derived surface point cloud.  This is the
+preferred mode for mixed object geometries.  The path must remain inside
+`--data-root`.  `--reference-pointcloud` remains available as an explicit
+single-reference override for legacy one-object experiments.
+
+The compatible `space_event_blender` generator writes, per sequence,
+`meta/cad/target_mesh.ply` (triangulated CAD mesh in the target body frame),
+`meta/cad/reference_points.npz` (deterministic area-sampled points and normals),
+and the corresponding manifest paths when `cad_export.enabled=true`.
+
+eSpinSLAM is a geometric estimator, so this does **not** add a neural shape
+training stage.  The mesh and sampled points are opened only after event-only
+inference and are used for similarity-ICP/Chamfer evaluation and plots.  This
+matches the paper's CAD-alignment evaluation protocol without leaking CAD
+shape into tracking, frequency estimation, or reconstruction.
+
 The existing synthetic dataset contains slow camera translation/orbit in
 addition to object spin. That is intentionally retained for an apples-to-apples
 comparison with `event_snn_torch`, but it violates eSpinSLAM's exact static
@@ -59,7 +76,7 @@ results, and failure analysis are recorded in
 ## Data-leakage policy
 
 - Frequency and point-cloud inference use events and camera intrinsics only.
-- `omega_rad_s`, bounding boxes, Blender poses, and CAD geometry are used only
+- `omega_rad_s`, bounding boxes, Blender poses, and per-sequence CAD geometry are used only
   after inference for metrics and visualization.
 - Train labels determine a padded frequency-search prior. Validation labels
   select paper-compatible loop-alignment tolerances. These choices are fixed

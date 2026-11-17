@@ -11,6 +11,10 @@ from typing import Any, Iterable
 import numpy as np
 
 
+REFERENCE_POINTCLOUD_FIELD = "reference_pointcloud_path"
+REFERENCE_MESH_FIELD = "reference_mesh_path"
+
+
 @dataclass(frozen=True)
 class EventSequence:
     """One validated raw-event sequence and evaluation-only label."""
@@ -75,7 +79,30 @@ def read_manifest(path: str | Path, data_root: str | Path) -> list[dict[str, str
         event_path = (root / row["event_path"]).resolve()
         if not event_path.is_relative_to(root):
             raise ValueError("manifest event_path resolves outside data root")
+        for field in (REFERENCE_POINTCLOUD_FIELD, REFERENCE_MESH_FIELD):
+            row[field] = (row.get(field) or "").strip()
+            if row[field] and not (root / row[field]).resolve().is_relative_to(root):
+                raise ValueError(f"manifest {field} resolves outside data root")
     return rows
+
+
+def resolve_reference_pointcloud(
+    row: dict[str, str], data_root: str | Path,
+) -> Path | None:
+    """Resolve optional per-sequence CAD-derived evaluation points safely."""
+
+    value = (row.get(REFERENCE_POINTCLOUD_FIELD) or "").strip()
+    if not value:
+        return None
+    root = Path(data_root).resolve()
+    path = (root / value).resolve()
+    if not path.is_relative_to(root):
+        raise ValueError(
+            f"manifest {REFERENCE_POINTCLOUD_FIELD} resolves outside data root"
+        )
+    if not path.is_file():
+        raise ValueError(f"missing reference point cloud: {path}")
+    return path
 
 
 def _numeric(archive, name: str, *, ndim: int) -> np.ndarray:

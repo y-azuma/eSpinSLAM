@@ -2,7 +2,11 @@ import csv
 
 import numpy as np
 
-from espinslam.data import load_event_sequence, read_manifest
+from espinslam.data import (
+    load_event_sequence,
+    read_manifest,
+    resolve_reference_pointcloud,
+)
 
 
 def test_npz_manifest_loader_preserves_explicit_test_membership(tmp_path):
@@ -30,4 +34,48 @@ def test_npz_manifest_loader_preserves_explicit_test_membership(tmp_path):
     assert sequence.sequence_id == "debris_000000"
     assert sequence.omega_rad_s == 2.0
     assert sequence.p.tolist() == [0, 1, 0]
+
+
+def test_manifest_resolves_per_sequence_cad_reference(tmp_path):
+    sample = tmp_path / "sample_000000"
+    reference = sample / "meta" / "cad" / "reference_points.npz"
+    reference.parent.mkdir(parents=True)
+    np.savez_compressed(reference, points=np.zeros((8, 3), dtype=np.float32))
+    manifest = tmp_path / "manifest.csv"
+    with manifest.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(stream, fieldnames=(
+            "sequence_id", "event_path", "split", "reference_pointcloud_path",
+        ))
+        writer.writeheader()
+        writer.writerow({
+            "sequence_id": "debris_000000",
+            "event_path": "sample_000000/events.npz",
+            "split": "test",
+            "reference_pointcloud_path": (
+                "sample_000000/meta/cad/reference_points.npz"
+            ),
+        })
+    row = read_manifest(manifest, tmp_path)[0]
+    assert resolve_reference_pointcloud(row, tmp_path) == reference.resolve()
+
+
+def test_manifest_rejects_cad_reference_outside_data_root(tmp_path):
+    manifest = tmp_path / "manifest.csv"
+    with manifest.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(stream, fieldnames=(
+            "sequence_id", "event_path", "split", "reference_pointcloud_path",
+        ))
+        writer.writeheader()
+        writer.writerow({
+            "sequence_id": "debris_000000",
+            "event_path": "sample_000000/events.npz",
+            "split": "test",
+            "reference_pointcloud_path": "../reference_points.npz",
+        })
+    try:
+        read_manifest(manifest, tmp_path)
+    except ValueError as error:
+        assert "reference_pointcloud_path" in str(error)
+    else:
+        raise AssertionError("escaping CAD path was accepted")
 

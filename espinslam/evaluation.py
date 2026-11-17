@@ -14,7 +14,11 @@ from typing import Any
 import numpy as np
 
 from .config import ESpinSLAMConfig
-from .data import load_event_sequence, read_manifest
+from .data import (
+    load_event_sequence,
+    read_manifest,
+    resolve_reference_pointcloud,
+)
 from .geometry import PointCloudAlignment, align_similarity_icp
 from .pipeline import ESpinSLAM
 from .plotting import create_report_plots
@@ -145,14 +149,17 @@ def evaluate(
         raise ValueError("manifest contains no held-out test rows")
     if maximum_sequences > 0:
         rows = rows[:maximum_sequences]
-    reference = _load_reference(
+    global_reference = _load_reference(
         reference_path, config.evaluation.pointcloud_max_reference_points,
     )
+    reference_cache: dict[Path, np.ndarray] = {}
     model = ESpinSLAM(config)
     predictions: list[dict] = []
     time_predictions: list[dict] = []
     pointcloud_rows: list[dict] = []
-    representative: tuple[float, str, PointCloudAlignment] | None = None
+    representative: tuple[
+        float, str, PointCloudAlignment, np.ndarray
+    ] | None = None
     raw_representative: tuple[int, str, np.ndarray] | None = None
 
     def condition_fields(sequence):
@@ -174,6 +181,20 @@ def evaluate(
             max_duration_seconds=config.data.max_duration_seconds,
         )
         result = model.process(sequence, reconstruct_structure=True)
+        sequence_reference_path = None
+        reference = global_reference
+        if reference is None:
+            sequence_reference_path = resolve_reference_pointcloud(row, data_root)
+            if sequence_reference_path is not None:
+                if sequence_reference_path not in reference_cache:
+                    loaded = _load_reference(
+                        sequence_reference_path,
+                        config.evaluation.pointcloud_max_reference_points,
+                    )
+                    if loaded is None:  # The resolver already requires a file.
+                        raise RuntimeError("reference point cloud disappeared while loading")
+                    reference_cache[sequence_reference_path] = loaded
+                reference = reference_cache[sequence_reference_path]
         prediction = result.omega_rad_s if result.valid else math.nan
         predictions.append({
             "sequence_id": sequence.sequence_id,
@@ -227,6 +248,11 @@ def evaluate(
         pointcloud_rows.append({
             "sequence_id": sequence.sequence_id,
             **condition_fields(sequence),
+            "reference_pointcloud_path": (
+                str(reference_path) if global_reference is not None
+                else row.get("reference_pointcloud_path", "")
+            ),
+            "reference_point_count": int(reference.shape[0]) if reference is not None else 0,
             "valid": alignment.valid,
             "landmark_count": int(result.reconstruction.points.shape[0]),
             "reprojection_error_px": _nullable(result.reconstruction.mean_reprojection_error_px),
@@ -250,7 +276,12 @@ def evaluate(
                 raw_representative = (points.shape[0], sequence.sequence_id, points.copy())
         if alignment.valid:
             if representative is None or alignment.icp_rmse_m < representative[0]:
-                representative = (alignment.icp_rmse_m, sequence.sequence_id, alignment)
+                representative = (
+                    alignment.icp_rmse_m,
+                    sequence.sequence_id,
+                    alignment,
+                    reference.copy(),
+                )
         print(
             f"[{index}/{len(rows)}] {sequence.sequence_id}: "
             f"omega={prediction:.6g} tracks={len(result.tracks)} "
@@ -279,7 +310,7 @@ def evaluate(
         time_summary.append({"observation_seconds": observation_seconds, **values})
 
     if representative:
-        plot_reference = reference
+        plot_reference = representative[3]
         plotted_points = representative[2].aligned_points
         pointcloud_sequence_id = representative[1]
     elif raw_representative:
@@ -325,7 +356,17 @@ def evaluate(
         "pointcloud": _pointcloud_metrics(pointcloud_rows, len(rows)),
         "runtime_seconds": time.monotonic() - started,
         "sequence_count": len(rows),
-        "reference_pointcloud_available": reference is not None,
+        "reference_pointcloud_available": any(
+            row["reference_point_count"] > 0 for row in pointcloud_rows
+        ),
+        "reference_pointcloud_mode": (
+            "global_override" if global_reference is not None
+            else "per_sequence_manifest" if reference_cache
+            else "unavailable"
+        ),
+        "reference_pointcloud_sequence_count": sum(
+            row["reference_point_count"] > 0 for row in pointcloud_rows
+        ),
         "representative_pointcloud_sequence": pointcloud_sequence_id,
         "plots": [path.name for path in plot_paths],
         "config": config.as_dict(),
