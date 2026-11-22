@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-from dataclasses import asdict
 import json
 import math
 from pathlib import Path

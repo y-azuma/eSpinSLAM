@@ -14,7 +14,6 @@ from dataclasses import dataclass, field
 import math
 import time
 
-import numpy as np
 
 from .backend import (
     IncrementalBackend, OptimizationReport, Reconstruction, UndistortionMap,

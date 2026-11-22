@@ -30,7 +30,7 @@ def test_efast_fires_near_corners_not_along_edges():
     detector = EFastDetector(120, 90)
     corners = detector.detect(x, y, t, p)
     assert corners.any()
-    corner_x, corner_y = x[corners], y[corners]
+    corner_y = y[corners]
     # Corner events cluster at the square's top-right corner, which moves along
     # the top edge; events in the middle of the leading edge are rejected.
     middle = (y >= 34) & (y <= 38)
