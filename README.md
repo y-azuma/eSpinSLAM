@@ -112,30 +112,33 @@ and compares the online output with ground truth in the same world frame:
 python scripts/synthetic_benchmark.py --ablations --output runs/synthetic.json
 ```
 
-Result of that command (346x260, fx = 528.6, 0.05 Hz/px noise; structure error
-is the distance from each landmark to the nearest true patch corner in world
-units, object radius 1.5, `r = 10`):
+Result of that command on the final code (346x260, fx = 528.6, 0.05 Hz/px
+noise; structure error is the distance from each landmark to the nearest true
+patch corner in world units, object radius 1.5, `r = 10`):
 
 | Scene (f, elevation) | Setting | f error | Loop detected | R0 error | Structure median / p90 | Reproj. | Landmarks |
 |---|---|---|---|---|---|---|---|
-| 0.5 Hz, 20° | eSpinSLAM | <0.0001 % | 3.95 s | 0.65° | 0.107 / 0.197 | 1.55 px | 626 |
+| 0.5 Hz, 20° | eSpinSLAM | <0.0001 % | 3.95 s | 0.48° | 0.090 / 0.197 | 1.59 px | 599 |
 | | No landmark association | <0.0001 % | 3.95 s | 0.24° | 0.051 / 0.143 | 1.32 px | 1112 |
-| | No factor graph f constraint | 0.001 % | 3.95 s | 0.48° | 0.091 / 0.197 | 1.55 px | 620 |
-| | FFT f estimation | 0.39 % | 4.25 s | 0.23° | 0.107 / 0.203 | 1.33 px | 829 |
-| 0.3 Hz, 10° | eSpinSLAM | 0.002 % | 5.39 s | 0.33° | 0.064 / 0.137 | 1.23 px | 697 |
+| | No factor graph f constraint | <0.0001 % | 3.95 s | 0.45° | 0.087 / 0.196 | 1.55 px | 623 |
+| | FFT f estimation | 0.28 % | 4.25 s | 0.21° | 0.084 / 0.129 | 1.51 px | 417 |
+| 0.3 Hz, 10° | eSpinSLAM | 0.0003 % | 5.39 s | 0.36° | 0.066 / 0.137 | 1.21 px | 678 |
 | | No landmark association | 0.0005 % | 5.39 s | 0.28° | 0.050 / 0.094 | 1.09 px | 1301 |
-| | No factor graph f constraint | 1.72 % | 5.39 s | 0.04° | 0.216 / 0.388 | 1.12 px | 1133 |
-| | FFT f estimation | 85.5 % (harmonic) | 3.87 s | 59.4° | 7.31 / 7.55 | 1.31 px | 104 |
-| 0.8 Hz, 35° | eSpinSLAM | 0.0001 % | 5.96 s | 0.38° | 0.078 / 0.210 | 1.21 px | 424 |
+| | No factor graph f constraint | 1.71 % | 5.39 s | 0.05° | 0.213 / 0.384 | 1.11 px | 1112 |
+| | FFT f estimation | 122.7 % (harmonic) | 3.87 s | 6.25° | 0.465 / 0.960 | 1.82 px | 346 |
+| 0.8 Hz, 35° | eSpinSLAM | <0.0001 % | 5.96 s | 0.36° | 0.079 / 0.212 | 1.22 px | 422 |
 | | No landmark association | <0.0001 % | 5.96 s | 0.75° | 0.085 / 0.158 | 1.12 px | 709 |
-| | No factor graph f constraint | 1.70 % | 5.96 s | 1.38° | 0.364 / 0.607 | 1.14 px | 675 |
-| | FFT f estimation | 89.6 % (harmonic) | 2.63 s | - | no inlier landmarks | - | - |
+| | No factor graph f constraint | 1.70 % | 5.96 s | 1.36° | 0.363 / 0.600 | 1.14 px | 674 |
+| | FFT f estimation | 89.6 % (harmonic) | 2.63 s | - | no inlier landmarks | - | 0 |
 
-The qualitative findings of Table 3 hold: FFT frequencies are fragile
-(harmonics), freeing `f` lets it drift and degrades the structure, and
-landmark association removes duplicate points (fewer landmarks). Python
-throughput is ~0.07-0.12 M events/s here, about an order of magnitude below
-the paper's C++ figures (Fig. 7).
+FFT frequencies are fragile (harmonics) and freeing `f` lets it drift and
+degrades the structure, as in Table 3. Without landmark association the map
+has 1.7-1.9x more (duplicate) points and a slightly lower reprojection error,
+also as in Table 3, but these short runs (at most 9 s) do not show the
+structure degradation the paper reports for long-term operation. Python
+throughput is ~0.08-0.12 M events/s, about an order of magnitude below the
+paper's C++ figures (Fig. 7). The full record of the changes and results is
+in [`docs/reproduction_report.md`](docs/reproduction_report.md).
 
 ## Debris evaluation (comparison with the proposed method)
 
