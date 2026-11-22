@@ -172,27 +172,32 @@ def evaluate(
             "percentage_error": _nullable(
                 abs(prediction - sequence.omega_rad_s) / max(sequence.omega_rad_s, 1e-9) * 100.0,
             ),
-            "frequency_hz": _nullable(result.frequency.frequency_hz),
-            "frequency_confidence": result.frequency.confidence,
+            "frequency_hz": _nullable(result.frequency_hz),
+            "latest_unconfirmed_frequency_hz": _nullable(result.frequency.frequency_hz),
+            "loop_closed": result.loop_closed,
+            "loop_closure_time_s": _nullable(result.loop_closure_time),
             "valid": result.valid,
-            "failure_reason": result.frequency.reason,
+            "failure_reason": "" if result.valid else (
+                result.frequency.reason or "loop closure was not detected"),
             "event_count": sequence.event_count,
-            "track_count": len(result.tracks),
+            "track_count": result.track_count,
             "landmark_count": int(result.reconstruction.points.shape[0]),
             "reprojection_error_px": _nullable(result.reconstruction.mean_reprojection_error_px),
+            "runtime_s": result.runtime_seconds,
+            "throughput_ev_s": _nullable(result.throughput_events_per_second),
         })
         for observation_seconds in config.evaluation.observation_times_seconds:
-            prefix = sequence.before(observation_seconds)
-            estimate = model.estimate_frequency(prefix)
+            # The online system's causal output at this time (no re-run, no labels).
+            confirmed, latest = result.frequency_at(observation_seconds)
             time_predictions.append({
                 "sequence_id": sequence.sequence_id,
                 "observation_seconds": float(observation_seconds),
-                "available_seconds": prefix.duration_seconds,
+                "available_seconds": min(float(observation_seconds), sequence.duration_seconds),
                 "omega_true_rad_s": sequence.omega_rad_s,
-                "omega_pred_rad_s": _nullable(estimate.omega_rad_s),
-                "confidence": estimate.confidence,
-                "valid": estimate.valid,
-                "failure_reason": estimate.reason,
+                "omega_pred_rad_s": _nullable(2.0 * math.pi * confirmed),
+                "omega_unconfirmed_rad_s": _nullable(2.0 * math.pi * latest),
+                "valid": math.isfinite(confirmed),
+                "failure_reason": "" if math.isfinite(confirmed) else "loop not yet detected",
             })
         alignment = (
             align_similarity_icp(result.reconstruction.points, reference)
@@ -224,7 +229,7 @@ def evaluate(
                 representative = (alignment.icp_rmse_m, sequence.sequence_id, alignment)
         print(
             f"[{index}/{len(rows)}] {sequence.sequence_id}: "
-            f"omega={prediction:.6g} tracks={len(result.tracks)} "
+            f"omega={prediction:.6g} tracks={result.track_count} "
             f"points={result.reconstruction.points.shape[0]}",
             flush=True,
         )
@@ -261,7 +266,7 @@ def evaluate(
     _write_csv(output_dir / "time_accuracy.csv", time_summary)
     _write_csv(output_dir / "pointcloud_metrics.csv", pointcloud_rows)
     report = {
-        "method": "Independent paper-guided eSpinSLAM reproduction",
+        "method": "Paper-faithful eSpinSLAM reproduction",
         "paper": "Event-based Spinning Object SLAM, ICCVW 2025",
         "evaluation_split": config.data.evaluation_split,
         "data_leakage_controls": {
@@ -273,11 +278,14 @@ def evaluate(
             "The debris dataset includes slow camera closing/orbit motion; the paper assumes "
             "a static event camera and constant single-axis object spin."
         ),
-        "implementation_differences": [
-            "OpenCV FAST on polarity time surfaces replaces the unpublished native eFAST code.",
-            "Sparse eFAST/HDBSCAN output falls back to event-frame Lucas-Kanade tracks.",
-            "SciPy robust least-squares replaces the paper's GTSAM backend.",
-            "Raw-event loop alignment is a bounded fallback when Python feature tracks are sparse.",
+        "implementation_notes": [
+            "Front-end: numba eFAST (rpg_corner_events criterion), Eq. (6) density filter, "
+            "HDBSCAN tracklets, tracks store events (sigma_retain circular buffer).",
+            "Back-end: GTSAM replaced by Levenberg-Marquardt with Huber IRLS and analytic "
+            "Jacobians; every retained track event is an observation (Eq. 11).",
+            "Frequency: Eq. (9) with 1-D ICP and loop detection (aleph, sigma); time curves "
+            "report the causal online output (f* only after loop closure).",
+            "No frame-based or raw-event fallbacks: sequences without loop closure abstain.",
         ],
         "rotation": final_metrics,
         "pointcloud": _pointcloud_metrics(pointcloud_rows, len(rows)),

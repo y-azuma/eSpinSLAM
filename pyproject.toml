@@ -4,11 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "espinslam"
-version = "0.1.0"
-description = "Independent eSpinSLAM reproduction for spinning-object event streams"
+version = "0.2.0"
+description = "Paper-faithful reproduction of Event-based Spinning Object SLAM (eSpinSLAM, ICCVW 2025)"
 requires-python = ">=3.10"
 dependencies = [
-  "numpy>=1.24",
+  # numba (eFAST, bundle adjustment kernels) supports NumPy <= 2.3.
+  "numpy>=1.24,<2.4",
+  "numba>=0.59",
   "scipy>=1.11",
   "opencv-python-headless>=4.8",
   "scikit-learn>=1.4",
@@ -17,11 +19,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=7"]
+# TOPSPIN: HDF5 event files and CAD meshes (.ply/.obj/.stl).
+topspin = ["h5py>=3.8", "trimesh>=4.0"]
+test = ["pytest>=7", "h5py>=3.8"]
 
 [tool.setuptools.packages.find]
 include = ["espinslam*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
+filterwarnings = ["ignore::FutureWarning:sklearn"]
