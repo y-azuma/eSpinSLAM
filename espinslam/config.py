@@ -175,6 +175,10 @@ class FrontendConfig:
     cluster_min_size: int = 5
     cluster_min_samples: int = 3
     cluster_time_scale_px_per_second: float = 1000.0
+    # Sec. 4.1 only says G is clustered "spatio-temporally". Clustering each
+    # polarity separately (consistent with the per-polarity density of Eq. 6)
+    # keeps the ON/OFF corners of small features apart; mixing them doubled the
+    # structure error on the low-resolution synthetic scene (docs/).
     cluster_by_polarity: bool = True
     # Tracklet-to-track association (merging into the global pool H).
     association_radius_px: float = 5.0

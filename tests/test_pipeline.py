@@ -13,7 +13,7 @@ from espinslam.config import CameraConfig, ESpinSLAMConfig, FrequencyConfig
 from espinslam.data import EventSequence
 from espinslam.pipeline import ESpinSLAM
 from espinslam.synthetic import make_scene, simulate_events
-from espinslam.topspin import evaluate_topspin
+from espinslam.topspin import evaluate_topspin, evaluate_topspin_ablations
 
 
 @pytest.fixture(scope="module")
@@ -54,7 +54,7 @@ def test_online_pipeline_recovers_frequency_orientation_and_structure(synthetic)
     assert math.isnan(before) and math.isfinite(after)
 
 
-def test_topspin_evaluation_writes_paper_tables(synthetic, tmp_path):
+def _write_topspin_scene(synthetic, tmp_path):
     scene, stream = synthetic
     root = tmp_path / "topspin"
     root.mkdir()
@@ -76,10 +76,28 @@ def test_topspin_evaluation_writes_paper_tables(synthetic, tmp_path):
         })
     config = _config(scene)
     config.camera = CameraConfig()  # calibration must come from the manifest
+    return root, config
+
+
+def test_topspin_evaluation_writes_paper_tables(synthetic, tmp_path):
+    root, config = _write_topspin_scene(synthetic, tmp_path)
     report = evaluate_topspin(config, root, root / "manifest.csv", tmp_path / "run")
     row = report["table2"][0]
     assert row["object"] == "Hubble" and row["valid_reconstructions"] == 1
     assert row["icp_mean_mm"] is not None and row["icp_mean_mm"] < 6.0  # object ~90 mm
-    for name in ("per_sequence.csv", "table2.md", "metrics.json", "fig6_frequency_cdf.png",
+    for name in ("per_sequence.csv", "table2.md", "table_vs_paper.md", "metrics.json",
+                 "fig5_throughput_summary.png", "fig6_frequency_cdf.png",
                  "fig7_throughput.png", "fig8_hubble-test-fast.png"):
         assert (tmp_path / "run" / name).is_file()
+    assert "paper" in (tmp_path / "run" / "table_vs_paper.md").read_text(encoding="utf-8")
+    assert report["mean_frontend_throughput_ev_s"] > report["mean_throughput_ev_s"]
+
+
+def test_topspin_ablations_write_table3_and_fig6_comparison(synthetic, tmp_path):
+    root, config = _write_topspin_scene(synthetic, tmp_path)
+    evaluate_topspin_ablations(config, root, root / "manifest.csv", tmp_path / "ablations",
+                               settings=["espinslam", "fft_frequency"])
+    for name in ("table3.md", "table3_vs_paper.md", "fig6_loop_closure_vs_fft.png"):
+        assert (tmp_path / "ablations" / name).is_file()
+    text = (tmp_path / "ablations" / "table3_vs_paper.md").read_text(encoding="utf-8")
+    assert "FFT f estimation" in text and "5.61 ± 7.93" in text

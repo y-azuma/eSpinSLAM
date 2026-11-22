@@ -7,7 +7,12 @@ Outputs, per run directory:
 * ``table2.csv`` / ``table2.md`` - per-object mean +- std of reprojection
   error [px] and ICP alignment RMSE [mm] (paper Table 2);
 * ``fig6_frequency_cdf.png`` - CDF of estimated f per speed with ground truth
-  (paper Fig. 6);
+  (paper Fig. 6; the ablation run adds ``fig6_loop_closure_vs_fft.png`` with
+  both estimators as in the paper);
+* ``fig5_throughput_summary.png`` - front-end (the paper's ETC tracker),
+  full-system, and scene event-rate throughput (paper Fig. 5);
+* ``table_vs_paper.md`` / ``table3_vs_paper.md`` - this run next to the
+  values printed in the paper;
 * ``fig7_throughput.png`` - per-object throughput box plot with the mean scene
   event rate (paper Fig. 7);
 * ``history/<scene>_optimizations.csv`` and ``fig8_<scene>.png`` - mean
@@ -46,6 +51,45 @@ from .geometry import align_similarity_icp
 from .pipeline import ESpinSLAM, ESpinSLAMResult
 
 TABLE2_OBJECTS = ("Hubble", "SOHO", "TDRS", "Camera", "Dualshock", "Switch")
+
+# Values reported in the paper (mean, std per object), for side-by-side reports.
+# Note: Table 3's eSpinSLAM ICP row differs from Table 2 for Hubble (1.92 vs
+# 0.92) and Switch (1.83 vs 0.83); both are kept as printed.
+PAPER_TABLE2 = {
+    "reprojection_px": {
+        "Hubble": (3.25, 3.01), "SOHO": (2.99, 3.17), "TDRS": (1.54, 0.20),
+        "Camera": (1.98, 0.15), "Dualshock": (2.19, 0.91), "Switch": (1.94, 0.35),
+    },
+    "icp_mm": {
+        "Hubble": (0.92, 0.71), "SOHO": (0.56, 0.41), "TDRS": (0.66, 0.76),
+        "Camera": (0.75, 0.57), "Dualshock": (0.93, 1.02), "Switch": (0.83, 0.66),
+    },
+}
+PAPER_TABLE3 = {
+    "FFT f estimation": {
+        "reprojection_px": {"Hubble": (5.61, 7.93), "SOHO": (5.81, 5.58), "TDRS": (3.41, 3.56),
+                            "Camera": (2.67, 1.34), "Dualshock": (2.99, 2.35), "Switch": (4.39, 5.11)},
+        "icp_mm": {"Hubble": (3.17, 1.82), "SOHO": (3.51, 2.44), "TDRS": (5.95, 1.62),
+                   "Camera": (2.13, 1.05), "Dualshock": (4.21, 1.33), "Switch": (3.16, 2.03)},
+    },
+    "No factor graph f constraint": {
+        "reprojection_px": {"Hubble": (6.01, 3.79), "SOHO": (17.16, 9.03), "TDRS": (4.29, 2.33),
+                            "Camera": (2.89, 3.11), "Dualshock": (5.27, 7.75), "Switch": (12.38, 6.91)},
+        "icp_mm": {"Hubble": (8.14, 7.29), "SOHO": (15.49, 3.60), "TDRS": (5.11, 2.49),
+                   "Camera": (1.12, 1.27), "Dualshock": (4.35, 0.74), "Switch": (9.38, 3.29)},
+    },
+    "No landmark association": {
+        "reprojection_px": {"Hubble": (2.11, 1.93), "SOHO": (3.68, 0.71), "TDRS": (1.18, 0.71),
+                            "Camera": (0.42, 0.80), "Dualshock": (1.67, 1.86), "Switch": (1.09, 1.50)},
+        "icp_mm": {"Hubble": (13.74, 3.92), "SOHO": (12.47, 11.16), "TDRS": (19.61, 8.31),
+                   "Camera": (9.19, 5.10), "Dualshock": (7.72, 3.27), "Switch": (13.11, 3.30)},
+    },
+    "eSpinSLAM": {
+        "reprojection_px": PAPER_TABLE2["reprojection_px"],
+        "icp_mm": {"Hubble": (1.92, 0.71), "SOHO": (0.56, 0.41), "TDRS": (0.66, 0.76),
+                   "Camera": (0.75, 0.57), "Dualshock": (0.93, 1.02), "Switch": (1.83, 0.66)},
+    },
+}
 ABLATIONS = {
     "fft_frequency": ("FFT f estimation", {"frequency": {"method": "fft"}}),
     "free_frequency": ("No factor graph f constraint", {"backend": {"optimize_frequency": True}}),
@@ -173,6 +217,7 @@ def _sequence_row(row: dict[str, str], result: ESpinSLAMResult, *,
         "landmarks": int(reconstruction.points.shape[0]),
         "observations": int(reconstruction.observation_count),
         "reprojection_error_px": _nullable(reconstruction.mean_reprojection_error_px),
+        "reprojection_error_obs_px": _nullable(reconstruction.mean_observation_error_px),
         "icp_rmse_mm": icp_rmse_mm,
         "chamfer_rmse_mm": chamfer_mm,
         "icp_scale_source": scale_source,
@@ -186,6 +231,10 @@ def _sequence_row(row: dict[str, str], result: ESpinSLAMResult, *,
             else math.nan),
         "runtime_s": result.runtime_seconds,
         "throughput_ev_s": _nullable(result.throughput_events_per_second),
+        "frontend_throughput_ev_s": _nullable(result.frontend_throughput_events_per_second),
+        "frontend_s": result.frontend_seconds,
+        "frequency_s": result.frequency_seconds,
+        "backend_s": result.backend_seconds,
         "optimizations": len(result.optimizations),
     }
 
@@ -227,6 +276,84 @@ def table2_markdown(table: list[dict[str, Any]], title: str = "eSpinSLAM") -> st
     icp = f"| ICP alignment RMSE (mm) ↓ [{title}] | " + " | ".join(
         _format(row["icp_mean_mm"], row["icp_std_mm"]) for row in table) + " |"
     return "\n".join((header, rule, reprojection, icp)) + "\n"
+
+
+def comparison_markdown(table: list[dict[str, Any]], paper: dict[str, dict], label: str) -> str:
+    """Side-by-side "reproduction / paper" cells for one setting."""
+
+    objects = [row["object"] for row in table]
+    lines = [f"| {label} | " + " | ".join(objects) + " |", "|---|" + "---|" * len(objects)]
+    for metric, mean_key, std_key in (("reprojection_px", "reprojection_mean_px",
+                                       "reprojection_std_px"),
+                                      ("icp_mm", "icp_mean_mm", "icp_std_mm")):
+        ours = [_format(row[mean_key], row[std_key]) for row in table]
+        reference = [
+            _format(*paper[metric][name]) if name in paper.get(metric, {}) else "-"
+            for name in objects
+        ]
+        title = "Reprojection error (px)" if metric == "reprojection_px" else "ICP alignment RMSE (mm)"
+        lines.append(f"| {title}: this run | " + " | ".join(ours) + " |")
+        lines.append(f"| {title}: paper | " + " | ".join(reference) + " |")
+    return "\n".join(lines) + "\n"
+
+
+def _speeds(rows: list[dict[str, Any]]) -> list[str]:
+    speeds = [speed for speed in ("slow", "medium", "fast")
+              if any(str(r["speed"]).lower() == speed for r in rows)]
+    return speeds + sorted({str(r["speed"]).lower() for r in rows} - set(speeds))
+
+
+def plot_frequency_cdf_comparison(series: dict[str, list[dict[str, Any]]], output: Path) -> None:
+    """Fig. 6: CDF of f per speed for several estimators, with ground truth."""
+
+    import matplotlib.pyplot as plt
+    all_rows = [row for rows in series.values() for row in rows]
+    speeds = _speeds(all_rows) or [""]
+    colours = {"eSpinSLAM": "#1f77b4", "FFT f estimation": "#ff7f0e"}
+    fig, axes = plt.subplots(1, len(speeds), figsize=(3.6 * len(speeds), 3.6), squeeze=False)
+    for axis, speed in zip(axes[0], speeds):
+        for label, rows in series.items():
+            estimates = np.sort([r["frequency_est_hz"] for r in rows
+                                 if str(r["speed"]).lower() == speed
+                                 and r["frequency_est_hz"] is not None])
+            if estimates.size:
+                cumulative = np.arange(1, estimates.size + 1) / estimates.size
+                axis.step(np.r_[estimates[0], estimates], np.r_[0.0, cumulative], where="post",
+                          linewidth=2, color=colours.get(label), label=label)
+        for truth in sorted({r["frequency_true_hz"] for r in all_rows
+                             if str(r["speed"]).lower() == speed
+                             and r["frequency_true_hz"] is not None}):
+            axis.axvline(truth, color="#d62728", linestyle="--", linewidth=1.2)
+        axis.set_title(f"{speed.capitalize() or 'All'} speed")
+        axis.set_xlabel("Frequency (Hz)")
+        axis.set_ylim(0, 1.02)
+        axis.grid(alpha=0.3)
+    axes[0][0].set_ylabel("CDF")
+    axes[0][0].legend(loc="lower right", fontsize=8)
+    fig.tight_layout()
+    fig.savefig(output, dpi=180)
+    plt.close(fig)
+
+
+def _plot_throughput_summary(rows: list[dict[str, Any]], output: Path) -> None:
+    """Fig. 5 analogue: front-end, full system, and the scenes' own event rate."""
+
+    import matplotlib.pyplot as plt
+    values = {
+        "Front-end (ETC analogue)": _mean_std([r["frontend_throughput_ev_s"] for r in rows])[0],
+        "eSpinSLAM (system)": _mean_std([r["throughput_ev_s"] for r in rows])[0],
+        "TOPSPIN scenes (event rate)": _mean_std([r["scene_event_rate_ev_s"] for r in rows])[0],
+    }
+    labels = [label for label, value in values.items() if value]
+    fig, axis = plt.subplots(figsize=(7.0, 2.8))
+    axis.barh(labels, [values[label] for label in labels],
+              color=["#1f77b4", "#8b0000", "#d2691e"][:len(labels)])
+    axis.set_xscale("log")
+    axis.set_xlabel("Throughput (events/s)")
+    axis.grid(alpha=0.3, axis="x")
+    fig.tight_layout()
+    fig.savefig(output, dpi=180)
+    plt.close(fig)
 
 
 def _plot_frequency_cdf(rows: list[dict[str, Any]], output: Path) -> None:
@@ -388,9 +515,14 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
     table = table2(results)
     _write_csv(output_dir / "table2.csv", table)
     _write_text(output_dir / "table2.md", table2_markdown(table, setting_name))
+    paper_reference = PAPER_TABLE3.get(setting_name)
+    if paper_reference is not None:
+        _write_text(output_dir / "table_vs_paper.md",
+                    comparison_markdown(table, paper_reference, setting_name))
     if any(r["frequency_est_hz"] is not None for r in results):
         _plot_frequency_cdf(results, output_dir / "fig6_frequency_cdf.png")
     _plot_throughput(results, output_dir / "fig7_throughput.png")
+    _plot_throughput_summary(results, output_dir / "fig5_throughput_summary.png")
     frequency_errors = [r["frequency_rel_error_percent"] for r in results
                         if r["frequency_rel_error_percent"] is not None]
     report = {
@@ -404,6 +536,9 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
         "frequency_median_rel_error_percent": (float(np.median(frequency_errors))
                                                if frequency_errors else None),
         "mean_throughput_ev_s": _mean_std([r["throughput_ev_s"] for r in results])[0],
+        "mean_frontend_throughput_ev_s": _mean_std(
+            [r["frontend_throughput_ev_s"] for r in results])[0],
+        "mean_scene_event_rate_ev_s": _mean_std([r["scene_event_rate_ev_s"] for r in results])[0],
         "table2": table,
         "runtime_seconds": time.monotonic() - started,
         "implementation_notes": [
@@ -465,4 +600,21 @@ def evaluate_topspin_ablations(config: ESpinSLAMConfig, data_root: Path, manifes
                 cells.append(_format(match[0][mean_key], match[0][std_key]) if match else "-")
             lines.append(f"| {label} | " + " | ".join(cells) + " |")
     _write_text(output_dir / "table3.md", "\n".join(lines) + "\n")
+    comparison = []
+    for key in settings:
+        label = ABLATIONS[key][0]
+        if label in PAPER_TABLE3:
+            comparison.append(comparison_markdown(reports[key]["table2"], PAPER_TABLE3[label], label))
+    _write_text(output_dir / "table3_vs_paper.md", "\n".join(comparison))
+    if "espinslam" in settings and "fft_frequency" in settings:
+        series = {}
+        for key in ("espinslam", "fft_frequency"):
+            with (output_dir / key / "per_sequence.csv").open(newline="", encoding="utf-8") as handle:
+                series[ABLATIONS[key][0]] = [
+                    {"speed": row["speed"],
+                     "frequency_est_hz": _float_or_none(row["frequency_est_hz"]),
+                     "frequency_true_hz": _float_or_none(row["frequency_true_hz"])}
+                    for row in csv.DictReader(handle)
+                ]
+        plot_frequency_cdf_comparison(series, output_dir / "fig6_loop_closure_vs_fft.png")
     return {"settings": settings, "reports": reports}

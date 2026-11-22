@@ -49,8 +49,12 @@ The paper does not pin these details down; each choice is configurable.
    triangulation angle) of orbit are under-constrained; they stay in `H` and
    enter the optimisation once they grow. Without this, single-chunk track
    fragments (which pass `N_match = 3`) produce landmarks with arbitrary depth.
-5. **Tracklet association.** Each tracklet joins the nearest same-polarity
-   track whose newest events are within `association_radius_px` and
+5. **Tracklets and association.** Sec. 4.1 only says HDBSCAN clusters `G`
+   "spatio-temporally". By default each polarity is clustered separately
+   (consistent with the per-polarity density of Eq. 6); mixing polarities
+   (`cluster_by_polarity: false`) merged the ON/OFF corners of small features
+   and doubled the structure error on a low-resolution synthetic scene. Each tracklet joins the nearest track whose newest
+   events are within `association_radius_px` and
    `association_max_gap_seconds`; several tracklets of one chunk may join the
    same track (HDBSCAN can split one corner).
 6. **FFT ablation (Table 3).** The dominant peak of the track-event rate

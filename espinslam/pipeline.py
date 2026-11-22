@@ -50,6 +50,10 @@ class ESpinSLAMResult:
     optimizations: list[OptimizationReport] = field(default_factory=list)
     track_count: int = 0
     runtime_seconds: float = math.nan
+    # Wall-time breakdown (front-end = the paper's ETC tracker, Fig. 5).
+    frontend_seconds: float = math.nan
+    frequency_seconds: float = math.nan
+    backend_seconds: float = math.nan
 
     @property
     def frequency_hz(self) -> float:
@@ -71,7 +75,16 @@ class ESpinSLAMResult:
 
     @property
     def throughput_events_per_second(self) -> float:
+        """Events processed per second of wall time by the whole system (Fig. 7)."""
+
         return self.event_count / self.runtime_seconds if self.runtime_seconds > 0 else math.nan
+
+    @property
+    def frontend_throughput_events_per_second(self) -> float:
+        """Events per second of front-end (feature tracking) time (Fig. 5, "ETC")."""
+
+        return (self.event_count / self.frontend_seconds
+                if self.frontend_seconds > 0 else math.nan)
 
     def frequency_at(self, seconds: float) -> tuple[float, float]:
         """(confirmed f*, latest unconfirmed estimate) available at ``seconds``."""
@@ -119,10 +132,13 @@ class ESpinSLAM:
         estimated_version = -1
         chunk = config.frontend.chunk_events
         now = origin
+        timers = {"frontend": 0.0, "frequency": 0.0, "backend": 0.0}
         for start in range(0, sequence.event_count, chunk):
             stop = min(start + chunk, sequence.event_count)
+            tick = time.perf_counter()
             frontend.push(sequence.t[start:stop], sequence.x[start:stop],
                           sequence.y[start:stop], sequence.p[start:stop])
+            timers["frontend"] += time.perf_counter() - tick
             now = float(sequence.t[stop - 1])
             due_estimate = pool.version != estimated_version and now >= next_estimate
             due_optimization = (estimator.loop_closed and reconstruct_structure
@@ -133,7 +149,9 @@ class ESpinSLAM:
                 pool.forget(pool.newest_time - config.backend.forget_revolutions
                             / estimator.current.frequency_hz)
             if due_estimate:
+                tick = time.perf_counter()
                 estimate = estimator.update(pool.events())
+                timers["frequency"] += time.perf_counter() - tick
                 estimated_version = pool.version
                 next_estimate = now + config.frequency.update_interval_seconds
                 history.append(FrequencyRecord(
@@ -147,11 +165,15 @@ class ESpinSLAM:
                 continue
             frequency = estimator.current.frequency_hz
             if reconstruct_structure and now >= next_optimization:
+                tick = time.perf_counter()
                 backend.optimize(pool, frequency, now - origin)
+                timers["backend"] += time.perf_counter() - tick
                 next_optimization = now + config.backend.optimization_cadence_revolutions / frequency
         if reconstruct_structure and estimator.loop_closed:
             # Final refinement with the complete pool at the end of the stream.
+            tick = time.perf_counter()
             backend.optimize(pool, estimator.current.frequency_hz, now - origin)
+            timers["backend"] += time.perf_counter() - tick
         reconstruction = backend.reconstruction() if reconstruct_structure else (
             empty_reconstruction("structure disabled"))
         if reconstruct_structure and not estimator.loop_closed:
@@ -160,4 +182,5 @@ class ESpinSLAM:
             sequence.sequence_id, sequence.duration_seconds, sequence.event_count,
             estimator.current, estimator.loop_closed, loop_time, reconstruction,
             history, list(backend.reports), len(pool), time.perf_counter() - started,
+            timers["frontend"], timers["frequency"], timers["backend"],
         )
