@@ -30,7 +30,7 @@ from espinslam.topspin import TABLE2_OBJECTS
 EVENT_SUFFIXES = {".raw", ".dat", ".h5", ".hdf5", ".npz", ".npy", ".csv", ".txt"}
 OBJECT_ALIASES = {"controller": "Dualshock", "dualshock": "Dualshock"}
 SPEED_ALIASES = {"slow": "slow", "med": "medium", "medium": "medium", "fast": "fast"}
-COLUMNS = ("sequence_id", "event_path", "object", "perspective", "speed", "frequency_hz",
+COLUMNS = ("sequence_id", "event_path", "split", "object", "perspective", "speed", "frequency_hz",
            "cad_path", "cad_unit_mm", "orbit_radius_mm", "fx", "fy", "cx", "cy", "k1", "k2",
            "p1", "p2", "k3", "width", "height", "time_unit")
 CALIBRATION_COLUMNS = ("fx", "fy", "cx", "cy", "k1", "k2", "p1", "p2", "k3")
@@ -47,6 +47,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--cad-dir", type=Path,
                         help="directory (relative to data-root) holding <object>.* CAD files")
+    parser.add_argument("--dev-scenes", type=Path,
+                        help="file listing the parameter-tuning scenes (split=dev); "
+                             "all other scenes get split=test")
     return parser.parse_args()
 
 
@@ -86,9 +89,21 @@ def _frame(directory: Path) -> dict[str, str]:
     return {key: str(int(frame[key])) for key in ("width", "height") if key in frame}
 
 
+def _dev_scenes(path: Path | None) -> set[str]:
+    if path is None:
+        return set()
+    names = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line:
+            names.add(line)
+    return names
+
+
 def main() -> None:
     args = parse_args()
     root = args.data_root.resolve()
+    dev = _dev_scenes(args.dev_scenes)
     rows = []
     for path in sorted(root.rglob("*")):
         if path.suffix.lower() not in EVENT_SUFFIXES or not path.is_file():
@@ -113,7 +128,8 @@ def main() -> None:
                 cad = str(candidates[0].resolve().relative_to(root))
         row = {column: "" for column in COLUMNS}
         row.update({
-            "sequence_id": name, "event_path": str(path.relative_to(root)), "object": obj,
+            "sequence_id": name, "event_path": str(path.relative_to(root)),
+            "split": "dev" if name in dev else "test", "object": obj,
             "perspective": _perspective(name), "speed": _speed(name), "cad_path": cad,
             "time_unit": "us" if path.suffix.lower() in (".csv", ".txt") else "",
         })
@@ -125,9 +141,13 @@ def main() -> None:
         writer = csv.DictWriter(stream, fieldnames=COLUMNS)
         writer.writeheader()
         writer.writerows(rows)
+    missing = dev - {row["sequence_id"] for row in rows}
+    if missing:
+        print(f"warning: dev scenes not found under the data root: {sorted(missing)}")
     missing_calibration = sum(not row["fx"] for row in rows)
     print(f"wrote {len(rows)} rows to {args.output}"
           + (f"; {missing_calibration} rows lack calibration" if missing_calibration else "")
+          + f"; {sum(row['split'] == 'dev' for row in rows)} dev rows"
           + "; TOPSPIN does not ship ground-truth frequency or CAD models")
 
 
