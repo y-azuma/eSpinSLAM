@@ -18,6 +18,14 @@ any tuning run:
 * Choice: the admissible candidate with the highest score; the starting
   configuration wins ties.
 
+Amendment (made during the run, documented in Sec. 13.4 of the report): the
+starting configuration failed to reconstruct two dev scenes, so its mean
+reprojection error was infinite and the bound above admitted everything,
+including a candidate whose reconstruction failed in one dev scene. A
+candidate is therefore admissible only if every dev scene also ends with a
+valid reconstruction, and when the starting configuration has no finite mean
+reprojection error the bound is the paper's gamma (10 px).
+
 Results are cached per candidate in ``runs.jsonl`` so the script can resume.
 """
 
@@ -95,6 +103,7 @@ def summarise(scenes: list[dict]) -> dict:
     return {
         "score": float(sum(scene["median_landmarks"] for scene in scenes)),
         "all_loops": all(scene["loop_closed"] for scene in scenes),
+        "all_valid": all(scene["reprojection_px"] is not None for scene in scenes),
         "mean_reprojection_px": (float(np.mean(errors)) if all(e is not None for e in errors)
                                  else math.inf),
     }
@@ -135,18 +144,27 @@ def main() -> None:
                for name in candidates[0]}
     reference = evaluate(dict(current))
     bound = reference["mean_reprojection_px"]
+    if not math.isfinite(bound):  # amendment, see the module docstring
+        bound = base.backend.max_mean_reprojection_error_px
     history = []
     for stage, candidates in STAGES:
         print(f"stage {stage} (start {current})", flush=True)
         best_values, best = dict(current), evaluate(dict(current))
+        if not (best["all_loops"] and math.isfinite(best["mean_reprojection_px"])):
+            best = {**best, "score": -math.inf}  # an invalid start never wins a stage
         for candidate in candidates:
             values = {**current, **candidate}
             entry = evaluate(values)
-            admissible = entry["all_loops"] and entry["mean_reprojection_px"] <= bound
+            all_valid = entry.get("all_valid",
+                                  all(scene["reprojection_px"] is not None
+                                      for scene in entry["scenes"]))
+            admissible = (entry["all_loops"] and all_valid
+                          and entry["mean_reprojection_px"] <= bound)
             if admissible and entry["score"] > best["score"]:
                 best_values, best = values, entry
         current = best_values
-        history.append({"stage": stage, "selected": dict(current), "score": best["score"],
+        history.append({"stage": stage, "selected": dict(current),
+                        "score": best["score"] if math.isfinite(best["score"]) else None,
                         "mean_reprojection_px": best["mean_reprojection_px"]})
         print(f"stage {stage} selected {current} (score {best['score']:.1f})", flush=True)
     summary = {
