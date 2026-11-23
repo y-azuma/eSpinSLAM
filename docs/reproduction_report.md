@@ -443,6 +443,41 @@ dev 3 本は Hubble 3.19 px、TDRS 3.87 px、Camera 4.73 px（各 1 本）。各
 
 **ループ検出の時刻**（中央値）は低速 28.1 秒、中速 15.6 秒、高速 9.6 秒で、いずれも約 1 回転と ℵ = 20 回の安定化（約 2 秒）の和に相当する。
 
+### 7.4.1 回転速度の MAE（deg/s）
+
+公開データに正解の回転速度はないので、代わりの正解を 2 通り使った。
+
+- **①速度ごとの推定値の中央値**: 低速 13.2、中速 25.9、高速 46.6 deg/s。自分の推定値から作るので、シーン間の一貫性は測れるが、中央値自体のずれは測れない。
+- **②論文の図6から読み取った正解線**: 低速 13.3、中速 26.6、高速 46.8 deg/s。目視の読み取りなので ±0.5 deg/s 程度の誤差がある。
+
+| 対象 | シーン数 | MAE（①） | MAE（②） | 誤差の中央値（②） |
+|---|---|---|---|---|
+| test（held-out） | 69 | 7.74 deg/s | 7.87 deg/s | 0.74 deg/s |
+| dev | 3 | 8.48 deg/s | 8.33 deg/s | 0.19 deg/s |
+| test のうち倍数の誤りを除く | 47 | 0.01 deg/s | 0.36 deg/s | 0.20 deg/s |
+
+誤差の 99.9% は、速度の中央値から 5% 以上外れた 23 シーンに集中している。正しい周波数を選べたシーンでは、MAE は図の読み取り誤差の範囲（0.36 deg/s 以下）に収まる。デブリ評価の MAE は正解の回転速度に対する値なので、この数値とは直接比較できない。
+
+### 7.4.2 修正前のコードとの比較
+
+修正前のコード（`4b2a1a9`）は TOPSPIN を読めないので、評価スクリプトの外でイベントを変換して渡し、画像サイズとカメラ内部パラメータだけを TOPSPIN に合わせた（レンズ歪みは修正前のコードが扱えないので無視）。修正前の周波数の探索範囲は 0.1〜1.0 Hz 固定で、TOPSPIN の低速・中速が範囲外になる。そこで、探索範囲を TOPSPIN に合わせて 1/60〜0.5 Hz に広げた版も評価した（修正前のコードに有利な条件）。
+
+対象は 18 シーン。恣意的に選ばないよう、6 物体 × 3 速度の各組み合わせに視点を順番に割り当てた（dev の tdrs-sideon-med を含む）。修正前のコードは 1 シーンあたり 1.5〜17 分（合計約 1.9 時間、単一スレッド）かかった。
+
+| 指標（18 シーン、②に対する誤差） | 修正前（探索範囲そのまま） | 修正前（探索範囲を拡大） | 修正後 |
+|---|---|---|---|
+| 推定値を出したシーン | 8 / 18 | 1 / 18 | 18 / 18 |
+| 推定値を出したシーンでの MAE | 306.7 deg/s | 0.06 deg/s（1 シーンのみ） | 7.79 deg/s |
+| 正解の ±5% に入ったシーン | 0 / 18 | 1 / 18 | 12 / 18 |
+| 再構成が成立したシーン | 7 / 18 | 0 / 18 | 18 / 18 |
+| ランドマーク数の中央値 | 0 | 0 | 196 |
+
+- **探索範囲そのまま**: 推定値を出した 8 シーンはすべて 216〜360 deg/s（正解の 8〜27 倍）。探索範囲の下限 0.1 Hz（36 deg/s）より遅い正解は原理的に出せない。
+- **探索範囲を拡大**: 推定値を出せたのは controller-perpendicular-slow の 1 シーンだけ（13.3 deg/s で正解）。残り 17 シーンは「観測時間がどの候補周期より短い」として推定できなかった。トラック数の上限（500 本）で古いトラックが消え、残る観測が最後の数秒分しかないためである（2.2節 #2）。
+- **MAE は推定値を出したシーンだけで計算すると誤解を招く。** 拡大版の 0.06 deg/s は 1 シーンだけの値である。推定できた割合とあわせて見る必要がある。
+
+したがって TOPSPIN では、修正前のコードの方が良いということはない。修正後のコードは、全シーンで推定値を出したうえで 12 / 18 シーンで正解の ±5% に入った。外れた 6 シーンは 7.4節の倍数の問題（hubble、soho、tdrs の 2 倍）である。
+
 ### 7.5 結果のまとめ
 
 | 項目 | 判定 |
@@ -501,6 +536,7 @@ dev 3 本は Hubble 3.19 px、TDRS 3.87 px、Camera 4.73 px（各 1 本）。各
 | 6.2・6.3（修正前の値） | `git worktree add <dir> 4b2a1a9` で修正前のコードを取り出し、同じ合成入力を与えて計測した（使い捨てのスクリプトで、リポジトリには含めていない）。修正後の値は `espinslam.geometry.bundle_adjust` と `espinslam.pipeline.ESpinSLAM` を同じ入力で実行したもの |
 | 6.4 | `python scripts/synthetic_benchmark.py --ablations` |
 | 7.4 | `python scripts/download_topspin.py --output <dir>` → `python scripts/make_topspin_manifest.py --data-root <dir> --output <dir>/manifest.csv --dev-scenes examples/splits/topspin_dev.txt` → `python scripts/evaluate_topspin.py --config examples/configs/topspin_evk4.jsonc --data-root <dir> --manifest <dir>/manifest.csv --output-dir <out>` |
+| 7.4.2 | `git worktree add <dir> 4b2a1a9` で修正前のコードを取り出し、`python docs/topspin_results/old_code_runner.py <dir> <out.jsonl> <scene...>` を実行（生の結果は `docs/topspin_results/old_code_18_scenes.jsonl`） |
 | 13 | `python scripts/tune_topspin.py --config <tuning 前の設定> --data-root <dir> --manifest <dir>/manifest.csv --output-dir <out>`（初期値は `docs/topspin_tuning/selected.json` の `start`） |
 | 12 | 高速化前のコードで、実シーンの周波数推定器への入力 553 回分と出力を記録し、同じ入力を高速化後の推定器に与えて全出力と全コスト曲線を比較した（記録・比較用の使い捨てスクリプトはリポジトリに含めていない）。パイプライン全体は `scripts/evaluate_topspin.py` を前後で実行して比較した |
 | 4章の 5・11 | `espinslam.synthetic` で生成したシーンに、設定を変えて `ESpinSLAM` を実行した（4章の 11 は `contrast_threshold=0.2, contrast_threshold_off=0.35`） |
