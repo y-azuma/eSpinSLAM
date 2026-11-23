@@ -1,26 +1,61 @@
-"""GridIndex must return exactly cKDTree's nearest distances (bit for bit)."""
+"""Cross-platform correctness tests for :class:`espinslam.nn.GridIndex`.
+
+Nearest-neighbour distances are floating-point reductions.  Different valid
+implementations (and different CPU architectures) need not round the final bit
+identically, so correctness is defined against a small brute-force reference
+with a tight numerical tolerance.  A different index is accepted only when it
+is at the same minimum distance, which also handles exact ties explicitly.
+"""
 
 import numpy as np
 import pytest
-from scipy.spatial import cKDTree
 
 from espinslam.nn import GridIndex
 
 
+_RTOL = 1e-12
+_ATOL = 1e-12
+
+
+def _brute_force_nearest(points, queries, chunk_size=64):
+    """Return exact-search nearest distances and indices without a tree.
+
+    Chunking keeps the temporary ``queries x points x dimensions`` array small
+    enough for the larger randomized tests while retaining a simple independent
+    oracle.
+    """
+    points = np.asarray(points, dtype=float)
+    queries = np.asarray(queries, dtype=float)
+    distance = np.empty(len(queries), dtype=float)
+    index = np.empty(len(queries), dtype=np.intp)
+    for start in range(0, len(queries), chunk_size):
+        stop = min(start + chunk_size, len(queries))
+        delta = queries[start:stop, None, :] - points[None, :, :]
+        squared = np.einsum("qpd,qpd->qp", delta, delta)
+        nearest = np.argmin(squared, axis=1)
+        index[start:stop] = nearest
+        distance[start:stop] = np.sqrt(squared[np.arange(stop - start), nearest])
+    return distance, index
+
+
 def _check(points, queries, hint=None):
-    tree_distance, tree_index = cKDTree(points).query(queries, k=1)
+    expected_distance, _ = _brute_force_nearest(points, queries)
     grid = GridIndex(points)
     distance, index = grid.query_points(queries[:, 0], queries[:, 1], queries[:, 2], hint)
-    assert np.array_equal(distance, tree_distance)
-    differ = index != tree_index
-    # Only exact ties may pick a different (equally near) point.
-    assert np.array_equal(np.linalg.norm(points[index[differ]] - queries[differ], axis=1),
-                          np.linalg.norm(points[tree_index[differ]] - queries[differ], axis=1))
+    assert np.issubdtype(index.dtype, np.integer)
+    assert np.all((0 <= index) & (index < len(points)))
+
+    # First verify that the reported distance belongs to the reported point.
+    selected_distance = np.linalg.norm(points[index] - queries, axis=1)
+    np.testing.assert_allclose(distance, selected_distance, rtol=_RTOL, atol=_ATOL)
+    # Then verify global optimality against an implementation-independent oracle.
+    # This accepts a different index only for a numerically equal nearest point.
+    np.testing.assert_allclose(selected_distance, expected_distance, rtol=_RTOL, atol=_ATOL)
     return index
 
 
 @pytest.mark.parametrize("seed", [0, 1, 2])
-def test_float_points_match_kdtree(seed):
+def test_float_points_match_brute_force(seed):
     rng = np.random.default_rng(seed)
     points = np.column_stack((rng.uniform(0, 400, 3000), rng.uniform(0, 300, 3000),
                               100.0 * np.sort(rng.uniform(10, 25, 3000))))
@@ -58,12 +93,14 @@ def test_query_shifts_matches_per_shift_queries():
     shifts = np.geomspace(2.0, 15.0, 120)
     start, stop = float(right_t[0]), float(right_t[-1])
     out = GridIndex(points).query_shifts(left_t, left_x, left_y, shifts, 100.0, start, stop)
-    tree = cKDTree(points)
     for k, shift in enumerate(shifts):
         shifted = left_t + shift
         mask = (shifted >= start) & (shifted <= stop)
         assert np.array_equal(np.isnan(out[k]), ~mask)
         if mask.any():
-            expected, _ = tree.query(np.column_stack((left_x[mask], left_y[mask],
-                                                      100.0 * (left_t[mask] + shift))), k=1)
-            assert np.array_equal(out[k, mask], expected)
+            expected, _ = _brute_force_nearest(
+                points,
+                np.column_stack((left_x[mask], left_y[mask],
+                                 100.0 * (left_t[mask] + shift))),
+            )
+            np.testing.assert_allclose(out[k, mask], expected, rtol=_RTOL, atol=_ATOL)

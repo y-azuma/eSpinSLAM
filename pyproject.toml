@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools==84.2.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -22,6 +22,10 @@ dependencies = [
 # TOPSPIN: HDF5 event files and CAD meshes (.ply/.obj/.stl).
 topspin = ["h5py>=3.8", "trimesh>=4.0"]
 test = ["pytest>=7", "h5py>=3.8"]
+# GTSAM 4.2's Python wheel was verified with NumPy 1.26; it segfaulted with
+# NumPy 2.x in the frozen equivalence run, so this executable reference path
+# deliberately narrows the otherwise wider runtime constraint.
+gtsam = ["gtsam==4.2", "numpy>=1.24,<2"]
 
 [tool.setuptools.packages.find]
 include = ["espinslam*"]
