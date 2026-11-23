@@ -13,6 +13,7 @@ place where the paper leaves a detail open (see
 | Sec. 3.1.2, Eqs. 2-5 | `espinslam/geometry.py` | Circular orbit `c(t) = r[cos 2πft, sin 2πft, 0]`, camera looking at the orbit centre, constant `R0` |
 | Sec. 4.1 | `espinslam/efast.py`, `espinslam/frontend.py` | Event chunks (`|C| = 1000`), eFAST corners (rpg_corner_events criterion, numba), same-polarity density filter (Eq. 6), HDBSCAN spatio-temporal tracklets, association/merging into the global pool `H`; tracks store **events** in a `σ_retain` circular buffer |
 | Sec. 4.2.1, Eqs. 7-9 | `espinslam/frequency.py` | Midlife split of all track events, temporal-shift alignment solved by 1-D ICP, loop detection when the last `ℵ` estimates have std `< σ` |
+| (speed) | `espinslam/nn.py` | Exact nearest neighbours for Eq. 9 (numba grid with warm starts); distances are bit-identical to SciPy's k-d tree, so results do not change |
 | Sec. 4.2.2, Eq. 11 | `espinslam/geometry.py` (`bundle_adjust`) | Robust (Huber, 2 px) optimisation of `R0` and all world points with `f = f*`; every retained track event is a virtual-camera observation; runs every `ε/f` seconds |
 | Sec. 4.2.3 | `espinslam/backend.py` | First optimisation from world points at the origin and `R0 = I` |
 | Sec. 4.2.4 | `espinslam/backend.py` | Multi-view triangulation of new/updated tracks with the latest `R0`, `f*` |
@@ -27,6 +28,17 @@ GTSAM is replaced by a Levenberg-Marquardt solver with Huber IRLS weights
 (the robust-noise-model strategy GTSAM uses), analytic Jacobians, and a Schur
 complement on the landmark blocks (numba kernels). It converges from the
 paper's initialisation (`X = 0`, `R0 = I`) for camera tilts of at least 40°.
+
+## Speed-up without changing results
+
+The Eq. 9 nearest-neighbour searches dominated the run time. They now use
+`espinslam/nn.py`, an exact grid search whose distances are bit-identical to
+SciPy's k-d tree (same operation order, rounding-safe pruning bounds, exact
+warm-start upper bounds). On a real TOPSPIN scene (hubble-perpendicular-slow)
+every output, all 553 frequency updates and all coarse cost curves are
+unchanged, while the run takes 37.9 s instead of 149.5 s (107k events/s,
+above the scene's 68k events/s, i.e. real time in the sense of Fig. 7).
+Details: [`docs/reproduction_report.md`](docs/reproduction_report.md), Sec. 12.
 
 ## Interpretation choices
 

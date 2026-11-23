@@ -32,9 +32,9 @@ from dataclasses import dataclass, field
 import math
 
 import numpy as np
-from scipy.spatial import cKDTree
 
 from .config import FrequencyConfig
+from .nn import GridIndex
 
 
 @dataclass(frozen=True)
@@ -78,45 +78,74 @@ class _Alignment:
     def __init__(self, left: np.ndarray, right: np.ndarray, scale: float,
                  minimum_overlap: int):
         self.left = left
+        self.left_t = np.ascontiguousarray(left[:, 0])
+        self.left_x = np.ascontiguousarray(left[:, 1])
+        self.left_y = np.ascontiguousarray(left[:, 2])
         self.scale = scale
         self.right_t = right[:, 0]
         self.start = float(right[0, 0])
         self.stop = float(right[-1, 0])
         self.minimum_overlap = minimum_overlap
-        self.tree = cKDTree(np.column_stack((right[:, 1], right[:, 2], scale * right[:, 0])))
+        # Exact nearest neighbours in (x, y, scale * t); distances are identical
+        # to scipy's cKDTree (see espinslam.nn), only computed faster.
+        self.grid = GridIndex(np.column_stack((right[:, 1], right[:, 2], scale * right[:, 0])))
 
-    def _overlap(self, left: np.ndarray, shift: float) -> np.ndarray:
-        shifted = left[:, 0] + shift
-        return left[(shifted >= self.start) & (shifted <= self.stop)]
+    def _overlap(self, shift: float) -> np.ndarray:
+        shifted = self.left_t + shift
+        return (shifted >= self.start) & (shifted <= self.stop)
 
-    def _query(self, left: np.ndarray, shift: float):
-        query = np.column_stack((left[:, 1], left[:, 2], self.scale * (left[:, 0] + shift)))
-        return self.tree.query(query, k=1, workers=-1)
+    def _query(self, mask: np.ndarray, shift: float, hint: np.ndarray | None = None):
+        times = self.left_t[mask]
+        distance, index = self.grid.query_points(
+            self.left_x[mask], self.left_y[mask], self.scale * (times + shift),
+            None if hint is None else hint[mask],
+        )
+        return times, distance, index
 
-    def cost(self, shift: float, left: np.ndarray | None = None) -> float:
-        overlap = self._overlap(self.left if left is None else left, shift)
-        minimum = self.minimum_overlap if left is None else max(
-            10, self.minimum_overlap * left.shape[0] // max(self.left.shape[0], 1))
-        if overlap.shape[0] < minimum:
+    def cost(self, shift: float, hint: np.ndarray | None = None) -> float:
+        mask = self._overlap(shift)
+        if np.count_nonzero(mask) < self.minimum_overlap:
             return math.inf
-        distance, _ = self._query(overlap, shift)
+        _, distance, _ = self._query(mask, shift, hint)
         return float(np.mean(distance))
 
+    def costs(self, shifts: np.ndarray, left: np.ndarray) -> np.ndarray:
+        """``cost(shift, left)`` for many shifts in one parallel pass.
+
+        Uses the same overlap test, query coordinates and per-shift means as
+        :meth:`cost`, with exact nearest distances, so the result is identical.
+        """
+
+        minimum = max(10, self.minimum_overlap * left.shape[0] // max(self.left.shape[0], 1))
+        distances = self.grid.query_shifts(left[:, 0], left[:, 1], left[:, 2], shifts,
+                                           self.scale, self.start, self.stop)
+        result = np.full(len(shifts), math.inf)
+        for index in range(len(shifts)):
+            row = distances[index]
+            overlap = row[~np.isnan(row)]
+            if overlap.shape[0] >= minimum:
+                result[index] = float(np.mean(overlap))
+        return result
+
     def icp(self, shift: float, iterations: int, tolerance: float) -> tuple[float, float]:
+        # Each point's neighbour from the previous iteration warm-starts its
+        # search (an exact upper bound), which leaves the result unchanged.
+        hint = np.full(self.left_t.shape[0], -1, dtype=np.int64)
         for _ in range(iterations):
-            overlap = self._overlap(self.left, shift)
-            if overlap.shape[0] < self.minimum_overlap:
+            mask = self._overlap(shift)
+            if np.count_nonzero(mask) < self.minimum_overlap:
                 return shift, math.inf
-            distance, index = self._query(overlap, shift)
+            times, distance, index = self._query(mask, shift, hint)
+            hint[mask] = index
             # Minimise sum ||.||_2 for fixed correspondences by IRLS (weights 1/d).
             weights = 1.0 / np.maximum(distance, 1e-6)
-            target = self.right_t[index] - overlap[:, 0]
+            target = self.right_t[index] - times
             updated = float(np.sum(weights * target) / np.sum(weights))
             converged = abs(updated - shift) < tolerance
             shift = updated
             if converged:
                 break
-        return shift, self.cost(shift)
+        return shift, self.cost(shift, hint)
 
 
 class LoopClosureFrequencyEstimator:
@@ -193,7 +222,7 @@ class LoopClosureFrequencyEstimator:
         )) + 1)
         candidates = np.geomspace(config.min_period_seconds, maximum, count)
         coarse_left = _uniform_subsample(left, config.coarse_alignment_samples)
-        costs = np.asarray([alignment.cost(value, coarse_left) for value in candidates])
+        costs = alignment.costs(candidates, coarse_left)
         interior = np.flatnonzero(
             (costs[1:-1] <= costs[:-2]) & (costs[1:-1] <= costs[2:]),
         ) + 1
