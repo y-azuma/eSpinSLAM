@@ -76,24 +76,30 @@ The paper does not pin these details down; each choice is configurable.
 
 ## TOPSPIN evaluation (paper Sec. 5-6)
 
-TOPSPIN is available from Zenodo (doi:10.5281/zenodo.10884693). Event files
+TOPSPIN is available from Zenodo (doi:10.5281/zenodo.10884693, current
+version record 10884694): 72 scenes `{object}-{perspective}-{speed}`, each with
+`events.csv` (t [us], x, y, p), `calib.txt` (fx fy cx cy k1 k2 p1 p2 k3) and
+`meta.json`. The public release does **not** include ground-truth rotation
+frequencies or CAD models, so frequency accuracy (Fig. 6) and ICP RMSE
+(Tables 2-3) need data from elsewhere; reprojection error, loop closure,
+throughput and Fig. 8 work as is. Event files
 can be Prophesee `.raw` (EVT 2.0/3.0) or `.dat`, `.h5`, `.npz`, `.npy`,
 `.csv`/`.txt`. The Prophesee decoders follow the OpenEB format specification;
 ECF-compressed Prophesee HDF5 files must be converted (e.g. to `.npz`) first.
 
-1. Build a manifest skeleton (object and speed are parsed from file names
-   such as `soho-perpendicular-fast.raw`):
+1. Build the manifest (object, perspective and speed come from the scene
+   directory name, `controller` maps to Dualshock and `med` to medium;
+   calibration and sensor size are read from `calib.txt` and `meta.json`):
 
    ```bash
    python scripts/make_topspin_manifest.py --data-root datasets/topspin \
      --output datasets/topspin/manifest.csv --cad-dir cad
    ```
 
-2. Fill in the columns the dataset provides:
-   `frequency_hz` (ground truth, used only for metrics), `cad_path`,
-   `cad_unit_mm`, calibration `fx, fy, cx, cy` (and `k1, k2, p1, p2, k3`), and
-   optionally `orbit_radius_mm`. The TOPSPIN config intentionally has no
-   intrinsics; evaluation stops if they are missing.
+2. Optionally add what the public release lacks: `frequency_hz` (ground
+   truth, used only for metrics), `cad_path` / `cad_unit_mm`, and
+   `orbit_radius_mm`. Empty columns only leave the matching metrics blank;
+   rows without calibration stop the evaluation.
 
 3. Run the full method (Table 2, Figs. 6-8) and the ablations (Table 3):
 
