@@ -103,3 +103,24 @@ def test_topspin_ablations_write_table3_and_fig6_comparison(synthetic, tmp_path)
         assert (tmp_path / "ablations" / name).is_file()
     text = (tmp_path / "ablations" / "table3_vs_paper.md").read_text(encoding="utf-8")
     assert "FFT f estimation" in text and "5.61 ± 7.93" in text
+
+
+def test_split_column_reports_held_out_and_dev_separately(synthetic, tmp_path):
+    root, config = _write_topspin_scene(synthetic, tmp_path)
+    manifest = root / "manifest.csv"
+    with manifest.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    dev = dict(rows[0], sequence_id="hubble-dev-fast", split="dev")
+    test = dict(rows[0], split="test")
+    with manifest.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(dev))
+        writer.writeheader()
+        writer.writerows([dev, test])
+    report = evaluate_topspin(config, root, manifest, tmp_path / "split_run", history_plots=False)
+    assert report["split_counts"] == {"dev": 1, "test": 1}
+    assert report["table2"][0]["scenes"] == 1          # held-out only
+    assert report["table2_all"][0]["scenes"] == 2
+    assert report["table2_dev"][0]["scenes"] == 1
+    for name in ("table2_dev.md", "table2_all.md"):
+        assert (tmp_path / "split_run" / name).is_file()
+    assert "held-out" in (tmp_path / "split_run" / "table2.md").read_text(encoding="utf-8")

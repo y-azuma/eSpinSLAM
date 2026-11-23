@@ -5,7 +5,10 @@ Outputs, per run directory:
 * ``per_sequence.csv``  - frequency, loop closure, reprojection error, ICP
   alignment RMSE [mm], landmarks, runtime and throughput of every scene;
 * ``table2.csv`` / ``table2.md`` - per-object mean +- std of reprojection
-  error [px] and ICP alignment RMSE [mm] (paper Table 2);
+  error [px] and ICP alignment RMSE [mm] (paper Table 2). If the manifest has
+  a ``split`` column (dev = parameter tuning, test = held out), the tables,
+  figures and summary use the test scenes and ``table2_dev.*`` /
+  ``table2_all.*`` report the dev scenes and all scenes;
 * ``fig6_frequency_cdf.png`` - CDF of estimated f per speed with ground truth
   (paper Fig. 6; the ablation run adds ``fig6_loop_closure_vs_fft.png`` with
   both estimators as in the paper);
@@ -209,6 +212,7 @@ def _sequence_row(row: dict[str, str], result: ESpinSLAMResult, *,
     return {
         "sequence_id": result.sequence_id,
         "object": row["object"],
+        "split": row.get("split", ""),
         "speed": row.get("speed", ""),
         "frequency_true_hz": truth,
         "frequency_est_hz": _nullable(estimate),
@@ -559,36 +563,64 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
             flush=True,
         )
     _write_csv(output_dir / "per_sequence.csv", results)
-    table = table2(results)
+    # With a split column the paper comparison uses the held-out (test) scenes
+    # only; dev (tuning) scenes and the union are reported separately.
+    has_split = any(r["split"] for r in results)
+    primary = [r for r in results if r["split"] == "test"] if has_split else results
+    table = table2(primary)
     _write_csv(output_dir / "table2.csv", table)
-    _write_text(output_dir / "table2.md", table2_markdown(table, setting_name))
+    label = f"{setting_name}, held-out" if has_split else setting_name
+    _write_text(output_dir / "table2.md", table2_markdown(table, label))
+    extra_tables: dict[str, list[dict[str, Any]]] = {}
+    if has_split:
+        for name, subset in (("dev", [r for r in results if r["split"] == "dev"]),
+                             ("all", results)):
+            extra_tables[name] = table2(subset)
+            _write_csv(output_dir / f"table2_{name}.csv", extra_tables[name])
+            _write_text(output_dir / f"table2_{name}.md",
+                        table2_markdown(extra_tables[name], f"{setting_name}, {name}"))
     paper_reference = PAPER_TABLE3.get(setting_name)
     if paper_reference is not None:
         _write_text(output_dir / "table_vs_paper.md",
-                    comparison_markdown(table, paper_reference, setting_name))
-    if any(r["frequency_est_hz"] is not None for r in results):
-        _plot_frequency_cdf(results, output_dir / "fig6_frequency_cdf.png")
-    _plot_throughput(results, output_dir / "fig7_throughput.png")
-    _plot_throughput_summary(results, output_dir / "fig5_throughput_summary.png")
-    frequency_errors = [r["frequency_rel_error_percent"] for r in results
+                    comparison_markdown(table, paper_reference, label))
+    if any(r["frequency_est_hz"] is not None for r in primary):
+        _plot_frequency_cdf(primary, output_dir / "fig6_frequency_cdf.png")
+    if primary:
+        _plot_throughput(primary, output_dir / "fig7_throughput.png")
+        _plot_throughput_summary(primary, output_dir / "fig5_throughput_summary.png")
+    frequency_errors = [r["frequency_rel_error_percent"] for r in primary
                         if r["frequency_rel_error_percent"] is not None]
+    by_speed = {}
+    for speed in sorted({r["speed"] for r in primary}):
+        values = [r["frequency_est_hz"] for r in primary
+                  if r["speed"] == speed and r["frequency_est_hz"] is not None]
+        if values:
+            by_speed[speed] = {"count": len(values), "median_hz": float(np.median(values)),
+                               "std_hz": float(np.std(values)),
+                               "min_hz": float(np.min(values)), "max_hz": float(np.max(values))}
     report = {
         "method": "Paper-faithful eSpinSLAM reproduction",
         "paper": "Event-based Spinning Object SLAM, ICCVW 2025",
         "setting": setting_name,
         "dataset": "TOPSPIN",
         "sequence_count": len(results),
-        "loop_closure_rate": (sum(bool(r["loop_closed"]) for r in results) / len(results)
-                              if results else None),
+        "split_counts": {name: sum(r["split"] == name for r in results)
+                         for name in ("dev", "test")} if has_split else None,
+        "summary_scope": "test (held-out) scenes" if has_split else "all scenes",
+        "loop_closure_rate": (sum(bool(r["loop_closed"]) for r in primary) / len(primary)
+                              if primary else None),
         "frequency_median_rel_error_percent": (float(np.median(frequency_errors))
                                                if frequency_errors else None),
-        "mean_throughput_ev_s": _mean_std([r["throughput_ev_s"] for r in results])[0],
+        "frequency_by_speed_hz": by_speed,
+        "mean_throughput_ev_s": _mean_std([r["throughput_ev_s"] for r in primary])[0],
         "mean_frontend_throughput_ev_s": _mean_std(
-            [r["frontend_throughput_ev_s"] for r in results])[0],
-        "mean_scene_event_rate_ev_s": _mean_std([r["scene_event_rate_ev_s"] for r in results])[0],
-        "real_time_rate": (sum(bool(r["real_time"]) for r in results) / len(results)
-                           if results else None),
+            [r["frontend_throughput_ev_s"] for r in primary])[0],
+        "mean_scene_event_rate_ev_s": _mean_std([r["scene_event_rate_ev_s"] for r in primary])[0],
+        "real_time_rate": (sum(bool(r["real_time"]) for r in primary) / len(primary)
+                           if primary else None),
         "table2": table,
+        "table2_dev": extra_tables.get("dev"),
+        "table2_all": extra_tables.get("all"),
         "runtime_seconds": time.monotonic() - started,
         "implementation_notes": [
             "GTSAM is replaced by a Levenberg-Marquardt solver with Huber IRLS weights "
@@ -659,11 +691,14 @@ def evaluate_topspin_ablations(config: ESpinSLAMConfig, data_root: Path, manifes
         series = {}
         for key in ("espinslam", "fft_frequency"):
             with (output_dir / key / "per_sequence.csv").open(newline="", encoding="utf-8") as handle:
+                rows = list(csv.DictReader(handle))
+                if any(row.get("split") for row in rows):
+                    rows = [row for row in rows if row.get("split") == "test"]
                 series[ABLATIONS[key][0]] = [
                     {"speed": row["speed"],
                      "frequency_est_hz": _float_or_none(row["frequency_est_hz"]),
                      "frequency_true_hz": _float_or_none(row["frequency_true_hz"])}
-                    for row in csv.DictReader(handle)
+                    for row in rows
                 ]
         plot_frequency_cdf_comparison(series, output_dir / "fig6_loop_closure_vs_fft.png")
     return {"settings": settings, "reports": reports}
