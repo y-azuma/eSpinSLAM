@@ -34,6 +34,10 @@ COLUMNS = ("sequence_id", "event_path", "object", "perspective", "speed", "frequ
            "cad_path", "cad_unit_mm", "orbit_radius_mm", "fx", "fy", "cx", "cy", "k1", "k2",
            "p1", "p2", "k3", "width", "height", "time_unit")
 CALIBRATION_COLUMNS = ("fx", "fy", "cx", "cy", "k1", "k2", "p1", "p2", "k3")
+SCENE_PATTERN = re.compile(
+    r"^(hubble|soho|tdrs|camera|controller|dualshock|switch)[-_][a-z0-9]+[-_](slow|med|medium|fast)$",
+    re.IGNORECASE,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -94,7 +98,9 @@ def main() -> None:
         # TOPSPIN keeps one scene per directory with a generic events.csv.
         name = path.parent.name if path.stem.lower() == "events" else path.stem
         obj = _object(name)
-        if obj is None:
+        # Only full scene names count, so reports or logs that merely start
+        # with an object name (e.g. hubble-..._frequency.csv) are ignored.
+        if obj is None or not SCENE_PATTERN.match(name):
             continue
         cad = ""
         if args.cad_dir is not None:
