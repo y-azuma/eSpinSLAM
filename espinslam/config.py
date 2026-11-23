@@ -87,6 +87,8 @@ def _boolean(name: str, value: object) -> bool:
 
 
 _TIME_UNITS = {"auto", "s", "ms", "us", "ns"}
+_INTERPRETATION_MODES = {"paper", "experimental"}
+_SOLVER_BACKENDS = {"equivalent_custom", "gtsam"}
 
 
 @dataclass
@@ -167,43 +169,63 @@ class CameraConfig:
 class FrontendConfig:
     """Section 4.1: chunking, eFAST, density filtering, HDBSCAN, track pool."""
 
+    # ``paper`` uses the eSpinSLAM text plus the numerical settings and
+    # head/tail construction stated in its cited eSfO front-end [16].  The
+    # historical tuned implementation is retained only for retrospective
+    # comparison under ``experimental``.
+    interpretation_mode: str = "paper"
+
     # |C|: events per chunk pushed by the camera driver (~1000 for Metavision).
     chunk_events: int = 1000
     # lambda in Eq. (6): radius of the same-polarity density neighbourhood.
-    density_radius_px: float = 3.0
-    # Eq. (6) removes corners below "the mean mu_D" (one mean over F). True uses
-    # a mean per polarity instead; it was less accurate with unequal ON/OFF
-    # contrast thresholds on the synthetic benchmark (docs/).
-    density_mean_per_polarity: bool = False
+    density_radius_px: float = 7.0
+    # The adapted eSfO front-end computes the comparison mean independently
+    # for each polarity.  False is retained only for historical experimental
+    # replay; it is not the cited reference interpretation.
+    density_mean_per_polarity: bool = True
     # HDBSCAN parameters for spatio-temporal tracklet clustering.
-    cluster_min_size: int = 5
-    cluster_min_samples: int = 3
-    cluster_time_scale_px_per_second: float = 1000.0
-    # Sec. 4.1 only says G is clustered "spatio-temporally". Clustering each
-    # polarity separately (consistent with the per-polarity density of Eq. 6)
-    # keeps the ON/OFF corners of small features apart; mixing them doubled the
-    # structure error on the low-resolution synthetic scene (docs/).
-    cluster_by_polarity: bool = True
+    cluster_min_size: int = 10
+    # eSfO reports only minPts (10) and cluster-selection epsilon (5).
+    # ``None`` therefore leaves HDBSCAN's separate min_samples parameter at
+    # its library default instead of inventing another paper parameter.
+    cluster_min_samples: int | None = None
+    cluster_selection_epsilon: float = 5.0
+    cluster_time_scale_px_per_second: float = 1.0
+    # The cited eSfO front-end applies HDBSCAN to the spatio-temporal features
+    # without adding polarity as a clustering dimension.  True is the earlier
+    # experimental interpretation only.
+    cluster_by_polarity: bool = False
     # Tracklet-to-track association (merging into the global pool H).
-    association_radius_px: float = 5.0
+    association_radius_px: float = 30.0
     association_max_gap_seconds: float = 0.05
     association_head_events: int = 5
     # sigma_retain: circular buffer length per track.
     retain_events_per_track: int = 1000
 
     def __post_init__(self) -> None:
+        if self.interpretation_mode not in _INTERPRETATION_MODES:
+            raise ValueError(
+                f"frontend.interpretation_mode must be one of {sorted(_INTERPRETATION_MODES)}"
+            )
         for name in (
-            "chunk_events", "cluster_min_size", "cluster_min_samples",
-            "association_head_events", "retain_events_per_track",
+            "chunk_events", "cluster_min_size", "association_head_events",
+            "retain_events_per_track",
         ):
             _positive_integer(f"frontend.{name}", getattr(self, name))
+        if self.cluster_min_samples is not None:
+            _positive_integer("frontend.cluster_min_samples", self.cluster_min_samples)
         if self.cluster_min_size < 2:
             raise ValueError("frontend.cluster_min_size must be at least two")
         for name in (
             "density_radius_px", "cluster_time_scale_px_per_second",
-            "association_radius_px", "association_max_gap_seconds",
+            "cluster_selection_epsilon", "association_radius_px",
+            "association_max_gap_seconds",
         ):
-            _finite(f"frontend.{name}", getattr(self, name), positive=True)
+            _finite(
+                f"frontend.{name}", getattr(self, name),
+                non_negative=name == "cluster_selection_epsilon",
+                positive=name != "cluster_selection_epsilon",
+            )
         _boolean("frontend.cluster_by_polarity", self.cluster_by_polarity)
         _boolean("frontend.density_mean_per_polarity", self.density_mean_per_polarity)
 
@@ -217,13 +239,17 @@ class FrequencyConfig:
 
     # "loop_closure" is the paper's method; "fft" is the Table 3 ablation.
     method: str = "loop_closure"
+    # Literal Eq. (9) or the historical approximate/tuned path.
+    alignment_mode: str = "paper"
     # The estimator re-runs whenever H changed and at least this much event
     # time elapsed since the previous estimate (0 means after every chunk).
     update_interval_seconds: float = 0.1
-    min_period_seconds: float = 1.0
-    max_period_seconds: float = 60.0
+    min_period_seconds: float = 0.1
+    # ``None`` makes the literal paper search cover the entire observed span.
+    # A finite ceiling is only an experimental replay control.
+    max_period_seconds: float | None = None
     # Pixels that one second of temporal offset is worth in Eq. (9).
-    time_scale_px_per_second: float = 100.0
+    time_scale_px_per_second: float = 1.0
     max_alignment_samples: int = 10000
     coarse_alignment_samples: int = 2000
     coarse_relative_step: float = 0.01
@@ -231,7 +257,7 @@ class FrequencyConfig:
     icp_tolerance_seconds: float = 1e-5
     # Local minima within this relative cost of the best are treated as equal
     # and the shortest period (the fundamental) is selected.
-    harmonic_tolerance: float = 0.15
+    harmonic_tolerance: float = 0.0
     min_samples_per_half: int = 50
     # sigma and aleph of Table 1.
     loop_std_threshold_hz: float = 1e-3
@@ -241,16 +267,28 @@ class FrequencyConfig:
     def __post_init__(self) -> None:
         if self.method not in _FREQUENCY_METHODS:
             raise ValueError(f"frequency.method must be one of {sorted(_FREQUENCY_METHODS)}")
+        if self.alignment_mode not in _INTERPRETATION_MODES:
+            raise ValueError(
+                f"frequency.alignment_mode must be one of {sorted(_INTERPRETATION_MODES)}"
+            )
         _finite("frequency.update_interval_seconds", self.update_interval_seconds,
                 non_negative=True)
         for name in (
-            "min_period_seconds", "max_period_seconds", "time_scale_px_per_second",
+            "min_period_seconds", "time_scale_px_per_second",
             "coarse_relative_step", "icp_tolerance_seconds", "loop_std_threshold_hz",
             "fft_bin_seconds",
         ):
             _finite(f"frequency.{name}", getattr(self, name), positive=True)
+        if self.max_period_seconds is not None:
+            _finite("frequency.max_period_seconds", self.max_period_seconds, positive=True)
+            if self.alignment_mode == "paper":
+                raise ValueError(
+                    "frequency.max_period_seconds must be null in paper mode; "
+                    "the upper endpoint is the observed span"
+                )
         _finite("frequency.harmonic_tolerance", self.harmonic_tolerance, non_negative=True)
-        if self.max_period_seconds <= self.min_period_seconds:
+        if (self.max_period_seconds is not None
+                and self.max_period_seconds <= self.min_period_seconds):
             raise ValueError("frequency.max_period_seconds must exceed min_period_seconds")
         for name in (
             "max_alignment_samples", "coarse_alignment_samples", "icp_iterations",
@@ -266,6 +304,13 @@ class BackendConfig:
     """Sections 4.2.2-4.2.7: continuous-time orbit optimisation and map upkeep."""
 
     orbit_radius: float = 10.0
+    # ``paper`` disables unreported guards/final refinements. ``experimental``
+    # preserves the prior exploratory behavior for result archaeology.
+    interpretation_mode: str = "paper"
+    # The in-tree Schur/LM solver is the default only because it satisfies the
+    # predeclared direct-GTSAM numerical equivalence gate. ``gtsam`` remains an
+    # optional executable reference path.
+    solver_backend: str = "equivalent_custom"
     min_track_events: int = 3
     huber_threshold_px: float = 2.0
     max_mean_reprojection_error_px: float = 10.0
@@ -277,14 +322,25 @@ class BackendConfig:
     # Tracks whose events span less orbit arc than this are under-constrained
     # and wait (in H) until they grow. 1.5 deg is COLMAP's default minimum
     # triangulation angle; the paper does not state its triangulator's check.
-    min_triangulation_angle_deg: float = 1.5
+    min_triangulation_angle_deg: float = 0.0
     # 0 uses every retained event of every track, as in Eq. (11).
     max_observations_per_track: int = 0
     # Ablations of Table 3.
     optimize_frequency: bool = False
     landmark_association: bool = True
+    # The paper describes online cadence only; an end-of-stream refinement is
+    # an experimental convenience and must not enter reproduction metrics.
+    final_offline_refinement: bool = False
 
     def __post_init__(self) -> None:
+        if self.interpretation_mode not in _INTERPRETATION_MODES:
+            raise ValueError(
+                f"backend.interpretation_mode must be one of {sorted(_INTERPRETATION_MODES)}"
+            )
+        if self.solver_backend not in _SOLVER_BACKENDS:
+            raise ValueError(
+                f"backend.solver_backend must be one of {sorted(_SOLVER_BACKENDS)}"
+            )
         for name in ("min_track_events", "max_iterations"):
             _positive_integer(f"backend.{name}", getattr(self, name))
         _non_negative_integer("backend.max_observations_per_track",
@@ -299,6 +355,7 @@ class BackendConfig:
             _finite(f"backend.{name}", getattr(self, name), positive=True)
         _boolean("backend.optimize_frequency", self.optimize_frequency)
         _boolean("backend.landmark_association", self.landmark_association)
+        _boolean("backend.final_offline_refinement", self.final_offline_refinement)
 
 
 @dataclass

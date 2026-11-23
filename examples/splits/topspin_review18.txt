@@ -1,0 +1,20 @@
+# Frozen implementation-review subset (docs/decision_log.md D-007).
+# Exploratory/retrospective only; never use these outcomes to select parameters.
+camera-diagonal-slow
+camera-perpendicular-med
+camera-sideon-fast
+controller-perpendicular-slow
+controller-sideon-med
+controller-topdown-fast
+hubble-sideon-slow
+hubble-topdown-med
+hubble-diagonal-fast
+soho-topdown-slow
+soho-diagonal-med
+soho-sideon-fast
+switch-diagonal-slow
+switch-perpendicular-med
+switch-sideon-fast
+tdrs-perpendicular-slow
+tdrs-topdown-med
+tdrs-topdown-fast

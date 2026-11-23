@@ -42,16 +42,18 @@ def test_online_loop_closure_recovers_frequency_and_detects_loop():
     events = _track_events(0.5, 6.0)
     estimator, closed_at = _online(events, FrequencyConfig(min_period_seconds=0.5,
                                                            time_scale_px_per_second=150.0,
-                                                           alignment_mode="experimental"))
+                                                           alignment_mode="experimental",
+                                                           harmonic_tolerance=0.15))
     assert estimator.loop_closed and closed_at is not None and closed_at < 5.0
     assert abs(estimator.current.frequency_hz - 0.5) < 2e-3
 
 
-def test_fundamental_is_preferred_over_subharmonics():
+def test_experimental_mode_prefers_fundamental_over_subharmonics():
     events = _track_events(0.9, 6.0, seed=3)
     estimator = LoopClosureFrequencyEstimator(FrequencyConfig(min_period_seconds=0.5,
                                                               time_scale_px_per_second=150.0,
-                                                              alignment_mode="experimental"))
+                                                              alignment_mode="experimental",
+                                                              harmonic_tolerance=0.15))
     estimate = estimator.update(events)
     assert estimate.valid and abs(estimate.frequency_hz - 0.9) < 0.01
 

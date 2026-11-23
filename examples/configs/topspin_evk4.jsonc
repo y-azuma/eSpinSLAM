@@ -20,11 +20,13 @@
     "distortion": []
   },
   "frontend": {
+    "interpretation_mode": "experimental", // historical tuned result replay only
     "chunk_events": 1000,                    // |C| ~ 1000 (Metavision driver)
     "density_radius_px": 5.0,  // lambda in Eq. (6); tuned on dev scenes (docs Sec. 13)
     "density_mean_per_polarity": false,
     "cluster_min_size": 3,  // tuned on dev scenes (docs Sec. 13)
     "cluster_min_samples": 2,  // tuned on dev scenes (docs Sec. 13)
+    "cluster_selection_epsilon": 0.0,
     "cluster_time_scale_px_per_second": 1000.0,
     "cluster_by_polarity": true,
     "association_radius_px": 5.0,  // tuned on dev scenes (docs Sec. 13)
@@ -34,6 +36,7 @@
   },
   "frequency": {
     "method": "loop_closure",
+    "alignment_mode": "experimental",
     "update_interval_seconds": 0.1,
     // TOPSPIN turntable speeds are ~0.04-0.16 Hz (paper Fig. 6).
     "min_period_seconds": 2.0,
@@ -48,6 +51,8 @@
     "loop_history": 20                       // aleph
   },
   "backend": {
+    "interpretation_mode": "experimental",
+    "solver_backend": "equivalent_custom",
     "orbit_radius": 10.0,                    // r
     "min_track_events": 3,                   // N_match
     "huber_threshold_px": 2.0,               // inlier threshold of rho
@@ -59,7 +64,8 @@
     "min_triangulation_angle_deg": 1.5,
     "max_observations_per_track": 0,
     "optimize_frequency": false,
-    "landmark_association": true
+    "landmark_association": true,
+    "final_offline_refinement": true
   },
   "evaluation": {
     "pointcloud_max_reference_points": 30000

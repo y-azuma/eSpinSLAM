@@ -17,11 +17,13 @@
     "cy": 130.0
   },
   "frontend": {
+    "interpretation_mode": "experimental",
     "chunk_events": 1000,
     "density_radius_px": 3.0,
     "density_mean_per_polarity": false,
     "cluster_min_size": 5,
     "cluster_min_samples": 3,
+    "cluster_selection_epsilon": 0.0,
     "cluster_time_scale_px_per_second": 1000.0,
     "cluster_by_polarity": true,
     "association_radius_px": 5.0,
@@ -31,14 +33,18 @@
   },
   "frequency": {
     "method": "loop_closure",
+    "alignment_mode": "experimental",
     "update_interval_seconds": 0.1,
     "min_period_seconds": 1.0,
     "max_period_seconds": 10.0,
     "time_scale_px_per_second": 200.0,
+    "harmonic_tolerance": 0.15,
     "loop_std_threshold_hz": 0.001,          // sigma
     "loop_history": 20                       // aleph
   },
   "backend": {
+    "interpretation_mode": "experimental",
+    "solver_backend": "equivalent_custom",
     "orbit_radius": 10.0,                    // r
     "min_track_events": 3,                   // N_match
     "huber_threshold_px": 2.0,               // inlier threshold of rho
@@ -50,7 +56,8 @@
     "min_triangulation_angle_deg": 1.5,
     "max_observations_per_track": 0,
     "optimize_frequency": false,
-    "landmark_association": true
+    "landmark_association": true,
+    "final_offline_refinement": true
   },
   "evaluation": {
     "observation_times_seconds": [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0],

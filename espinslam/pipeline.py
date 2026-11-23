@@ -33,6 +33,13 @@ class FrequencyRecord:
     wall_seconds: float
     frequency_hz: float
     loop_closed: bool
+    period_seconds: float = math.nan
+    alignment_cost: float = math.nan
+    grid_seed_seconds: float = math.nan
+    grid_seed_cost: float = math.nan
+    icp_iterations_used: int = 0
+    icp_termination: str = "not_run"
+    icp_clipped_to_search_interval: bool = False
 
 
 @dataclass(frozen=True)
@@ -141,13 +148,18 @@ class ESpinSLAM:
             timers["frontend"] += time.perf_counter() - tick
             now = float(sequence.t[stop - 1])
             due_estimate = pool.version != estimated_version and now >= next_estimate
-            due_optimization = (estimator.loop_closed and reconstruct_structure
-                                and now >= next_optimization)
-            if estimator.loop_closed and (due_estimate or due_optimization):
-                # Sec. 4.2.7: discard tracks older than sigma_forget revolutions
-                # (applied whenever the back-end consumes H).
-                pool.forget(pool.newest_time - config.backend.forget_revolutions
-                            / estimator.current.frequency_hz)
+            loop_was_closed = estimator.loop_closed
+            due_existing_optimization = (
+                reconstruct_structure and loop_was_closed and now >= next_optimization
+            )
+            if loop_was_closed and (due_estimate or due_existing_optimization):
+                # Once f* exists, Eq. (12) precedes every subsequent use of H.
+                # In particular, frequency re-estimation must not see stale
+                # tracks that the paper says have already been forgotten.
+                pool.forget(
+                    pool.newest_time - config.backend.forget_revolutions
+                    / estimator.current.frequency_hz
+                )
             if due_estimate:
                 tick = time.perf_counter()
                 estimate = estimator.update(pool.events())
@@ -158,19 +170,35 @@ class ESpinSLAM:
                     now - origin, time.perf_counter() - started,
                     estimate.frequency_hz if estimate.valid else math.nan,
                     estimator.loop_closed,
+                    estimate.period_seconds,
+                    estimate.alignment_cost,
+                    estimate.grid_seed_seconds,
+                    estimate.grid_seed_cost,
+                    estimate.icp_iterations_used,
+                    estimate.icp_termination,
+                    estimate.icp_clipped_to_search_interval,
                 ))
                 if estimator.loop_closed and not math.isfinite(loop_time):
                     loop_time = now - origin
             if not estimator.loop_closed:
                 continue
             frequency = estimator.current.frequency_hz
-            if reconstruct_structure and now >= next_optimization:
+            due_optimization = reconstruct_structure and now >= next_optimization
+            if not loop_was_closed and (due_estimate or due_optimization):
+                # On the transition itself f* did not exist before estimation,
+                # so forgetting happens immediately after f* is established
+                # and before the first bundle adjustment.
+                pool.forget(pool.newest_time - config.backend.forget_revolutions
+                            / frequency)
+            if due_optimization:
                 tick = time.perf_counter()
                 backend.optimize(pool, frequency, now - origin)
                 timers["backend"] += time.perf_counter() - tick
                 next_optimization = now + config.backend.optimization_cadence_revolutions / frequency
-        if reconstruct_structure and estimator.loop_closed:
-            # Final refinement with the complete pool at the end of the stream.
+        if (reconstruct_structure and estimator.loop_closed
+                and config.backend.final_offline_refinement):
+            # Not described by the paper. It remains available solely for
+            # retrospective replay of the earlier exploratory implementation.
             tick = time.perf_counter()
             backend.optimize(pool, estimator.current.frequency_hz, now - origin)
             timers["backend"] += time.perf_counter() - tick

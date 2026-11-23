@@ -1,6 +1,6 @@
 # Paper-faithful reproduction decision log
 
-Status: **preimplementation decisions frozen 2026-11-24; Gate C evidence appended**  
+Status: **preimplementation decisions frozen 2026-11-24; history correction and later evidence separated**
 Agreed by: user direction, Codex, and Claude Code (session discussion)  
 Scope: eSpinSLAM reproduction only; not a method-improvement project
 
@@ -78,6 +78,16 @@ landmark/reprojection performance (`3,2`; `5 px`; `0.1 s`; density radius
 - The primary global initialization uses a geometric period grid over
   `[0.1 s, observed span]`, then 1-D ICP from the lowest-cost point. The
   `0.1 s` bound and grid are **primary interpretations**, not paper values.
+- The frozen grid is geometric with a nominal `1%` multiplicative step and
+  includes both interval endpoints exactly. `min_samples_per_half=50` is a
+  numerical validity guard, not a paper value. The reference profile leaves
+  `max_period_seconds` unset and searches through the full observed span.
+  A finite maximum is permitted only in an explicitly experimental profile,
+  where it intersects the observed-span upper bound.
+- ICP is capped at `30` iterations with shift tolerance `1e-5 s`. Period
+  clipping to the declared search interval and an IRLS weight floor of
+  `1e-12` are deterministic numerical protections, **Not-stated** by the
+  paper. Every estimate records convergence versus the iteration cap.
 - Batching, exact grid lookup, and parallel execution are permitted only if
   brute-force tests show equivalent neighbor choices (allowing exact-distance
   ties) and numerical distances within the declared tolerance.
@@ -105,8 +115,12 @@ all of:
   variable ordering.
 
 The deterministic Gate C problem is defined in
-`tests/test_gtsam_equivalence.py` (random seed `7305`). The measured results
-are:
+`tests/test_gtsam_equivalence.py` (random seed `7305`). The thresholds above,
+not the measurements below, are the frozen preimplementation decision.
+
+#### Gate C evidence (recorded after implementation)
+
+The direct comparison measured:
 
 | Quantity | Direct GTSAM | In-tree LM | Difference | Frozen threshold | Result |
 |---|---:|---:|---:|---:|---|
@@ -211,8 +225,10 @@ user with both arguments. Nothing merges to `main` until:
 eSpinSLAM says that its online front-end adapts eSfO. The cited primary source,
 Elms et al., [*Event-based Structure-from-Orbit*](https://arxiv.org/abs/2405.06216)
 (arXiv:2405.06216 / CVPR 2024), therefore has hierarchy level 3 under D-002.
-Its Secs. 4.1-4.2, Eq. (3), and Table 2 freeze the following reference values
-and mechanics without a dev sweep:
+Its Secs. 4.1-4.2, Eq. (3), and Table 2 supply the following cited values and
+mechanics without a dev sweep. The offline-verifiable page/section/table map,
+short source fragments, and PDF hash are recorded in
+[`cited_source_audit.md`](cited_source_audit.md):
 
 - density radius `lambda=7`, with the mean density computed separately for
   positive- and negative-polarity corners;
@@ -225,12 +241,19 @@ and mechanics without a dev sweep:
 - association selects the nearest head in the forward spatio-temporal
   hemisphere of radius `phi=30`.
 
-Two adaptation details remain **Ambiguous**, but no longer trigger parameter
-selection by accuracy:
+The entire transfer from offline eSfO clustering to eSpinSLAM's approximately
+1,000-event online chunks is **Ambiguous (adapted)**. The constants are cited;
+their chunk-local behavior is not Exact. If this literal cited configuration
+does not meet D-003 on the dev scenes, record a reproduction failure and do
+not search alternative front-end constants. Two additional adaptation details
+remain Ambiguous, but no longer trigger parameter selection by accuracy:
 
 1. Neither source declares how timestamp values are scaled relative to pixels
    in the Euclidean `(t,x,y)` distance. The frozen primary representation is
    timestamp seconds with multiplier `1`; alternatives are sensitivity-only.
+   Under the literal `(t,x,y)` Euclidean gate and `phi=30`, a near-zero spatial
+   displacement can connect events separated by almost 30 seconds and hence
+   across several rotations. This is a known limitation of the frozen units.
 2. Offline eSfO does not specify how simultaneous current-chunk tracklets
    competing for one global online track are resolved. The frozen primary is
    deterministic nearest-first, many-to-one merging. Greedy one-to-one and
@@ -258,10 +281,10 @@ candidates:
 
 | Parameter | Candidate set | Evaluation order | Predeclared neutral tie-break | Status |
 |---|---|---|---|---|
-| Eq. (6) density radius and mean | `{lambda=7}`, same-polarity mean | Direct cited-source value; no sweep | Not applicable | **Resolved - eSfO Sec. 4.1/Table 2** |
-| HDBSCAN parameters/polarity | `{min_cluster_size=10, cluster_selection_epsilon=5, min_samples=None}`, polarity ignored | Direct cited-source values; no sweep | Not applicable | **Resolved - eSfO Sec. 4.2/Table 2** |
+| Eq. (6) density radius and mean | `{lambda=7}`, same-polarity mean | Direct cited-source value; no sweep; chunk adaptation is not exact | Not applicable | **Resolved cited value / Ambiguous adapted use - eSfO Sec. 4.1/Table 2** |
+| HDBSCAN parameters/polarity | `{min_cluster_size=10, cluster_selection_epsilon=5, min_samples=None}`, polarity ignored | Direct cited-source values; no sweep; chunk adaptation is not exact | Not applicable | **Resolved cited values / Ambiguous adapted use - eSfO Sec. 4.2/Table 2** |
 | HDBSCAN/association time-coordinate scale | Primary `{timestamp seconds x 1}`; raw-unit or normalized alternatives are sensitivity-only | Primary fixed; any sensitivity must be preregistered and cannot replace it by performance | Multiplier `1` | **Frozen Ambiguous** |
-| Track association descriptor/gate | `{N_sigma=5, phi=30}`, nearest forward hemisphere, no independent tuned max-gap | Direct cited-source values; no sweep | Not applicable | **Resolved - eSfO Sec. 4.2/Eq. (3)/Table 2** |
+| Track association descriptor/gate | `{N_sigma=5, phi=30}`, nearest forward hemisphere, no independent tuned max-gap | Direct cited-source values; no sweep; online chunk/global-pool adaptation remains ambiguous | Not applicable | **Resolved cited mechanics / Ambiguous adapted use - eSfO Sec. 4.2/Eq. (3)/Table 2** |
 | Online association collision | Primary `{deterministic nearest-first, many-to-one}` | Primary only for reference result | Stable distance then input-order tie break | **Frozen Ambiguous** |
 
 This table prohibits performance-driven trial and error. It is not permission
@@ -272,6 +295,8 @@ to reuse earlier empirically optimized values.
 | Date | Decision | Reason category | Agreed by |
 |---|---|---|---|
 | 2026-11-24 | D-001 through D-010 frozen; implementation not yet claimed complete. | Paper text and cross-review | User direction, Codex, Claude Code |
-| 2026-11-24 | D-011 resolves the cited eSfO front-end parameters; time scaling and online collision handling remain frozen ambiguities. | Primary cited-source audit: eSfO Secs. 4.1-4.2, Eq. (3), Table 2 | Gate 0 review |
+| 2026-11-24 | D-011 records the cited eSfO front-end constants/mechanics; their online chunk adaptation, time scaling, and collision handling remain frozen ambiguities. | Primary cited-source audit: eSfO Secs. 4.1-4.2, Eq. (3), Table 2 | Gate 0 review |
 | 2026-11-24 | D-006 Gate C passed; `equivalent_custom` selected by the frozen thresholds, with optional direct `gtsam`. | Deterministic direct-GTSAM equivalence measurement | Gate C implementation evidence |
+| 2026-11-24 | **History correction:** commit `9bb723d` bundled the already-agreed D-006 thresholds with later Gate C measurements and references that did not yet exist at that commit. The thresholds were agreed during the external Claude/Codex session before implementation, but that commit does not independently prove the ordering. History is not rewritten; measured values are now explicitly separated under “Gate C evidence.” | Audit-trail correction; no method or threshold changed | Claude review response and Codex correction |
+| 2026-11-24 | Reclassified cited eSfO constants in the online chunked front end from Exact to **Ambiguous (adapted)**; froze “report reproduction failure, do not sweep” if cited values fail D-003; documented the seconds/`phi=30` long-time association limitation. | Cross-review of offline cited method versus online adaptation | Claude review response and Codex correction |
 

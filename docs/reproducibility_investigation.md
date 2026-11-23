@@ -17,6 +17,18 @@ python -m pip check
 python -m pytest -q
 ```
 
+W&B is not part of the reproduction runtime; it is available only through the
+optional `wandb` extra for the separate logging script.  Direct GTSAM 4.2 is
+also tested in a separate CI job with NumPy 1.26.4.  That audit environment is
+deliberately isolated from the portable lock, whose NumPy 2 stack is not ABI
+compatible with the GTSAM 4.2 wheel.
+
+The first Actions run (`45215552381`) was rejected before creating any job. Its
+workflow placed `${{ runner.temp }}` in job-level `env`, where the `runner`
+context does not yet exist during job expansion.  Cache paths are now exported
+from a runner step via `RUNNER_TEMP`/`GITHUB_ENV`; a successful matrix run is
+still required as external evidence before Gate A can pass.
+
 The lock is version-exact but intentionally does not contain wheel hashes,
 because Linux and macOS consume different wheels.  The isolated build backend
 is pinned separately in `pyproject.toml`.  Updating either is a reviewed
@@ -120,9 +132,14 @@ not a failure of the similarity-ICP solver itself.
 
 ### Reproducible remedy (without loosening the threshold)
 
-The portable CI gates every test except this one stochastic end-to-end node.
-That node is run separately on macOS as a visible, non-gating diagnostic until
-it can be replaced by tests with separated responsibilities:
+The end-to-end node is now split by responsibility.  Report generation,
+required files, CSV fields and JSON schema remain a gating test in all four
+portable CI combinations; that test deliberately makes no claim from one
+noise realization.  Reconstruction accuracy is a visible, non-gating macOS
+diagnostic over the predeclared seeds `0..9`, using the predeclared median and
+the historical 6 mm criterion.  No seed is selected after seeing its result.
+
+The following fixed-input replacement remains a Gate-D task:
 
 1. Commit a versioned synthetic event fixture (with content hash and generator
    metadata) so rasterisation/noise changes do not silently alter the pipeline
@@ -132,9 +149,8 @@ it can be replaced by tests with separated responsibilities:
 3. Test TOPSPIN reporting and known-scale alignment with a small, versioned
    reconstructed-cloud fixture, while retaining the existing deterministic ICP
    unit test.
-4. If simulator robustness itself is a requirement, evaluate a declared set of
-   seeds and a pre-declared distributional statistic rather than making a
-   scientific conclusion from one favourable noise realisation.
+4. Retain the declared multi-seed distribution as a simulator-robustness
+   diagnostic even after the fixed fixture is introduced.
 
 This is not a proposal to tune the production method to the synthetic fixture.
 It makes each regression attributable and prevents a platform-dependent event

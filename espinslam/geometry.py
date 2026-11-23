@@ -106,14 +106,26 @@ def project_points(points: np.ndarray, times: np.ndarray, frequency_hz: float,
 
 def triangulate(times: np.ndarray, pixels: np.ndarray, frequency_hz: float,
                 orbit_radius: float, rotation: np.ndarray, intrinsic: np.ndarray,
-                *, max_views: int = 64) -> np.ndarray | None:
-    """Linear multi-view (DLT) triangulation from virtual orbit cameras."""
+                *, max_views: int | None = None,
+                min_positive_depth_fraction: float | None = None) -> np.ndarray | None:
+    """Linear multi-view (DLT) triangulation from virtual orbit cameras.
+
+    The paper's Sec. 4.2.4 sends the retained observations of a track to
+    multi-view triangulation and does not describe view subsampling.  The
+    reference path therefore leaves ``max_views`` unset.  It also returns a
+    finite DLT solution without an unreported cheirality threshold.  Finite
+    values of ``max_views`` and ``min_positive_depth_fraction`` are retained
+    only for replaying the earlier experimental implementation.
+    """
 
     times = np.asarray(times, dtype=np.float64)
     pixels = np.asarray(pixels, dtype=np.float64)
+    if (min_positive_depth_fraction is not None
+            and not 0.0 <= min_positive_depth_fraction <= 1.0):
+        raise ValueError("min_positive_depth_fraction must lie in [0, 1]")
     if times.size < 2:
         return None
-    if times.size > max_views:
+    if max_views is not None and times.size > max_views:
         indices = np.unique(np.linspace(0, times.size - 1, max_views).round().astype(int))
         times, pixels = times[indices], pixels[indices]
     rotations, centers = orbit_camera_frames(times, frequency_hz, orbit_radius, rotation)
@@ -136,9 +148,10 @@ def triangulate(times: np.ndarray, pixels: np.ndarray, frequency_hz: float,
     point = homogeneous[:3] / homogeneous[3]
     if not np.isfinite(point).all():
         return None
-    depth = np.einsum("nj,nj->n", rotations[:, 2], point - centers)
-    if np.mean(depth > 0) < 0.9:
-        return None
+    if min_positive_depth_fraction is not None:
+        depth = np.einsum("nj,nj->n", rotations[:, 2], point - centers)
+        if np.mean(depth > 0) < min_positive_depth_fraction:
+            return None
     return point
 
 
@@ -156,7 +169,13 @@ class BundleAdjustmentResult:
     initial_cost: float
     final_cost: float
     iterations: int
-    converged: bool
+    termination_status: str
+
+    @property
+    def converged(self) -> bool:
+        """True only for an actual tolerance-based convergence decision."""
+
+        return self.termination_status == "converged"
 
 
 def _huber_cost(errors: np.ndarray, threshold: float) -> np.ndarray:
@@ -346,7 +365,7 @@ def bundle_adjust(times: np.ndarray, pixels: np.ndarray, owners: np.ndarray,
     lam = 1e-4
     system = problem.normal_equations(points, rotation, frequency, global_dim)
     cost = initial_cost = system[0]
-    converged = False
+    termination_status = "max_iterations"
     iteration = 0
     for iteration in range(1, max_iterations + 1):
         _, h_pp, h_gp, h_gg, g_p, g_g = system
@@ -387,10 +406,13 @@ def bundle_adjust(times: np.ndarray, pixels: np.ndarray, owners: np.ndarray,
                 break
             lam *= 4.0
         if not improved:
-            converged = True
+            # Failure to find a decreasing LM step is not evidence that a
+            # convergence tolerance was met.  Keeping it separate is required
+            # by the predeclared viability criterion used for this reproduction.
+            termination_status = "stalled"
             break
         if relative < relative_tolerance:
-            converged = True
+            termination_status = "converged"
             break
         system = problem.normal_equations(points, rotation, frequency, global_dim)
     final_cost, errors = problem.errors(points, rotation, frequency)
@@ -399,7 +421,7 @@ def bundle_adjust(times: np.ndarray, pixels: np.ndarray, owners: np.ndarray,
         rotation=rotation, frequency_hz=frequency, points=points,
         per_point_error_px=per_point, per_observation_error_px=errors,
         initial_cost=float(initial_cost), final_cost=float(final_cost),
-        iterations=iteration, converged=converged,
+        iterations=iteration, termination_status=termination_status,
     )
 
 

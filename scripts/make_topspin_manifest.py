@@ -13,7 +13,9 @@ Objects are mapped to the paper's Table 2 names (``controller`` is the
 Dualshock) and ``med`` to ``medium``. Calibration and sensor size are copied
 from ``calib.txt`` and ``meta.json``. The release contains neither the
 ground-truth rotation frequency nor the CAD models, so ``frequency_hz`` and
-``cad_path`` stay empty unless ``--cad-dir`` holds ``<object>.*`` meshes.
+``frequency_source`` stay empty. ``--cad-dir`` may populate ``cad_path``, but
+such assets are marked ``user_supplied_unverified`` and cannot populate the
+paper-comparison ICP metric without explicit author provenance.
 Other layouts (single event files named after the scene) also work.
 """
 
@@ -30,9 +32,12 @@ from espinslam.topspin import TABLE2_OBJECTS
 EVENT_SUFFIXES = {".raw", ".dat", ".h5", ".hdf5", ".npz", ".npy", ".csv", ".txt"}
 OBJECT_ALIASES = {"controller": "Dualshock", "dualshock": "Dualshock"}
 SPEED_ALIASES = {"slow": "slow", "med": "medium", "medium": "medium", "fast": "fast"}
-COLUMNS = ("sequence_id", "event_path", "split", "object", "perspective", "speed", "frequency_hz",
-           "cad_path", "cad_unit_mm", "orbit_radius_mm", "fx", "fy", "cx", "cy", "k1", "k2",
-           "p1", "p2", "k3", "width", "height", "time_unit")
+COLUMNS = (
+    "sequence_id", "event_path", "split", "object", "perspective", "speed",
+    "frequency_hz", "frequency_source", "cad_path", "cad_source", "cad_unit_mm",
+    "orbit_radius_mm", "fx", "fy", "cx", "cy", "k1", "k2", "p1", "p2", "k3",
+    "width", "height", "time_unit",
+)
 CALIBRATION_COLUMNS = ("fx", "fy", "cx", "cy", "k1", "k2", "p1", "p2", "k3")
 SCENE_PATTERN = re.compile(
     r"^(hubble|soho|tdrs|camera|controller|dualshock|switch)[-_][a-z0-9]+[-_](slow|med|medium|fast)$",
@@ -131,6 +136,7 @@ def main() -> None:
             "sequence_id": name, "event_path": str(path.relative_to(root)),
             "split": "dev" if name in dev else "test", "object": obj,
             "perspective": _perspective(name), "speed": _speed(name), "cad_path": cad,
+            "cad_source": "user_supplied_unverified" if cad else "",
             "time_unit": "us" if path.suffix.lower() in (".csv", ".txt") else "",
         })
         row.update(_calibration(path.parent))

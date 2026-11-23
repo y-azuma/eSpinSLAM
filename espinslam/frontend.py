@@ -70,6 +70,21 @@ class FeatureTrack:
             self._head = cached
         return cached[2], cached[3]
 
+    def tail_descriptor(self, count: int, time_scale: float) -> np.ndarray:
+        """Mean of the latest ``N_sigma`` (t, x, y) events from eSfO Eq. (3).
+
+        The cited front-end calls this the *tail* descriptor of an earlier
+        cluster.  Timestamps are stored in seconds, so the declared scale maps
+        them to the coordinate used alongside pixels.
+        """
+
+        take = slice(max(0, self.size - count), self.size)
+        return np.asarray((
+            float(np.mean(self.x[take])),
+            float(np.mean(self.y[take])),
+            float(np.mean(self.t[take])) * float(time_scale),
+        ))
+
     def append(self, t: np.ndarray, x: np.ndarray, y: np.ndarray, retain: int) -> None:
         self.t = np.concatenate((self.t, t))[-retain:]
         self.x = np.concatenate((self.x, np.asarray(x, dtype=np.float32)))[-retain:]
@@ -109,10 +124,19 @@ class TrackPool:
         self.newest_time = max(self.newest_time, track.latest_t)
 
     def remove(self, track_ids) -> None:
+        removed = False
         for track_id in track_ids:
             if self.tracks.pop(int(track_id), None) is not None:
                 self.version += 1
+                removed = True
             self.active.discard(int(track_id))
+        if removed:
+            # Eq. (12) is relative to the newest event still present in H.
+            # Keeping the timestamp of a removed newest track would make the
+            # next cutoff too recent and could cascade into over-forgetting.
+            self.newest_time = max(
+                (track.latest_t for track in self.tracks.values()), default=-np.inf,
+            )
 
     def merge(self, track_ids) -> int:
         """Landmark association (Sec. 4.2.6): ``H_u2 = H_u1 U H_u2``."""
@@ -167,9 +191,10 @@ def density_filter(t: np.ndarray, x: np.ndarray, y: np.ndarray, p: np.ndarray,
     """Eq. (6): keep corners whose same-polarity density reaches the mean ``mu_D``.
 
     ``D(e_i) = (1/lambda) * #{e_q in F : |e_q - e_i| <= lambda, p_q = p_i}``;
-    corners with ``D < mu_D`` are removed, ``mu_D`` being one mean over all
-    corners as written in the paper. ``per_polarity_mean=True`` uses a separate
-    mean per polarity (an alternative reading of the normalisation remark).
+    corners with ``D < mu_D`` are removed.  The cited eSfO front-end computes
+    ``mu_D`` independently for each polarity, selected by
+    ``per_polarity_mean=True`` in the paper-reference profile.  A global mean
+    remains available solely for historical experimental replay.
     """
 
     count = t.size
@@ -204,7 +229,10 @@ def cluster_tracklets(t: np.ndarray, x: np.ndarray, y: np.ndarray, p: np.ndarray
     """HDBSCAN over (x, y, t) of the density-filtered corners of one chunk."""
 
     count = t.size
-    if count < max(config.cluster_min_size, config.cluster_min_samples + 1):
+    minimum = config.cluster_min_size
+    if config.cluster_min_samples is not None:
+        minimum = max(minimum, config.cluster_min_samples + 1)
+    if count < minimum:
         return []
     features = [
         x.astype(np.float64), y.astype(np.float64),
@@ -218,6 +246,7 @@ def cluster_tracklets(t: np.ndarray, x: np.ndarray, y: np.ndarray, p: np.ndarray
         labels = HDBSCAN(
             min_cluster_size=config.cluster_min_size,
             min_samples=config.cluster_min_samples,
+            cluster_selection_epsilon=config.cluster_selection_epsilon,
             copy=True,
         ).fit_predict(np.column_stack(features))
     tracklets = []
@@ -225,6 +254,7 @@ def cluster_tracklets(t: np.ndarray, x: np.ndarray, y: np.ndarray, p: np.ndarray
         if label < 0:
             continue
         members = np.flatnonzero(labels == label)
+        members = members[np.argsort(t[members], kind="stable")]
         polarity = int(np.mean(p[members]) >= 0.5)
         tracklets.append(Tracklet(polarity, t[members], x[members], y[members]))
     return tracklets
@@ -265,6 +295,56 @@ class EventFrontend:
         )
 
     def _associate(self, tracklets: list[Tracklet], chunk_start: float) -> int:
+        if self.config.interpretation_mode == "paper":
+            return self._associate_paper(tracklets)
+        return self._associate_experimental(tracklets, chunk_start)
+
+    def _associate_paper(self, tracklets: list[Tracklet]) -> int:
+        """Online form of cited eSfO head/tail association (Eq. (3)).
+
+        The mean of the first/last ``N_sigma`` spatio-temporal events forms the
+        descriptor.  A new tracklet joins its nearest earlier track inside the
+        forward temporal hemisphere of radius ``phi``.  eSpinSLAM does not
+        specify collision handling after adapting the offline eSfO procedure
+        to chunks; the neutral deterministic choice used here lets multiple
+        fragments from one chunk join the same earlier track.
+        """
+
+        config = self.config
+        pool = self.pool
+        if not tracklets:
+            return 0
+        count = config.association_head_events
+        scale = config.cluster_time_scale_px_per_second
+        active = [pool.tracks[track_id] for track_id in sorted(pool.active)
+                  if track_id in pool.tracks]
+        matched: dict[int, int] = {}
+        if active:
+            tails = np.asarray([track.tail_descriptor(count, scale) for track in active])
+            heads = np.asarray([
+                (
+                    float(np.mean(item.x[:count])),
+                    float(np.mean(item.y[:count])),
+                    float(np.mean(item.t[:count])) * scale,
+                )
+                for item in tracklets
+            ])
+            difference = heads[:, None, :] - tails[None, :, :]
+            distance = np.linalg.norm(difference, axis=2)
+            # A hemisphere has no backward-time half.  Whether its equatorial
+            # plane and radius boundary are open or closed is not specified by
+            # eSfO; the frozen interpretation admits equal descriptor times
+            # and uses a strict distance < phi boundary.
+            valid = ((difference[:, :, 2] >= 0.0)
+                     & (distance < config.association_radius_px))
+            distance = np.where(valid, distance, np.inf)
+            best = np.argmin(distance, axis=1)
+            for row in range(len(tracklets)):
+                if np.isfinite(distance[row, best[row]]):
+                    matched[row] = active[int(best[row])].track_id
+        return self._apply_associations(tracklets, matched)
+
+    def _associate_experimental(self, tracklets: list[Tracklet], chunk_start: float) -> int:
         config = self.config
         pool = self.pool
         stale = [track_id for track_id in pool.active
@@ -303,6 +383,13 @@ class EventFrontend:
             for row in range(len(tracklets)):
                 if np.isfinite(distance[row, best[row]]):
                     matched[row] = active[int(best[row])].track_id
+        return self._apply_associations(tracklets, matched)
+
+    def _apply_associations(self, tracklets: list[Tracklet],
+                            matched: dict[int, int]) -> int:
+        """Apply deterministic tracklet-to-pool associations."""
+
+        pool = self.pool
         groups: dict[int, list[Tracklet]] = {}
         for row, item in enumerate(tracklets):
             if row in matched:

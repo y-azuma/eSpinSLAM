@@ -72,12 +72,17 @@ class OptimizationReport:
     landmarks: int
     observations: int
     mean_reprojection_error_px: float
+    removed_short: int
     removed_reprojection: int
     removed_radius: int
     fused: int
     iterations: int
-    converged: bool
+    termination_status: str
     mean_observation_error_px: float = math.nan
+
+    @property
+    def converged(self) -> bool:
+        return self.termination_status == "converged"
 
 
 class UndistortionMap:
@@ -124,7 +129,11 @@ class IncrementalBackend:
     def _track_observations(self, track) -> tuple[np.ndarray, np.ndarray]:
         t = track.t - self.time_origin
         x, y = track.x.astype(np.float64), track.y.astype(np.float64)
-        limit = self.config.max_observations_per_track
+        # Eq. (11) and Sec. 4.2.4 use every retained track event.  A finite
+        # cap is an explicitly experimental replay option, never a paper-mode
+        # behavior even if a caller accidentally carries that old value over.
+        limit = (self.config.max_observations_per_track
+                 if self.config.interpretation_mode == "experimental" else 0)
         if limit and t.size > limit:
             indices = np.unique(np.linspace(0, t.size - 1, limit).round().astype(np.int64))
             t, x, y = t[indices], x[indices], y[indices]
@@ -139,9 +148,20 @@ class IncrementalBackend:
         previous = self.landmarks.get(track_id)
         if previous is not None and not updated:
             return previous
-        point = triangulate(times, pixels, frequency, self.config.orbit_radius,
-                            self.rotation, self.intrinsic)
-        if point is not None and np.linalg.norm(point) <= self.config.orbit_radius:
+        # Sec. 4.2.4 states that all retained observations enter the linear
+        # multi-view triangulation.  The former 64-view cap is kept only for
+        # replaying the explicitly experimental implementation.
+        max_views = 64 if self.config.interpretation_mode == "experimental" else None
+        min_depth = 0.9 if self.config.interpretation_mode == "experimental" else None
+        point = triangulate(
+            times, pixels, frequency, self.config.orbit_radius,
+            self.rotation, self.intrinsic, max_views=max_views,
+            min_positive_depth_fraction=min_depth,
+        )
+        if point is not None and (
+            self.config.interpretation_mode == "paper"
+            or np.linalg.norm(point) <= self.config.orbit_radius
+        ):
             return point
         return previous if previous is not None else np.zeros(3)
 
@@ -151,18 +171,39 @@ class IncrementalBackend:
         frequency = float(self.frequency_hz) if (
             config.optimize_frequency and self.initialized and math.isfinite(self.frequency_hz)
         ) else float(frequency_hz)
+        snapshot = pool.snapshot()
+        preoptimization_short = [
+            track.track_id for track in snapshot
+            if track.size < config.min_track_events
+        ]
+        # The historical experimental implementation removed short tracks
+        # before triangulation.  Fig. 3 and Sec. 4.2.5 place all three outlier
+        # tests after association and optimisation, so the paper path delays
+        # this test; fragments may consequently acquire N_match observations
+        # when landmark association merges them.
+        if config.interpretation_mode == "experimental":
+            pool.remove(preoptimization_short)
         min_span = config.min_triangulation_angle_deg / (360.0 * frequency)
         tracks = [
-            track for track in pool.snapshot()
-            if track.size >= config.min_track_events
-            and track.latest_t - track.earliest_t >= max(min_span, 1e-9)
+            track for track in snapshot
+            if (config.interpretation_mode != "experimental"
+                or track.track_id not in preoptimization_short)
+            and track.latest_t - track.earliest_t >= min_span
         ]
         for stale in set(self.landmarks) - set(pool.tracks):
             self.landmarks.pop(stale, None)
             self.errors.pop(stale, None)
             self.revisions.pop(stale, None)
         if not tracks:
-            report = OptimizationReport(event_time, frequency, 0, 0, math.nan, 0, 0, 0, 0, False)
+            report = OptimizationReport(
+                event_time=event_time, frequency_hz=frequency, landmarks=0,
+                observations=0, mean_reprojection_error_px=math.nan,
+                removed_short=(len(preoptimization_short)
+                               if config.interpretation_mode == "experimental" else 0),
+                removed_reprojection=0,
+                removed_radius=0, fused=0, iterations=0,
+                termination_status="not_run",
+            )
             self.reports.append(report)
             return report
         # Sec. 4.2.3 / 4.2.4: origin on the first run, otherwise triangulation
@@ -187,7 +228,11 @@ class IncrementalBackend:
             owners.append(np.full(t.size, owner, dtype=np.int64))
         times_array = np.concatenate(times)
         owners_array = np.concatenate(owners)
-        result = bundle_adjust(
+        solver = bundle_adjust
+        if config.solver_backend == "gtsam":
+            from .gtsam_backend import bundle_adjust_gtsam
+            solver = bundle_adjust_gtsam
+        result = solver(
             times_array, np.concatenate(pixels), owners_array,
             np.asarray([initial[track.track_id] for track in tracks]),
             np.eye(3) if not self.initialized else self.rotation,
@@ -203,11 +248,15 @@ class IncrementalBackend:
         points = result.points
         errors = result.per_point_error_px
         # Sec. 4.2.5: outlier elimination after the optimisation.
+        short_bad = np.asarray([
+            track.size < config.min_track_events for track in tracks
+        ], dtype=bool)
         radius_bad = ~np.isfinite(points).all(axis=1) | (
             np.linalg.norm(points, axis=1) > config.orbit_radius)
-        error_bad = ~radius_bad & ~(errors <= config.max_mean_reprojection_error_px)
-        pool.remove(ids[radius_bad | error_bad])
-        keep = ~(radius_bad | error_bad)
+        error_bad = ~(short_bad | radius_bad) & ~(
+            errors <= config.max_mean_reprojection_error_px)
+        pool.remove(ids[short_bad | radius_bad | error_bad])
+        keep = ~(short_bad | radius_bad | error_bad)
         self.landmarks = {int(i): p for i, p in zip(ids[keep], points[keep])}
         self.errors = {int(i): float(e) for i, e in zip(ids[keep], errors[keep])}
         revision = {track.track_id: track.revision for track in tracks}
@@ -218,9 +267,17 @@ class IncrementalBackend:
         self.observation_count = int(inlier_observations.sum())
         mean_error = float(np.mean(list(self.errors.values()))) if self.errors else math.nan
         report = OptimizationReport(
-            event_time, result.frequency_hz, len(self.landmarks), int(times_array.size),
-            mean_error, int(error_bad.sum()), int(radius_bad.sum()), fused,
-            result.iterations, result.converged, self.observation_error,
+            event_time=event_time, frequency_hz=result.frequency_hz,
+            landmarks=len(self.landmarks), observations=int(times_array.size),
+            mean_reprojection_error_px=mean_error,
+            removed_short=(len(preoptimization_short)
+                           if config.interpretation_mode == "experimental"
+                           else int(short_bad.sum())),
+            removed_reprojection=int(error_bad.sum()),
+            removed_radius=int(radius_bad.sum()), fused=fused,
+            iterations=result.iterations,
+            termination_status=result.termination_status,
+            mean_observation_error_px=self.observation_error,
         )
         self.reports.append(report)
         return report

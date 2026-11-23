@@ -1,5 +1,6 @@
-# TOPSPIN scenes used to set the front-end parameters the paper does not give
-# (pre-registered before any tuning run; see docs/reproduction_report.md, Sec. 13).
+# TOPSPIN scenes reserved for predeclared viability checks of mandatory values
+# absent from the paper/citations. They are never used to optimize accuracy,
+# reprojection error, landmark count, or any other performance measure.
 # One scene per speed, three different objects and perspectives. The paper's
 # Fig. 8 scene (soho-perpendicular-fast) is deliberately kept out of this set.
 hubble-perpendicular-slow

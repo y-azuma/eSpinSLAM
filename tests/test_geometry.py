@@ -102,11 +102,82 @@ def test_bundle_adjustment_can_also_estimate_frequency():
     assert abs(result.frequency_hz - 0.5) < 1e-4
 
 
-def test_triangulation_recovers_point_and_rejects_points_behind():
+def test_iteration_limit_is_not_mislabeled_as_convergence():
+    scene, times, pixels, owners = _scene_observations(30.0, 0.5)
+    result = bundle_adjust(times, pixels, owners, np.zeros_like(scene.points), np.eye(3),
+                           0.5, 10.0, INTRINSIC, huber_threshold_px=2.0,
+                           max_iterations=1)
+    assert result.termination_status == "max_iterations"
+    assert not result.converged
+
+
+def test_triangulation_recovers_point():
     scene, times, pixels, owners = _scene_observations(20.0, 0.0)
     mask = owners == 3
     point = triangulate(times[mask], pixels[mask], 0.5, 10.0, scene.rotation, INTRINSIC)
     assert point is not None and np.allclose(point, scene.points[3], atol=1e-6)
+
+
+def test_cheirality_guard_is_experimental_and_includes_threshold_boundary(monkeypatch):
+    """The paper does not state the former 90% positive-depth rejection."""
+
+    import espinslam.geometry as geometry_module
+
+    times = np.arange(10.0)
+    pixels = np.zeros((10, 2))
+    rotations = np.repeat(np.eye(3)[None], 10, axis=0)
+    centres = np.zeros((10, 3))
+    centres[:, 2] = 1.0
+
+    def fake_frames(*args, **kwargs):
+        return rotations, centres.copy()
+
+    def origin_svd(matrix, *args, **kwargs):
+        return np.eye(matrix.shape[0], 4), np.ones(4), np.eye(4)
+
+    monkeypatch.setattr(geometry_module, "orbit_camera_frames", fake_frames)
+    monkeypatch.setattr(np.linalg, "svd", origin_svd)
+
+    # The finite DLT solution is behind every camera. It remains valid in the
+    # paper path, whereas the old unreported guard rejects it.
+    paper = triangulate(times, pixels, 0.5, 10.0, np.eye(3), INTRINSIC)
+    guarded = triangulate(
+        times, pixels, 0.5, 10.0, np.eye(3), INTRINSIC,
+        min_positive_depth_fraction=0.9,
+    )
+    assert np.array_equal(paper, np.zeros(3))
+    assert guarded is None
+
+    # Nine strictly positive depths out of ten is exactly the 0.9 boundary
+    # and is admitted by the historical experimental rule.
+    centres[:9, 2] = -1.0
+    centres[9, 2] = 1.0
+    boundary = triangulate(
+        times, pixels, 0.5, 10.0, np.eye(3), INTRINSIC,
+        min_positive_depth_fraction=0.9,
+    )
+    assert np.array_equal(boundary, np.zeros(3))
+
+
+def test_reference_triangulation_uses_every_retained_observation(monkeypatch):
+    """Sec. 4.2.4 has no 64-view subsampling step in the reference path."""
+
+    scene, times, pixels, owners = _scene_observations(20.0, 0.0)
+    mask = owners == 3
+    times, pixels = times[mask], pixels[mask]
+    assert times.size > 64
+    rows: list[int] = []
+    original = np.linalg.svd
+
+    def recording_svd(matrix, *args, **kwargs):
+        rows.append(matrix.shape[0])
+        return original(matrix, *args, **kwargs)
+
+    monkeypatch.setattr(np.linalg, "svd", recording_svd)
+    triangulate(times, pixels, 0.5, 10.0, scene.rotation, INTRINSIC)
+    triangulate(times, pixels, 0.5, 10.0, scene.rotation, INTRINSIC,
+                max_views=64)
+    assert rows == [2 * times.size, 2 * 64]
 
 
 def test_similarity_icp_resolves_monocular_transform():
