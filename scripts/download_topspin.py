@@ -5,8 +5,10 @@ Each ``<scene>.tar.gz`` of the public release (record 10884694, CC-BY-4.0) is
 downloaded, extracted, and its ``events.csv`` (t [us], x, y, p) is converted to
 ``events.npz`` (int64 t in microseconds, int16 x/y, uint8 p) next to
 ``calib.txt`` and ``meta.json``. The CSV and the archive are then deleted
-(the npz is about 3x smaller and loads much faster). Finished scenes are
-skipped, so the script can be re-run after an interruption.
+(the npz is about 3x smaller and loads much faster). Each archive is checked
+against the size and MD5 published by Zenodo and downloaded again on a
+mismatch. Finished scenes are skipped, so the script can be re-run after an
+interruption.
 
 Example::
 
@@ -17,6 +19,7 @@ Example::
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -38,17 +41,34 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _fetch(url: str, destination: Path, attempts: int = 4) -> None:
+def _md5(path: Path) -> str:
+    digest = hashlib.md5()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _fetch(url: str, destination: Path, size: int, checksum: str, attempts: int = 5) -> None:
+    """Download and verify against Zenodo's size and MD5 (retry on any mismatch)."""
+
+    expected = checksum.split(":", 1)[1] if checksum.startswith("md5:") else None
     for attempt in range(1, attempts + 1):
+        temporary = destination.with_suffix(destination.suffix + ".part")
         try:
-            temporary = destination.with_suffix(destination.suffix + ".part")
             with urllib.request.urlopen(url, timeout=120) as response, temporary.open("wb") as out:
                 shutil.copyfileobj(response, out, length=1 << 20)
+            if temporary.stat().st_size != size:
+                raise OSError(f"size {temporary.stat().st_size} != {size}")
+            if expected is not None and _md5(temporary) != expected:
+                raise OSError("md5 mismatch")
             temporary.replace(destination)
             return
-        except OSError:
+        except OSError as error:
+            temporary.unlink(missing_ok=True)
             if attempt == attempts:
                 raise
+            print(f"  retry {attempt} for {destination.name}: {error}", flush=True)
             time.sleep(2 ** attempt)
 
 
@@ -88,7 +108,9 @@ def main() -> None:
             continue
         archive = args.output / f"{name}.tar.gz"
         started = time.monotonic()
-        _fetch(f"{RECORD}/files/{name}.tar.gz/content", archive)
+        archive.unlink(missing_ok=True)  # a leftover from an interrupted run
+        _fetch(f"{RECORD}/files/{name}.tar.gz/content", archive,
+               int(files[name]["size"]), files[name].get("checksum", ""))
         _safe_extract(archive, args.output)
         archive.unlink()
         events = convert(scene_dir)
