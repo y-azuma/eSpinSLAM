@@ -41,7 +41,8 @@ def _online(events, config, step=0.1):
 def test_online_loop_closure_recovers_frequency_and_detects_loop():
     events = _track_events(0.5, 6.0)
     estimator, closed_at = _online(events, FrequencyConfig(min_period_seconds=0.5,
-                                                           time_scale_px_per_second=150.0))
+                                                           time_scale_px_per_second=150.0,
+                                                           alignment_mode="experimental"))
     assert estimator.loop_closed and closed_at is not None and closed_at < 5.0
     assert abs(estimator.current.frequency_hz - 0.5) < 2e-3
 
@@ -49,7 +50,8 @@ def test_online_loop_closure_recovers_frequency_and_detects_loop():
 def test_fundamental_is_preferred_over_subharmonics():
     events = _track_events(0.9, 6.0, seed=3)
     estimator = LoopClosureFrequencyEstimator(FrequencyConfig(min_period_seconds=0.5,
-                                                              time_scale_px_per_second=150.0))
+                                                              time_scale_px_per_second=150.0,
+                                                              alignment_mode="experimental"))
     estimate = estimator.update(events)
     assert estimate.valid and abs(estimate.frequency_hz - 0.9) < 0.01
 
@@ -73,5 +75,7 @@ def test_fft_ablation_finds_event_rate_modulation():
 def test_short_observation_abstains():
     events = np.column_stack((np.linspace(0.0, 0.2, 300), np.linspace(0.0, 10.0, 300),
                               np.linspace(0.0, 5.0, 300)))
-    estimate = LoopClosureFrequencyEstimator(FrequencyConfig()).update(events)
+    estimate = LoopClosureFrequencyEstimator(
+        FrequencyConfig(min_period_seconds=1.0),
+    ).update(events)
     assert not estimate.valid

@@ -180,6 +180,39 @@ def _query_shifts(times, xq_all, yq_all, shifts, scale, start, stop, xs, ys, zs,
             out[k, m] = math.sqrt(best2)
 
 
+@njit(cache=True, parallel=True)
+def _query_all_shifts(times, xq_all, yq_all, shifts, scale, xs, ys, zs,
+                      cell_start, bx0, bx1, by0, by1, gx, gy, xmin, ymin, cell, out):
+    """Exact distances for every ``(shift, point)`` pair.
+
+    Unlike :func:`_query_shifts`, this routine deliberately performs no
+    timestamp-overlap filtering.  It is the batched form required by the
+    literal support of paper Eq. (9), where every event in ``A_l`` contributes
+    to the objective for every candidate shift.
+    """
+
+    for m in prange(times.shape[0]):
+        xq = xq_all[m]
+        yq = yq_all[m]
+        previous = -1
+        for k in range(shifts.shape[0]):
+            zq = scale * (times[m] + shifts[k])
+            best2 = np.inf
+            best = -1
+            if previous >= 0:
+                dx = xs[previous] - xq
+                dy = ys[previous] - yq
+                dz = zs[previous] - zq
+                best2 = dx * dx
+                best2 = best2 + dy * dy
+                best2 = best2 + dz * dz
+                best = previous
+            best2, best = _nearest(xq, yq, zq, best2, best, xs, ys, zs, cell_start,
+                                   bx0, bx1, by0, by1, gx, gy, xmin, ymin, cell)
+            previous = best
+            out[k, m] = math.sqrt(best2)
+
+
 class GridIndex:
     """Exact nearest neighbour in 3-D with a uniform (x, y) grid."""
 
@@ -268,4 +301,27 @@ class GridIndex:
                           float(start), float(stop), self.xs, self.ys, self.zs,
                           self.cell_start, self.bx0, self.bx1, self.by0, self.by1,
                           self.gx, self.gy, self.xmin, self.ymin, self.cell, out)
+        return out
+
+    def query_all_shifts(self, times: np.ndarray, x: np.ndarray, y: np.ndarray,
+                         shifts: np.ndarray, scale: float) -> np.ndarray:
+        """Nearest distances for all points and all temporal shifts.
+
+        This is an exact batched equivalent of calling :meth:`query_points`
+        once per shift with queries ``(x, y, scale * (t + shift))``.  No event
+        is removed based on the shifted timestamp.  The previous shift's
+        nearest neighbour is only an upper-bound warm start, so it cannot
+        alter the selected distance.
+        """
+
+        times = np.ascontiguousarray(times, dtype=np.float64)
+        x = np.ascontiguousarray(x, dtype=np.float64)
+        y = np.ascontiguousarray(y, dtype=np.float64)
+        shifts = np.ascontiguousarray(shifts, dtype=np.float64)
+        out = np.empty((len(shifts), len(times)), dtype=np.float64)
+        if len(shifts) and len(times):
+            _query_all_shifts(times, x, y, shifts, float(scale), self.xs, self.ys,
+                              self.zs, self.cell_start, self.bx0, self.bx1,
+                              self.by0, self.by1, self.gx, self.gy, self.xmin,
+                              self.ymin, self.cell, out)
         return out

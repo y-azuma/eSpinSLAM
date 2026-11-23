@@ -8,18 +8,21 @@ The revolution period is the temporal shift that best aligns ``A_l`` with
     t_rev* = argmin_s  sum_{m in A_l} min_{n in A_r} || [x_m, y_m, lambda (t_m + s)]
                                                        - [x_n, y_n, lambda t_n] ||_2
 
-(restricted to the left events whose shifted time falls inside ``A_r``; see
-:class:`_Alignment`) and is solved with a 1-D variant of ICP: alternate nearest-neighbour
-correspondences with the closed-form (IRLS) update of the shift. Pixels and
-seconds are made commensurate by ``lambda`` (``time_scale_px_per_second``),
-which the paper leaves implicit.
+``alignment_mode="paper"`` implements that support literally: every event in
+``A_l`` contributes for every candidate shift, all of ``A_r`` is searched,
+the Euclidean distances are summed, and the global grid argmin is refined by
+1-D ICP.  There is no subsampling, overlap restriction, harmonic preference,
+or warm-start shortcut.  ``lambda`` (``time_scale_px_per_second``) remains a
+declared interpretation because the paper combines pixels and timestamps
+without specifying their relative units.
 
-Until a loop has been detected the shift is initialised by a bounded coarse
-search (local minima within ``harmonic_tolerance`` of the best are treated as
-equivalent and the shortest period, i.e. the fundamental, is chosen); after
-detection ICP is warm-started from the current estimate, which is how a local
-1-D ICP tracks the period online. A loop is detected when the last ``aleph``
-estimates have a sample standard deviation below ``sigma`` (Table 1).
+``alignment_mode="experimental"`` preserves the earlier approximate
+interpretation for retrospective comparison only.  It restricts support to
+the temporal overlap, averages distances, subsamples large pools, and can use
+``harmonic_tolerance``.  Reproduction configurations must not select it.
+
+A loop is detected when the last ``aleph`` estimates have sample standard
+deviation below ``sigma`` (Table 1).
 
 ``method="fft"`` implements the Table 3 ablation ("FFT f estimation"): the
 dominant peak of the spectrum of the track-event rate, as in eSfO.
@@ -65,8 +68,8 @@ def _uniform_subsample(values: np.ndarray, limit: int) -> np.ndarray:
     return values[indices]
 
 
-class _Alignment:
-    """Eq. (9) cost and 1-D ICP for a fixed split of ``A``.
+class _ExperimentalAlignment:
+    """Earlier approximate alignment retained for retrospective comparison.
 
     Only left events whose shifted timestamp ``t_m + s`` falls inside the time
     range of ``A_r`` take part: the others cannot be aligned by construction,
@@ -148,11 +151,93 @@ class _Alignment:
         return shift, self.cost(shift, hint)
 
 
+class _PaperAlignment:
+    """Literal Eq. (9) support and objective for a fixed split of ``A``.
+
+    Every event in ``A_l`` is queried against all of ``A_r`` for every shift.
+    The objective is the *sum* of Euclidean nearest-neighbour distances.  The
+    class intentionally has no overlap mask and no sampling limit.
+    """
+
+    def __init__(self, left: np.ndarray, right: np.ndarray, scale: float):
+        self.left_t = np.ascontiguousarray(left[:, 0], dtype=np.float64)
+        self.left_x = np.ascontiguousarray(left[:, 1], dtype=np.float64)
+        self.left_y = np.ascontiguousarray(left[:, 2], dtype=np.float64)
+        self.right_t = np.ascontiguousarray(right[:, 0], dtype=np.float64)
+        self.scale = float(scale)
+        self.grid = GridIndex(np.column_stack((right[:, 1], right[:, 2],
+                                               self.scale * right[:, 0])))
+
+    def _query(self, shift: float, hint: np.ndarray | None = None
+               ) -> tuple[np.ndarray, np.ndarray]:
+        return self.grid.query_points(
+            self.left_x,
+            self.left_y,
+            self.scale * (self.left_t + shift),
+            hint,
+        )
+
+    def cost(self, shift: float, hint: np.ndarray | None = None) -> float:
+        distance, _ = self._query(shift, hint)
+        return float(np.sum(distance))
+
+    def costs(self, shifts: np.ndarray) -> np.ndarray:
+        # Exact acceleration only: bound the temporary distance matrix without
+        # changing the support, candidates, nearest neighbours, or reduction
+        # performed for any candidate.  This prevents the literal all-event
+        # objective from allocating O(len(A_l) * candidates) memory at once.
+        shifts = np.asarray(shifts, dtype=np.float64)
+        result = np.empty(shifts.size, dtype=np.float64)
+        bytes_per_shift = max(8 * self.left_t.size, 8)
+        batch = max(1, (64 << 20) // bytes_per_shift)
+        for start in range(0, shifts.size, batch):
+            stop = min(start + batch, shifts.size)
+            distances = self.grid.query_all_shifts(
+                self.left_t, self.left_x, self.left_y,
+                shifts[start:stop], self.scale,
+            )
+            result[start:stop] = np.sum(distances, axis=1)
+        return result
+
+    def icp(self, shift: float, iterations: int, tolerance: float,
+            minimum: float, maximum: float) -> tuple[float, float]:
+        """Refine a global-grid seed with fixed-correspondence IRLS.
+
+        The update minimises the sum of Euclidean norms in Eq. (9) for the
+        current correspondences.  Bounds are part of the declared search
+        interval; an update is clipped to them rather than silently changing
+        the admissible problem.
+        """
+
+        hint = np.full(self.left_t.shape[0], -1, dtype=np.int64)
+        shift = float(np.clip(shift, minimum, maximum))
+        for _ in range(iterations):
+            distance, index = self._query(shift, hint)
+            hint = index
+            weights = 1.0 / np.maximum(distance, 1e-12)
+            target = self.right_t[index] - self.left_t
+            updated = float(np.sum(weights * target) / np.sum(weights))
+            updated = float(np.clip(updated, minimum, maximum))
+            converged = abs(updated - shift) < tolerance
+            shift = updated
+            if converged:
+                break
+        return shift, self.cost(shift, hint)
+
+
 class LoopClosureFrequencyEstimator:
     """Online period estimator with loop-closure detection."""
 
-    def __init__(self, config: FrequencyConfig):
+    def __init__(self, config: FrequencyConfig, alignment_mode: str | None = None):
         self.config = config
+        # ``alignment_mode`` is an explicit override used by verification
+        # tests.  The config hook is added separately so older recorded configs
+        # remain readable while the paper path is introduced.
+        self.alignment_mode = alignment_mode or getattr(
+            config, "alignment_mode", "experimental",
+        )
+        if self.alignment_mode not in {"paper", "experimental"}:
+            raise ValueError("alignment_mode must be 'paper' or 'experimental'")
         self.history: deque[float] = deque(maxlen=config.loop_history)
         self.loop_closed = False
         self.current: FrequencyEstimate = _invalid("no estimate yet")
@@ -181,20 +266,30 @@ class LoopClosureFrequencyEstimator:
                     and float(np.std(np.asarray(self.history), ddof=1))
                     < self.config.loop_std_threshold_hz):
                 self.loop_closed = True
-        elif not self.loop_closed:
-            # Detection needs aleph *consecutive* consistent estimates.
+        elif not self.loop_closed and self.alignment_mode == "experimental":
+            # Historical interpretation: an invalid update breaks the run of
+            # estimates.  The paper path instead reads "the last aleph
+            # estimates" literally and therefore does not count (or clear the
+            # history for) an update that produced no estimate.
             self.history.clear()
         return estimate
 
     # -- Eq. (9) ---------------------------------------------------------------
     def _loop_closure(self, events: np.ndarray) -> FrequencyEstimate:
+        if self.alignment_mode == "paper":
+            return self._loop_closure_paper(events)
+        return self._loop_closure_experimental(events)
+
+    def _validate_and_split(self, events: np.ndarray, *, subsample: bool
+                            ) -> tuple[np.ndarray, np.ndarray, float, float] | FrequencyEstimate:
         config = self.config
         if events.ndim != 2 or events.shape[1] < 3:
             raise ValueError("events must have shape [N,3] as t/x/y")
         if events.shape[0] < 2 * config.min_samples_per_half:
             return _invalid("too few track events")
         events = events[np.argsort(events[:, 0], kind="stable")]
-        events = _uniform_subsample(events, config.max_alignment_samples)
+        if subsample:
+            events = _uniform_subsample(events, config.max_alignment_samples)
         first, last = float(events[0, 0]), float(events[-1, 0])
         span = last - first
         midlife = 0.5 * (first + last)
@@ -205,8 +300,49 @@ class LoopClosureFrequencyEstimator:
         maximum = min(config.max_period_seconds, span)
         if maximum <= config.min_period_seconds:
             return _invalid("observation span is shorter than the minimum period")
-        alignment = _Alignment(left, right, config.time_scale_px_per_second,
-                               config.min_samples_per_half)
+        return left, right, span, maximum
+
+    def _loop_closure_paper(self, events: np.ndarray) -> FrequencyEstimate:
+        """Paper-reference Eq. (9): full support, sum, global argmin."""
+
+        config = self.config
+        split = self._validate_and_split(events, subsample=False)
+        if isinstance(split, FrequencyEstimate):
+            return split
+        left, right, _, maximum = split
+        alignment = _PaperAlignment(left, right, config.time_scale_px_per_second)
+
+        count = max(3, int(math.ceil(
+            math.log(maximum / config.min_period_seconds)
+            / math.log1p(config.coarse_relative_step),
+        )) + 1)
+        candidates = np.geomspace(config.min_period_seconds, maximum, count)
+        costs = alignment.costs(candidates)
+        finite = np.flatnonzero(np.isfinite(costs))
+        if not finite.size:
+            return _invalid("no admissible alignment minimum")
+        seed = int(finite[np.argmin(costs[finite])])
+        shift, cost = alignment.icp(
+            float(candidates[seed]), config.icp_iterations,
+            config.icp_tolerance_seconds, config.min_period_seconds, maximum,
+        )
+        if not (config.min_period_seconds <= shift <= maximum and math.isfinite(cost)):
+            return _invalid("no admissible alignment minimum")
+        return FrequencyEstimate(1.0 / shift, shift, cost, True, "",
+                                 candidates, costs)
+
+    def _loop_closure_experimental(self, events: np.ndarray) -> FrequencyEstimate:
+        """Previous approximate interpretation, isolated from reproduction."""
+
+        config = self.config
+        split = self._validate_and_split(events, subsample=True)
+        if isinstance(split, FrequencyEstimate):
+            return split
+        left, right, span, maximum = split
+        alignment = _ExperimentalAlignment(
+            left, right, config.time_scale_px_per_second,
+            config.min_samples_per_half,
+        )
 
         if self.loop_closed and self.current.valid and self.current.period_seconds <= span:
             shift, cost = alignment.icp(
