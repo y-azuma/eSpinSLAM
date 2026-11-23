@@ -47,6 +47,21 @@ def test_density_filter_removes_isolated_corners():
     assert keep[:30].mean() > 0.6 and not keep[30:].any()
 
 
+def test_density_threshold_global_or_per_polarity():
+    """Eq. (6) uses one mean mu_D; the per-polarity variant keeps the rarer polarity."""
+
+    rng = np.random.default_rng(1)
+    on = rng.normal((30.0, 30.0), 0.5, (60, 2))     # sensitive polarity: very dense
+    off = rng.normal((70.0, 70.0), 1.5, (15, 2))    # rarer polarity: sparser corner
+    xy = np.vstack((on, off))
+    p = np.r_[np.ones(60, int), np.zeros(15, int)]
+    global_mean = density_filter(np.zeros(len(xy)), xy[:, 0], xy[:, 1], p, 3.0)
+    per_polarity = density_filter(np.zeros(len(xy)), xy[:, 0], xy[:, 1], p, 3.0,
+                                  per_polarity_mean=True)
+    assert not global_mean[60:].any()       # the paper's single mean drops it
+    assert per_polarity[60:].any()          # a per-polarity mean keeps it
+
+
 def test_track_pool_buffer_merge_and_forget():
     pool = TrackPool(retain=5)
     first = pool.add(1, np.arange(4.0), np.zeros(4), np.zeros(4))

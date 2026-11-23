@@ -163,13 +163,20 @@ class TrackPool:
 
 
 def density_filter(t: np.ndarray, x: np.ndarray, y: np.ndarray, p: np.ndarray,
-                   radius: float) -> np.ndarray:
-    """Eq. (6): keep corners whose same-polarity density is >= the mean density."""
+                   radius: float, *, per_polarity_mean: bool = False) -> np.ndarray:
+    """Eq. (6): keep corners whose same-polarity density reaches the mean ``mu_D``.
+
+    ``D(e_i) = (1/lambda) * #{e_q in F : |e_q - e_i| <= lambda, p_q = p_i}``;
+    corners with ``D < mu_D`` are removed, ``mu_D`` being one mean over all
+    corners as written in the paper. ``per_polarity_mean=True`` uses a separate
+    mean per polarity (an alternative reading of the normalisation remark).
+    """
 
     count = t.size
     if count < 2:
         return np.ones(count, dtype=bool)
     scores = np.zeros(count, dtype=np.float64)
+    thresholds = np.zeros(count, dtype=np.float64)
     points = np.column_stack((x, y)).astype(np.float64)
     for polarity in (0, 1):
         indices = np.flatnonzero(p == polarity)
@@ -178,7 +185,10 @@ def density_filter(t: np.ndarray, x: np.ndarray, y: np.ndarray, p: np.ndarray,
         tree = cKDTree(points[indices])
         neighbours = tree.query_ball_point(points[indices], radius, return_length=True)
         scores[indices] = (np.asarray(neighbours, dtype=np.float64) - 1.0) / radius
-    return scores >= scores.mean()
+        thresholds[indices] = scores[indices].mean()
+    if not per_polarity_mean:
+        thresholds[:] = scores.mean()
+    return scores >= thresholds
 
 
 @dataclass(frozen=True)
@@ -244,7 +254,8 @@ class EventFrontend:
              p: np.ndarray) -> FrontendChunkStats:
         corners = self.detector.detect(x, y, t, p)
         ct, cx, cy, cp = t[corners], x[corners], y[corners], p[corners]
-        dense = density_filter(ct, cx, cy, cp, self.config.density_radius_px)
+        dense = density_filter(ct, cx, cy, cp, self.config.density_radius_px,
+                               per_polarity_mean=self.config.density_mean_per_polarity)
         ct, cx, cy, cp = ct[dense], cx[dense], cy[dense], cp[dense]
         tracklets = cluster_tracklets(ct, cx, cy, cp, self.config)
         associated = self._associate(tracklets, float(t[0]) if t.size else 0.0)

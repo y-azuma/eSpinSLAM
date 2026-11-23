@@ -87,10 +87,12 @@ def test_topspin_evaluation_writes_paper_tables(synthetic, tmp_path):
     assert row["icp_mean_mm"] is not None and row["icp_mean_mm"] < 6.0  # object ~90 mm
     for name in ("per_sequence.csv", "table2.md", "table_vs_paper.md", "metrics.json",
                  "fig5_throughput_summary.png", "fig6_frequency_cdf.png",
-                 "fig7_throughput.png", "fig8_hubble-test-fast.png"):
+                 "fig7_throughput.png", "fig8_hubble-test-fast.png",
+                 "reconstruction_hubble-test-fast.png"):
         assert (tmp_path / "run" / name).is_file()
     assert "paper" in (tmp_path / "run" / "table_vs_paper.md").read_text(encoding="utf-8")
     assert report["mean_frontend_throughput_ev_s"] > report["mean_throughput_ev_s"]
+    assert report["real_time_rate"] in (0.0, 1.0)
 
 
 def test_topspin_ablations_write_table3_and_fig6_comparison(synthetic, tmp_path):

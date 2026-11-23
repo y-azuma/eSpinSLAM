@@ -138,8 +138,13 @@ def render(scene: SyntheticScene, time_seconds: float, background: float = 0.15)
 
 def simulate_events(scene: SyntheticScene, *, duration_seconds: float = 5.0,
                     frame_rate: float = 1000.0, contrast_threshold: float = 0.2,
+                    contrast_threshold_off: float | None = None,
                     noise_rate_hz_per_pixel: float = 0.0, seed: int = 0) -> SyntheticStream:
-    """Generate an event stream with the contrast-threshold sensor model."""
+    """Generate an event stream with the contrast-threshold sensor model.
+
+    ``contrast_threshold`` applies to ON events and ``contrast_threshold_off``
+    (default: the same value) to OFF events; real sensors differ (Sec. 4.1).
+    """
 
     rng = np.random.default_rng(seed)
     frame_times = np.arange(0.0, duration_seconds, 1.0 / frame_rate)
@@ -150,20 +155,24 @@ def simulate_events(scene: SyntheticScene, *, duration_seconds: float = 5.0,
     for index in range(1, frame_times.size):
         current = np.log(render(scene, frame_times[index]) + epsilon)
         delta = current - reference
-        counts = np.floor(np.abs(delta) / contrast_threshold).astype(np.int64)
+        threshold = np.where(delta > 0, contrast_threshold,
+                             contrast_threshold if contrast_threshold_off is None
+                             else contrast_threshold_off)
+        counts = np.floor(np.abs(delta) / threshold).astype(np.int64)
         ys, xs = np.nonzero(counts)
         if ys.size:
             n = counts[ys, xs]
             owner = np.repeat(np.arange(ys.size), n)
             crossing = np.arange(owner.size) - np.repeat(np.cumsum(n) - n, n) + 1
             sign = np.sign(delta[ys, xs])
-            target = reference[ys, xs][owner] + sign[owner] * crossing * contrast_threshold
+            step = threshold[ys, xs]
+            target = reference[ys, xs][owner] + sign[owner] * crossing * step[owner]
             start = previous[ys, xs][owner]
             change = (current[ys, xs] - previous[ys, xs])[owner]
             with np.errstate(divide="ignore", invalid="ignore"):
                 fraction = np.where(np.abs(change) > 1e-12, (target - start) / change, 1.0)
             times = frame_times[index - 1] + np.clip(fraction, 0.0, 1.0) / frame_rate
-            reference[ys, xs] += sign * n * contrast_threshold
+            reference[ys, xs] += sign * n * step
             chunks_t.append(times)
             chunks_x.append(xs[owner])
             chunks_y.append(ys[owner])

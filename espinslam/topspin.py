@@ -17,6 +17,9 @@ Outputs, per run directory:
   event rate (paper Fig. 7);
 * ``history/<scene>_optimizations.csv`` and ``fig8_<scene>.png`` - mean
   reprojection error and number of world points over time (paper Fig. 8);
+* ``reconstruction_<scene>.png`` - world points inside the estimated orbit
+  (as in paper Figs. 1, 3, 4); ``per_sequence.csv`` also flags whether the
+  system kept up with the scene's event rate (``real_time``, Fig. 7);
 * ``metrics.json`` - everything above plus the configuration.
 
 :func:`evaluate_topspin_ablations` runs the four settings of Table 3 and
@@ -231,6 +234,10 @@ def _sequence_row(row: dict[str, str], result: ESpinSLAMResult, *,
             else math.nan),
         "runtime_s": result.runtime_seconds,
         "throughput_ev_s": _nullable(result.throughput_events_per_second),
+        # Fig. 7: real time when the system outpaces the scene's own event rate.
+        "real_time": bool(result.observation_seconds > 0 and result.runtime_seconds > 0
+                          and result.throughput_events_per_second
+                          >= result.event_count / result.observation_seconds),
         "frontend_throughput_ev_s": _nullable(result.frontend_throughput_events_per_second),
         "frontend_s": result.frontend_seconds,
         "frequency_s": result.frequency_seconds,
@@ -409,6 +416,44 @@ def _plot_throughput(rows: list[dict[str, Any]], output: Path) -> None:
     plt.close(fig)
 
 
+def _plot_reconstruction(result: ESpinSLAMResult, orbit_radius: float, output: Path) -> None:
+    """Figs. 1, 3, 4: reconstructed points inside the estimated camera orbit."""
+
+    import matplotlib.pyplot as plt
+    from .geometry import camera_pose
+    reconstruction = result.reconstruction
+    fig, axes = plt.subplots(1, 2, figsize=(10.0, 4.6))
+    angle = np.linspace(0.0, 2.0 * np.pi, 361)
+    if reconstruction.valid:
+        points = reconstruction.points
+        rotation, centre = camera_pose(0.0, reconstruction.frequency_hz, orbit_radius,
+                                       reconstruction.rotation)
+        axis_world = rotation[2]  # optical axis in the world frame
+        for axis, (i, j, name) in zip(axes, ((0, 1, "top view (x-y)"), (0, 2, "side view (x-z)"))):
+            if j == 1:
+                axis.plot(orbit_radius * np.cos(angle), orbit_radius * np.sin(angle), ":",
+                          color="red", linewidth=1, label="camera orbit")
+            else:
+                axis.plot([-orbit_radius, orbit_radius], [0.0, 0.0], ":", color="red",
+                          linewidth=1, label="camera orbit")
+            axis.scatter(points[:, i], points[:, j], s=3, color="black", label="world points")
+            axis.quiver(centre[i], centre[j], axis_world[i], axis_world[j], color="blue",
+                        angles="xy", scale_units="xy", scale=0.4, label="camera at t=0")
+            axis.set_aspect("equal", adjustable="datalim")
+            axis.set_title(name)
+            axis.grid(alpha=0.3)
+        axes[0].legend(loc="upper right", fontsize=7)
+    else:
+        for axis in axes:
+            axis.text(0.5, 0.5, reconstruction.reason or "no reconstruction",
+                      ha="center", va="center", transform=axis.transAxes)
+    fig.suptitle(f"{result.sequence_id}: f* = {result.frequency_hz:.4f} Hz, "
+                 f"{reconstruction.points.shape[0]} world points")
+    fig.tight_layout()
+    fig.savefig(output, dpi=160)
+    plt.close(fig)
+
+
 def _plot_history(result: ESpinSLAMResult, output: Path) -> None:
     import matplotlib.pyplot as plt
     reports = result.optimizations
@@ -504,6 +549,8 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
         ] or [{"event_time_s": None}])
         if history_plots:
             _plot_history(result, output_dir / f"fig8_{sequence.sequence_id}.png")
+            _plot_reconstruction(result, config.backend.orbit_radius,
+                                 output_dir / f"reconstruction_{sequence.sequence_id}.png")
         print(
             f"[{setting_name}] [{index}/{len(rows)}] {sequence.sequence_id}: "
             f"f={record['frequency_est_hz']} loop={result.loop_closed} "
@@ -539,6 +586,8 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
         "mean_frontend_throughput_ev_s": _mean_std(
             [r["frontend_throughput_ev_s"] for r in results])[0],
         "mean_scene_event_rate_ev_s": _mean_std([r["scene_event_rate_ev_s"] for r in results])[0],
+        "real_time_rate": (sum(bool(r["real_time"]) for r in results) / len(results)
+                           if results else None),
         "table2": table,
         "runtime_seconds": time.monotonic() - started,
         "implementation_notes": [

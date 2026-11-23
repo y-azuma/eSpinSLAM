@@ -19,6 +19,7 @@
   "frontend": {
     "chunk_events": 1000,
     "density_radius_px": 3.0,
+    "density_mean_per_polarity": false,
     "cluster_min_size": 5,
     "cluster_min_samples": 3,
     "cluster_time_scale_px_per_second": 1000.0,

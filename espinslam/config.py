@@ -171,6 +171,10 @@ class FrontendConfig:
     chunk_events: int = 1000
     # lambda in Eq. (6): radius of the same-polarity density neighbourhood.
     density_radius_px: float = 3.0
+    # Eq. (6) removes corners below "the mean mu_D" (one mean over F). True uses
+    # a mean per polarity instead; it was less accurate with unequal ON/OFF
+    # contrast thresholds on the synthetic benchmark (docs/).
+    density_mean_per_polarity: bool = False
     # HDBSCAN parameters for spatio-temporal tracklet clustering.
     cluster_min_size: int = 5
     cluster_min_samples: int = 3
@@ -201,6 +205,7 @@ class FrontendConfig:
         ):
             _finite(f"frontend.{name}", getattr(self, name), positive=True)
         _boolean("frontend.cluster_by_polarity", self.cluster_by_polarity)
+        _boolean("frontend.density_mean_per_polarity", self.density_mean_per_polarity)
 
 
 _FREQUENCY_METHODS = {"loop_closure", "fft"}

@@ -64,6 +64,15 @@ The paper does not pin these details down; each choice is configurable.
    arbitrary). If the manifest gives `orbit_radius_mm` (true camera-to-spin-axis
    distance) the scale is `orbit_radius_mm / r`; otherwise it is fixed from
    the RMS-radius ratio (re-estimating it inside ICP collapses the cloud).
+8. **Density threshold.** Eq. 6 removes corners below "the mean `μ_D`", so one
+   mean over all corners is used. A per-polarity mean
+   (`density_mean_per_polarity: true`) is available; it was less accurate with
+   unequal ON/OFF contrast thresholds on the synthetic benchmark.
+9. **Map contents and other details.** World points of forgotten tracks leave
+   the map with their track; the "no f constraint" ablation starts each run
+   from the previously optimised `f`; loop detection needs `ℵ` consecutive
+   valid estimates. The full list (15 items, with measurements) is in
+   [`docs/reproduction_report.md`](docs/reproduction_report.md), Sec. 4.
 
 ## TOPSPIN evaluation (paper Sec. 5-6)
 
@@ -97,9 +106,12 @@ ECF-compressed Prophesee HDF5 files must be converted (e.g. to `.npz`) first.
      --output-dir runs/topspin_ablations --ablations all
    ```
 
-Outputs: `per_sequence.csv`, `table2.md`, `fig6_frequency_cdf.png`,
-`fig7_throughput.png`, `fig8_<scene>.png`, `history/*.csv`, `metrics.json`,
-and `table3.md` for ablations.
+Outputs: `per_sequence.csv` (including the Fig. 7 `real_time` flag),
+`table2.md`, `table_vs_paper.md`, `fig5_throughput_summary.png`,
+`fig6_frequency_cdf.png`, `fig7_throughput.png`, `fig8_<scene>.png`,
+`reconstruction_<scene>.png` (as in Figs. 1, 3, 4), `history/*.csv`,
+`metrics.json`; ablation runs add `table3.md`, `table3_vs_paper.md` and
+`fig6_loop_closure_vs_fft.png`.
 
 ## Synthetic verification (no TOPSPIN required)
 
