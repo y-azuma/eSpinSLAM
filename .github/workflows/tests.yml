@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-14]
+        os: [ubuntu-latest, macos-15-intel]
         python-version: ["3.10", "3.12"]
 
     env:
@@ -35,8 +35,7 @@ jobs:
         run: |
           echo "MPLCONFIGDIR=$RUNNER_TEMP/matplotlib" >> "$GITHUB_ENV"
           echo "NUMBA_CACHE_DIR=$RUNNER_TEMP/numba-cache" >> "$GITHUB_ENV"
-          echo "XDG_CACHE_HOME=$RUNNER_TEMP/cache" >> "$GITHUB_ENV"
-          mkdir -p "$RUNNER_TEMP/matplotlib" "$RUNNER_TEMP/numba-cache" "$RUNNER_TEMP/cache"
+          mkdir -p "$RUNNER_TEMP/matplotlib" "$RUNNER_TEMP/numba-cache"
 
       - name: Install locked dependencies
         run: python -m pip install --constraint requirements/lock.txt -e ".[test,topspin]"
@@ -52,7 +51,7 @@ jobs:
 
   synthetic-topspin-diagnostic:
     name: macOS synthetic TOPSPIN diagnostic
-    runs-on: macos-14
+    runs-on: macos-15-intel
     continue-on-error: true
     env:
       MPLBACKEND: Agg
@@ -73,8 +72,7 @@ jobs:
         run: |
           echo "MPLCONFIGDIR=$RUNNER_TEMP/matplotlib" >> "$GITHUB_ENV"
           echo "NUMBA_CACHE_DIR=$RUNNER_TEMP/numba-cache" >> "$GITHUB_ENV"
-          echo "XDG_CACHE_HOME=$RUNNER_TEMP/cache" >> "$GITHUB_ENV"
-          mkdir -p "$RUNNER_TEMP/matplotlib" "$RUNNER_TEMP/numba-cache" "$RUNNER_TEMP/cache"
+          mkdir -p "$RUNNER_TEMP/matplotlib" "$RUNNER_TEMP/numba-cache"
 
       - name: Install locked dependencies
         run: python -m pip install --constraint requirements/lock.txt -e ".[test,topspin]"
