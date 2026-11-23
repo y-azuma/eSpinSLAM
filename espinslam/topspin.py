@@ -579,7 +579,8 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
             _write_csv(output_dir / f"table2_{name}.csv", extra_tables[name])
             _write_text(output_dir / f"table2_{name}.md",
                         table2_markdown(extra_tables[name], f"{setting_name}, {name}"))
-    paper_reference = PAPER_TABLE3.get(setting_name)
+    # The full method is compared with Table 2; ablation settings with Table 3.
+    paper_reference = PAPER_TABLE2 if setting_name == "eSpinSLAM" else PAPER_TABLE3.get(setting_name)
     if paper_reference is not None:
         _write_text(output_dir / "table_vs_paper.md",
                     comparison_markdown(table, paper_reference, label))

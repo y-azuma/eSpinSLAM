@@ -1,0 +1,279 @@
+{
+  "method": "Paper-faithful eSpinSLAM reproduction",
+  "paper": "Event-based Spinning Object SLAM, ICCVW 2025",
+  "setting": "eSpinSLAM",
+  "dataset": "TOPSPIN",
+  "sequence_count": 72,
+  "split_counts": {
+    "dev": 3,
+    "test": 69
+  },
+  "summary_scope": "test (held-out) scenes",
+  "loop_closure_rate": 1.0,
+  "frequency_median_rel_error_percent": null,
+  "frequency_by_speed_hz": {
+    "fast": {
+      "count": 23,
+      "median_hz": 0.12948261347226453,
+      "std_hz": 0.049399525812869556,
+      "min_hz": 0.12864321788278413,
+      "max_hz": 0.26067584695420626
+    },
+    "medium": {
+      "count": 23,
+      "median_hz": 0.07194986579374776,
+      "std_hz": 0.029213606395991513,
+      "min_hz": 0.0719238561627585,
+      "max_hz": 0.14488826663153553
+    },
+    "slow": {
+      "count": 23,
+      "median_hz": 0.03666605177990079,
+      "std_hz": 0.044211443722386785,
+      "min_hz": 0.03663885486461582,
+      "max_hz": 0.24871454921749847
+    }
+  },
+  "mean_throughput_ev_s": 196134.01062218225,
+  "mean_frontend_throughput_ev_s": 332215.27575972286,
+  "mean_scene_event_rate_ev_s": 405799.93119273934,
+  "real_time_rate": 0.11594202898550725,
+  "table2": [
+    {
+      "object": "Hubble",
+      "scenes": 11,
+      "valid_reconstructions": 11,
+      "reprojection_mean_px": 3.8621275012091814,
+      "reprojection_std_px": 1.0069175259354013,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "SOHO",
+      "scenes": 12,
+      "valid_reconstructions": 11,
+      "reprojection_mean_px": 4.092635234185391,
+      "reprojection_std_px": 0.3810243649837245,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "TDRS",
+      "scenes": 11,
+      "valid_reconstructions": 11,
+      "reprojection_mean_px": 4.242457968231249,
+      "reprojection_std_px": 0.7046228028994386,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "Camera",
+      "scenes": 11,
+      "valid_reconstructions": 10,
+      "reprojection_mean_px": 4.5938851457763095,
+      "reprojection_std_px": 0.6486412451383323,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "Dualshock",
+      "scenes": 12,
+      "valid_reconstructions": 11,
+      "reprojection_mean_px": 4.753470216522644,
+      "reprojection_std_px": 0.2954462690486033,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "Switch",
+      "scenes": 12,
+      "valid_reconstructions": 11,
+      "reprojection_mean_px": 4.449225350029274,
+      "reprojection_std_px": 0.814365668752473,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    }
+  ],
+  "table2_dev": [
+    {
+      "object": "Hubble",
+      "scenes": 1,
+      "valid_reconstructions": 1,
+      "reprojection_mean_px": 3.1886323654240534,
+      "reprojection_std_px": 0.0,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "TDRS",
+      "scenes": 1,
+      "valid_reconstructions": 1,
+      "reprojection_mean_px": 3.8712728920647375,
+      "reprojection_std_px": 0.0,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "Camera",
+      "scenes": 1,
+      "valid_reconstructions": 1,
+      "reprojection_mean_px": 4.72718145192434,
+      "reprojection_std_px": 0.0,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    }
+  ],
+  "table2_all": [
+    {
+      "object": "Hubble",
+      "scenes": 12,
+      "valid_reconstructions": 12,
+      "reprojection_mean_px": 3.806002906560421,
+      "reprojection_std_px": 0.9818565747614287,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "SOHO",
+      "scenes": 12,
+      "valid_reconstructions": 11,
+      "reprojection_mean_px": 4.092635234185391,
+      "reprojection_std_px": 0.3810243649837245,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "TDRS",
+      "scenes": 12,
+      "valid_reconstructions": 12,
+      "reprojection_mean_px": 4.211525878550706,
+      "reprojection_std_px": 0.6823808240716925,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "Camera",
+      "scenes": 12,
+      "valid_reconstructions": 11,
+      "reprojection_mean_px": 4.606002991789766,
+      "reprojection_std_px": 0.619641193101203,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "Dualshock",
+      "scenes": 12,
+      "valid_reconstructions": 11,
+      "reprojection_mean_px": 4.753470216522644,
+      "reprojection_std_px": 0.2954462690486033,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "Switch",
+      "scenes": 12,
+      "valid_reconstructions": 11,
+      "reprojection_mean_px": 4.449225350029274,
+      "reprojection_std_px": 0.814365668752473,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    }
+  ],
+  "runtime_seconds": 8316.884118762,
+  "implementation_notes": [
+    "GTSAM is replaced by a Levenberg-Marquardt solver with Huber IRLS weights (GTSAM's robust noise model strategy) and analytic Jacobians.",
+    "Eq. (9) is evaluated over left-half events whose shifted time falls inside the right half; a time scale lambda makes pixels and seconds commensurate.",
+    "Tracks spanning less than backend.min_triangulation_angle_deg of orbit are under-constrained and wait until they grow (triangulation parallax check).",
+    "ICP scale: orbit_radius_mm / r when provided, otherwise the RMS-radius ratio."
+  ],
+  "config": {
+    "data": {
+      "sensor_size": [
+        1280,
+        720
+      ],
+      "max_duration_seconds": null,
+      "time_unit": "auto",
+      "text_columns": "txyp",
+      "evaluation_split": "test"
+    },
+    "camera": {
+      "fx": null,
+      "fy": null,
+      "cx": null,
+      "cy": null,
+      "distortion": []
+    },
+    "frontend": {
+      "chunk_events": 1000,
+      "density_radius_px": 5.0,
+      "density_mean_per_polarity": false,
+      "cluster_min_size": 3,
+      "cluster_min_samples": 2,
+      "cluster_time_scale_px_per_second": 1000.0,
+      "cluster_by_polarity": true,
+      "association_radius_px": 5.0,
+      "association_max_gap_seconds": 0.1,
+      "association_head_events": 5,
+      "retain_events_per_track": 1000
+    },
+    "frequency": {
+      "method": "loop_closure",
+      "update_interval_seconds": 0.1,
+      "min_period_seconds": 2.0,
+      "max_period_seconds": 60.0,
+      "time_scale_px_per_second": 100.0,
+      "max_alignment_samples": 10000,
+      "coarse_alignment_samples": 2000,
+      "coarse_relative_step": 0.01,
+      "icp_iterations": 30,
+      "icp_tolerance_seconds": 1e-05,
+      "harmonic_tolerance": 0.15,
+      "min_samples_per_half": 50,
+      "loop_std_threshold_hz": 0.001,
+      "loop_history": 20,
+      "fft_bin_seconds": 0.01
+    },
+    "backend": {
+      "orbit_radius": 10.0,
+      "min_track_events": 3,
+      "huber_threshold_px": 2.0,
+      "max_mean_reprojection_error_px": 10.0,
+      "landmark_merge_radius": 0.01,
+      "optimization_cadence_revolutions": 0.1,
+      "forget_revolutions": 3.0,
+      "max_iterations": 100,
+      "min_triangulation_angle_deg": 1.5,
+      "max_observations_per_track": 0,
+      "optimize_frequency": false,
+      "landmark_association": true
+    },
+    "evaluation": {
+      "observation_times_seconds": [
+        0.25,
+        0.5,
+        0.75,
+        1.0,
+        1.5,
+        2.0,
+        3.0,
+        4.0,
+        5.0
+      ],
+      "pointcloud_max_reference_points": 30000,
+      "failure_policy": "report_and_mark_invalid"
+    },
+    "logging": {
+      "wandb": false,
+      "wandb_mode": "online",
+      "wandb_project": "snn-research",
+      "wandb_entity": null,
+      "wandb_run_name": "espinslam-topspin",
+      "wandb_tags": [
+        "espinslam",
+        "paper-faithful-reproduction",
+        "topspin"
+      ]
+    }
+  }
+}

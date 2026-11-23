@@ -99,13 +99,20 @@ can be Prophesee `.raw` (EVT 2.0/3.0) or `.dat`, `.h5`, `.npz`, `.npy`,
 `.csv`/`.txt`. The Prophesee decoders follow the OpenEB format specification;
 ECF-compressed Prophesee HDF5 files must be converted (e.g. to `.npz`) first.
 
+0. Download and convert the 72 scenes (about 10 GB of archives, 22 GB as
+   `events.npz`; archives are checked against Zenodo's MD5):
+
+   ```bash
+   python scripts/download_topspin.py --output datasets/topspin
+   ```
+
 1. Build the manifest (object, perspective and speed come from the scene
    directory name, `controller` maps to Dualshock and `med` to medium;
    calibration and sensor size are read from `calib.txt` and `meta.json`):
 
    ```bash
    python scripts/make_topspin_manifest.py --data-root datasets/topspin \
-     --output datasets/topspin/manifest.csv --cad-dir cad
+     --output datasets/topspin/manifest.csv --dev-scenes examples/splits/topspin_dev.txt
    ```
 
 2. Optionally add what the public release lacks: `frequency_hz` (ground
@@ -130,6 +137,26 @@ Outputs: `per_sequence.csv` (including the Fig. 7 `real_time` flag),
 `reconstruction_<scene>.png` (as in Figs. 1, 3, 4), `history/*.csv`,
 `metrics.json`; ablation runs add `table3.md`, `table3_vs_paper.md` and
 `fig6_loop_closure_vs_fft.png`.
+
+### TOPSPIN results
+
+The paper gives no tuning procedure or data split. Front-end settings the
+paper does not specify were set on three pre-registered dev scenes
+(`scripts/tune_topspin.py`, `examples/splits/topspin_dev.txt`), and all 72
+scenes were then evaluated once; the 69 held-out scenes are reported
+separately (`docs/topspin_results/`):
+
+- loop closure in 72/72 scenes, valid reconstruction in 68/72;
+- reprojection error per object 3.9-4.8 px (paper: 1.5-3.3 px);
+- frequency: 49/72 scenes within 5% of their speed's median (medians match
+  the paper's ground-truth lines), but 17 scenes of symmetric objects (SOHO,
+  TDRS) report about twice the frequency, unlike the paper's Fig. 6;
+- ICP RMSE cannot be computed: the public release has no CAD models or
+  ground-truth frequencies;
+- real time (Fig. 7) in 9/72 scenes; the Python front-end is the bottleneck.
+
+Full analysis: [`docs/reproduction_report.md`](docs/reproduction_report.md),
+Sec. 7.4-7.5 and 13.
 
 ## Synthetic verification (no TOPSPIN required)
 
