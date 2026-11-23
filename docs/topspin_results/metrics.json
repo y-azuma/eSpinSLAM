@@ -1,5 +1,8 @@
 {
-  "method": "Paper-faithful eSpinSLAM reproduction",
+  "method": "Historical experimental eSpinSLAM implementation (pre-reference audit)",
+  "method_profile": "historical_experimental_retrospective",
+  "evaluation_classification": "historical_experimental_retrospective",
+  "paper_comparison_eligible": false,
   "paper": "Event-based Spinning Object SLAM, ICCVW 2025",
   "setting": "eSpinSLAM",
   "dataset": "TOPSPIN",
@@ -8,7 +11,7 @@
     "dev": 3,
     "test": 69
   },
-  "summary_scope": "test (held-out) scenes",
+  "summary_scope": "historical non-dev manifest partition (not confirmatory held-out data)",
   "loop_closure_rate": 1.0,
   "frequency_median_rel_error_percent": null,
   "frequency_by_speed_hz": {

@@ -230,6 +230,12 @@ mechanics without a dev sweep. The offline-verifiable page/section/table map,
 short source fragments, and PDF hash are recorded in
 [`cited_source_audit.md`](cited_source_audit.md):
 
+The papers name eFAST, but this audit has not pinned an authoritative eFAST
+implementation revision/hash or a golden-output fixture. The in-tree arc and
+polarity tests are behavioral evidence only. eFAST implementation fidelity
+therefore remains **Ambiguous**; no behavior is changed or TOPSPIN-tuned on
+that basis.
+
 - density radius `lambda=7`, with the mean density computed separately for
   positive- and negative-polarity corners;
 - polarity-agnostic HDBSCAN with reported `minPts=10` and cluster-selection
@@ -245,7 +251,7 @@ The entire transfer from offline eSfO clustering to eSpinSLAM's approximately
 1,000-event online chunks is **Ambiguous (adapted)**. The constants are cited;
 their chunk-local behavior is not Exact. If this literal cited configuration
 does not meet D-003 on the dev scenes, record a reproduction failure and do
-not search alternative front-end constants. Two additional adaptation details
+not search alternative front-end constants. Three additional adaptation details
 remain Ambiguous, but no longer trigger parameter selection by accuracy:
 
 1. Neither source declares how timestamp values are scaled relative to pixels
@@ -254,7 +260,11 @@ remain Ambiguous, but no longer trigger parameter selection by accuracy:
    Under the literal `(t,x,y)` Euclidean gate and `phi=30`, a near-zero spatial
    displacement can connect events separated by almost 30 seconds and hence
    across several rotations. This is a known limitation of the frozen units.
-2. Offline eSfO does not specify how simultaneous current-chunk tracklets
+2. Eq. (6) describes events within distance `lambda` from an event tuple, but
+   neither source identifies whether that distance is spatial `(x,y)` or
+   spatio-temporal `(t,x,y)`. The frozen primary uses spatial `(x,y)` with
+   `lambda=7`; this is an interpretation, not an Exact source-derived fact.
+3. Offline eSfO does not specify how simultaneous current-chunk tracklets
    competing for one global online track are resolved. The frozen primary is
    deterministic nearest-first, many-to-one merging. Greedy one-to-one and
    Hungarian matching are experimental alternatives.
@@ -281,7 +291,8 @@ candidates:
 
 | Parameter | Candidate set | Evaluation order | Predeclared neutral tie-break | Status |
 |---|---|---|---|---|
-| Eq. (6) density radius and mean | `{lambda=7}`, same-polarity mean | Direct cited-source value; no sweep; chunk adaptation is not exact | Not applicable | **Resolved cited value / Ambiguous adapted use - eSfO Sec. 4.1/Table 2** |
+| eFAST implementation identity | In-tree published-criterion implementation | Behavioral fixtures only; no TOPSPIN sweep | Not applicable | **Ambiguous implementation fidelity - official revision/hash/golden output not pinned** |
+| Eq. (6) density radius, metric, and mean | `{lambda=7}`, spatial `(x,y)`, same-polarity mean | Radius/mean are cited; spatial metric and chunk adaptation are frozen without a sweep | Not applicable | **Resolved cited values / Ambiguous metric and adapted use - eSfO Sec. 4.1/Table 2** |
 | HDBSCAN parameters/polarity | `{min_cluster_size=10, cluster_selection_epsilon=5, min_samples=None}`, polarity ignored | Direct cited-source values; no sweep; chunk adaptation is not exact | Not applicable | **Resolved cited values / Ambiguous adapted use - eSfO Sec. 4.2/Table 2** |
 | HDBSCAN/association time-coordinate scale | Primary `{timestamp seconds x 1}`; raw-unit or normalized alternatives are sensitivity-only | Primary fixed; any sensitivity must be preregistered and cannot replace it by performance | Multiplier `1` | **Frozen Ambiguous** |
 | Track association descriptor/gate | `{N_sigma=5, phi=30}`, nearest forward hemisphere, no independent tuned max-gap | Direct cited-source values; no sweep; online chunk/global-pool adaptation remains ambiguous | Not applicable | **Resolved cited mechanics / Ambiguous adapted use - eSfO Sec. 4.2/Eq. (3)/Table 2** |
@@ -299,4 +310,5 @@ to reuse earlier empirically optimized values.
 | 2026-11-24 | D-006 Gate C passed; `equivalent_custom` selected by the frozen thresholds, with optional direct `gtsam`. | Deterministic direct-GTSAM equivalence measurement | Gate C implementation evidence |
 | 2026-11-24 | **History correction:** commit `9bb723d` bundled the already-agreed D-006 thresholds with later Gate C measurements and references that did not yet exist at that commit. The thresholds were agreed during the external Claude/Codex session before implementation, but that commit does not independently prove the ordering. History is not rewritten; measured values are now explicitly separated under “Gate C evidence.” | Audit-trail correction; no method or threshold changed | Claude review response and Codex correction |
 | 2026-11-24 | Reclassified cited eSfO constants in the online chunked front end from Exact to **Ambiguous (adapted)**; froze “report reproduction failure, do not sweep” if cited values fail D-003; documented the seconds/`phi=30` long-time association limitation. | Cross-review of offline cited method versus online adaptation | Claude review response and Codex correction |
+| 2026-11-24 | Recorded unresolved eFAST source identity and Eq. (6) distance-domain ambiguity; retained existing behavior without performance-motivated changes. | Independent source-fidelity audit | Codex pre-review audit |
 

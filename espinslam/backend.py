@@ -79,6 +79,8 @@ class OptimizationReport:
     iterations: int
     termination_status: str
     mean_observation_error_px: float = math.nan
+    triangulation_fallback_count: int = 0
+    triangulation_fallback_reasons: str = ""
 
     @property
     def converged(self) -> bool:
@@ -124,6 +126,7 @@ class IncrementalBackend:
         self.observation_error = math.nan
         self.observation_count = 0
         self.reports: list[OptimizationReport] = []
+        self._current_triangulation_fallbacks: dict[str, int] = {}
 
     # -- helpers ----------------------------------------------------------------
     def _track_observations(self, track) -> tuple[np.ndarray, np.ndarray]:
@@ -163,11 +166,18 @@ class IncrementalBackend:
             or np.linalg.norm(point) <= self.config.orbit_radius
         ):
             return point
+        cause = "triangulation_failed" if point is None else "triangulation_outside_orbit"
+        disposition = "reused_previous" if previous is not None else "used_origin"
+        reason = f"{cause}_{disposition}"
+        self._current_triangulation_fallbacks[reason] = (
+            self._current_triangulation_fallbacks.get(reason, 0) + 1
+        )
         return previous if previous is not None else np.zeros(3)
 
     # -- main entry point --------------------------------------------------------
     def optimize(self, pool: TrackPool, frequency_hz: float, event_time: float) -> OptimizationReport:
         config = self.config
+        self._current_triangulation_fallbacks = {}
         frequency = float(self.frequency_hz) if (
             config.optimize_frequency and self.initialized and math.isfinite(self.frequency_hz)
         ) else float(frequency_hz)
@@ -278,6 +288,11 @@ class IncrementalBackend:
             iterations=result.iterations,
             termination_status=result.termination_status,
             mean_observation_error_px=self.observation_error,
+            triangulation_fallback_count=sum(self._current_triangulation_fallbacks.values()),
+            triangulation_fallback_reasons=";".join(
+                f"{reason}:{count}"
+                for reason, count in sorted(self._current_triangulation_fallbacks.items())
+            ),
         )
         self.reports.append(report)
         return report

@@ -12,7 +12,8 @@ ground-truth error.
 Outputs, per run directory:
 
 * ``per_sequence.csv``  - frequency, loop closure, reprojection error, ICP
-  alignment RMSE [mm], landmarks, runtime and throughput of every scene;
+  alignment RMSE [mm], landmarks, triangulation-fallback diagnostics, runtime
+  and throughput of every scene;
 * ``table2.csv`` / ``table2.md`` - per-object mean +- std of reprojection
   error [px] and available ICP alignment RMSE [mm]. If the manifest has
   a ``split`` column (dev versus non-dev exploratory scenes), the tables,
@@ -27,7 +28,8 @@ Outputs, per run directory:
 * ``fig7_throughput.png`` - per-object throughput box plot with the mean scene
   event rate (paper Fig. 7);
 * ``history/<scene>_optimizations.csv`` and ``fig8_<scene>.png`` - mean
-  reprojection error and number of world points over time (paper Fig. 8);
+  reprojection error, number of world points, and triangulation-fallback
+  count/reason over time (paper Fig. 8 plus numerical diagnostics);
 * ``reconstruction_<scene>.png`` - world points inside the estimated orbit
   (as in paper Figs. 1, 3, 4); ``per_sequence.csv`` also flags whether the
   system kept up with the scene's event rate (``real_time``, Fig. 7);
@@ -49,6 +51,7 @@ camera-to-spin-axis distance; fixes the monocular scale for ICP),
 from __future__ import annotations
 
 import copy
+from collections import Counter
 import csv
 from dataclasses import replace
 import hashlib
@@ -770,6 +773,17 @@ def _sequence_row(row: dict[str, str], result: ESpinSLAMResult, *,
     # do not let it enter paper-comparison aggregate metrics as a success.
     paper_metrics_eligible = bool(
         reconstruction.valid and last_optimization_status != "max_iterations")
+    fallback_count = sum(
+        int(getattr(report, "triangulation_fallback_count", 0))
+        for report in result.optimizations
+    )
+    fallback_reasons: Counter[str] = Counter()
+    for report in result.optimizations:
+        for item in str(getattr(report, "triangulation_fallback_reasons", "")).split(";"):
+            if not item:
+                continue
+            reason, _, count = item.rpartition(":")
+            fallback_reasons[reason or item] += int(count) if reason else 1
     return {
         "sequence_id": result.sequence_id,
         "object": row["object"],
@@ -820,6 +834,10 @@ def _sequence_row(row: dict[str, str], result: ESpinSLAMResult, *,
         "frequency_s": result.frequency_seconds,
         "backend_s": result.backend_seconds,
         "optimizations": len(result.optimizations),
+        "triangulation_fallback_count": fallback_count,
+        "triangulation_fallback_reasons": ";".join(
+            f"{reason}:{count}" for reason, count in sorted(fallback_reasons.items())
+        ),
     }
 
 
@@ -1312,6 +1330,10 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
              "removed_short": getattr(r, "removed_short", None),
              "removed_reprojection": r.removed_reprojection, "removed_radius": r.removed_radius,
              "fused": r.fused, "iterations": r.iterations,
+             "triangulation_fallback_count": getattr(
+                 r, "triangulation_fallback_count", 0),
+             "triangulation_fallback_reasons": getattr(
+                 r, "triangulation_fallback_reasons", ""),
              "termination_status": getattr(r, "termination_status", None)}
             for r in result.optimizations
         ] or [{"event_time_s": None}])
@@ -1441,6 +1463,18 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
             bool(r["paper_metrics_eligible"]) for r in primary),
         "geometrically_valid_sequence_count": sum(
             bool(r["reconstruction_valid"]) for r in primary),
+        "backend_diagnostics": {
+            "triangulation_fallback_count": sum(
+                int(r["triangulation_fallback_count"]) for r in results
+            ),
+            "sequences_with_triangulation_fallback": sum(
+                int(r["triangulation_fallback_count"]) > 0 for r in results
+            ),
+            "reason_summaries": sorted({
+                r["triangulation_fallback_reasons"] for r in results
+                if r["triangulation_fallback_reasons"]
+            }),
+        },
         "split_counts": {name: sum(r["split"] == name for r in results)
                          for name in ("dev", "test")} if has_split else None,
         "summary_scope": "test-labelled non-dev exploratory scenes" if has_split else "all scenes",

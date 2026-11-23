@@ -134,3 +134,22 @@ def test_paper_backend_never_caps_retained_track_observations():
     )
     assert paper._track_observations(track)[0].size == 100
     assert experimental._track_observations(track)[0].size == 10
+
+
+def test_triangulation_fallback_records_count_and_reason(monkeypatch):
+    import espinslam.backend as backend_module
+
+    monkeypatch.setattr(backend_module, "triangulate", lambda *args, **kwargs: None)
+    backend = IncrementalBackend(BackendConfig(interpretation_mode="paper"), INTRINSIC)
+    backend.initialized = True
+    backend.landmarks[7] = np.asarray((1.0, 2.0, 3.0))
+    times = np.asarray((0.0, 0.1, 0.2))
+    pixels = np.zeros((3, 2))
+    reused = backend._initial_point(7, times, pixels, 0.5, True)
+    origin = backend._initial_point(8, times, pixels, 0.5, True)
+    assert np.array_equal(reused, backend.landmarks[7])
+    assert np.array_equal(origin, np.zeros(3))
+    assert backend._current_triangulation_fallbacks == {
+        "triangulation_failed_reused_previous": 1,
+        "triangulation_failed_used_origin": 1,
+    }

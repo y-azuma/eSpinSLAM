@@ -2,8 +2,9 @@
 
 The frequency estimator queries, thousands of times per update, the nearest
 right-half event to every shifted left-half event in ``(x, y, lambda * t)``.
-:class:`GridIndex` answers these queries exactly and returns the same distances
-as :class:`scipy.spatial.cKDTree` bit for bit, only faster:
+:class:`GridIndex` answers these queries with exact nearest-neighbour semantics
+and returns distances matching :class:`scipy.spatial.cKDTree` within the
+declared ``1e-12`` numerical tolerance, only faster:
 
 * points are bucketed into square ``(x, y)`` cells and sorted by ``z`` inside
   each cell; cells are visited in rings around the query and, inside a cell,
@@ -14,14 +15,16 @@ as :class:`scipy.spatial.cKDTree` bit for bit, only faster:
   actual bounding box, sums of non-negative squares), so the computed bound
   never exceeds the computed distance and pruning cannot change the result;
 * a distance is computed as ``((dx*dx + dy*dy) + dz*dz)`` followed by
-  ``sqrt``, the operation order of cKDTree's Minkowski p = 2 kernel, so the
-  returned distances are identical. A query batch runs in parallel (numba);
+  ``sqrt``. Floating-point evaluation can differ in its last bits from
+  cKDTree, so equivalence is asserted by the frozen tolerance rather than by
+  bit-for-bit identity. A query batch runs in parallel (numba);
 * :meth:`GridIndex.query_shifts` evaluates one point at many temporal shifts
   (the coarse search of Eq. 9) and warm-starts each search with the previous
   shift's neighbour, whose distance is an exact upper bound.
 
 With exact distance ties the returned index may differ from cKDTree's (both
-are nearest neighbours). ``tests/test_nn.py`` checks the equivalence.
+are nearest neighbours). ``tests/test_nn.py`` checks exact-nearest selection
+and the ``1e-12`` distance tolerance.
 """
 
 from __future__ import annotations

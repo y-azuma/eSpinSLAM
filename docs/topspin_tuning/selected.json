@@ -1,4 +1,6 @@
 {
+  "classification": "historical_performance_tuning_excluded_from_reference",
+  "paper_reference_eligible": false,
   "dev_scenes": [
     "camera-topdown-fast",
     "hubble-perpendicular-slow",

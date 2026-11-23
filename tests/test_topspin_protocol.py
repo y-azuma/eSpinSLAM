@@ -10,6 +10,7 @@ import pytest
 from espinslam.backend import OptimizationReport, empty_reconstruction
 from espinslam.config import CameraConfig, ESpinSLAMConfig, load_config
 from espinslam.data import EventSequence
+from espinslam.evaluation import _method_profile as _debris_method_profile
 from espinslam.frequency import FrequencyEstimate
 from espinslam.pipeline import ESpinSLAMResult
 from espinslam.topspin import (
@@ -96,6 +97,8 @@ def test_max_iterations_geometry_is_preserved_but_excluded_from_paper_metrics():
         mean_reprojection_error_px=4.0, removed_short=0,
         removed_reprojection=0, removed_radius=0, fused=0, iterations=100,
         termination_status="max_iterations", mean_observation_error_px=2.0,
+        triangulation_fallback_count=2,
+        triangulation_fallback_reasons="triangulation_failed_used_origin:2",
     )
     result = replace(_result(), reconstruction=reconstruction, optimizations=[optimization])
     row = _sequence_row(
@@ -104,6 +107,8 @@ def test_max_iterations_geometry_is_preserved_but_excluded_from_paper_metrics():
     )
     assert row["reconstruction_valid"] is True
     assert row["last_optimization_status"] == "max_iterations"
+    assert row["triangulation_fallback_count"] == 2
+    assert row["triangulation_fallback_reasons"] == "triangulation_failed_used_origin:2"
     assert row["paper_metrics_eligible"] is False
     aggregate = table2([row])[0]
     assert aggregate["geometrically_valid_reconstructions"] == 1
@@ -210,6 +215,15 @@ def test_config_match_does_not_promote_unaudited_executable_paths():
     assert _method_profile(True, "No landmark association") == "paper_reference_config"
     assert _method_profile(True, "FFT f estimation") == "experimental_interpretation"
     assert _method_profile(True, "No factor graph f constraint") == "experimental_interpretation"
+
+
+def test_generic_evaluation_labels_reference_and_experimental_profiles():
+    config = load_config("examples/configs/topspin_reference.jsonc")
+    assert _debris_method_profile(config) == ("paper_reference_config", [])
+    config.frontend.chunk_events = 999
+    profile, mismatches = _debris_method_profile(config)
+    assert profile == "experimental_interpretation"
+    assert any("frontend.chunk_events" in mismatch for mismatch in mismatches)
 
 
 def test_scene_checkpoint_resumes_without_reprocessing(monkeypatch, tmp_path):

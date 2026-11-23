@@ -2,12 +2,14 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import csv
+import sys
 import tarfile
 
 import numpy as np
 import pytest
 
-from scripts import download_topspin
+from scripts import download_topspin, make_topspin_manifest
 from espinslam.topspin import _validate_topspin_acquisition, _validate_verified_manifest_row
 
 
@@ -135,6 +137,54 @@ def test_evaluator_ties_verified_manifest_metadata_to_acquired_scene(tmp_path, m
         _validate_topspin_acquisition(
             output.resolve(), [{**row, "object": "Hubble"}], require_full72=False,
         )
+
+
+def test_manifest_labels_verified_schema2_npz_as_microseconds(tmp_path, monkeypatch):
+    name, _, cache, record = _archive(tmp_path)
+    output = tmp_path / "output"
+    download_topspin.acquire(record, output, cache, [name])
+    manifest = output / "manifest.csv"
+    monkeypatch.setattr(sys, "argv", [
+        "make_topspin_manifest.py", "--data-root", str(output),
+        "--output", str(manifest),
+    ])
+
+    make_topspin_manifest.main()
+
+    with manifest.open(newline="", encoding="utf-8") as stream:
+        rows = list(csv.DictReader(stream))
+    assert len(rows) == 1
+    assert rows[0]["event_path"] == f"{name}/events.npz"
+    assert rows[0]["time_unit"] == "us"
+
+
+def test_manifest_does_not_guess_time_unit_for_unaudited_npz(tmp_path, monkeypatch):
+    scene = tmp_path / "camera-diagonal-slow"
+    scene.mkdir()
+    np.savez(
+        scene / "events.npz",
+        t=np.array([0, 10], dtype=np.int64),
+        x=np.array([1, 2], dtype=np.int16),
+        y=np.array([3, 4], dtype=np.int16),
+        p=np.array([0, 1], dtype=np.uint8),
+    )
+    (scene / "calib.txt").write_text("1 1 0 0 0 0 0 0 0\n", encoding="utf-8")
+    (scene / "meta.json").write_text(
+        '{"event-camera": {"frame": {"width": 1280, "height": 720}}}\n',
+        encoding="utf-8",
+    )
+    manifest = tmp_path / "manifest.csv"
+    monkeypatch.setattr(sys, "argv", [
+        "make_topspin_manifest.py", "--data-root", str(tmp_path),
+        "--output", str(manifest),
+    ])
+
+    make_topspin_manifest.main()
+
+    with manifest.open(newline="", encoding="utf-8") as stream:
+        rows = list(csv.DictReader(stream))
+    assert len(rows) == 1
+    assert rows[0]["time_unit"] == ""
 
 
 def test_corrupt_cache_is_not_extracted(tmp_path, monkeypatch):

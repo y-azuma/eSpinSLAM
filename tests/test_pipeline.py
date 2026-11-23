@@ -14,12 +14,15 @@ from scipy.spatial.transform import Rotation
 from espinslam.backend import empty_reconstruction
 from espinslam.config import (
     BackendConfig, CameraConfig, ESpinSLAMConfig, FrequencyConfig, FrontendConfig,
+    load_config,
 )
 from espinslam.data import EventSequence
 from espinslam.frequency import FrequencyEstimate
 from espinslam.pipeline import ESpinSLAM
 from espinslam.synthetic import make_scene, simulate_events
-from espinslam.topspin import evaluate_topspin, evaluate_topspin_ablations
+from espinslam.topspin import (
+    _reference_mode, _sequence_row, evaluate_topspin, evaluate_topspin_ablations,
+)
 
 
 @pytest.fixture(scope="module")
@@ -50,6 +53,35 @@ def _config(scene) -> ESpinSLAMConfig:
             final_offline_refinement=True,
         ),
     )
+
+
+def test_paper_reference_profile_top_level_smoke_schema_and_trace():
+    """Gate the real reference profile without imposing an accuracy target."""
+
+    config = load_config("examples/configs/topspin_reference.jsonc")
+    assert _reference_mode(config)
+    t = np.linspace(0.0, 0.02, 12)
+    sequence = EventSequence(
+        "reference-smoke", np.arange(12) + 20, np.arange(12) + 30, t,
+        np.arange(12) % 2, math.nan, 1280, 720, {}, Path("synthetic-reference-smoke"),
+    )
+    result = ESpinSLAM(config).process(
+        sequence,
+        camera=CameraConfig(fx=500.0, fy=500.0, cx=640.0, cy=360.0),
+    )
+    row = _sequence_row(
+        {"sequence_id": sequence.sequence_id, "object": "synthetic"}, result,
+        icp_rmse_mm=None, chamfer_mm=None, icp_reason="not evaluated", scale_source="",
+    )
+    assert result.sequence_id == sequence.sequence_id
+    assert result.event_count == sequence.event_count
+    assert len(result.frequency_history) == 1
+    assert result.frequency_history[0].icp_termination == "not_run"
+    assert {
+        "frequency_est_hz", "reconstruction_valid", "last_optimization_status",
+        "triangulation_fallback_count", "triangulation_fallback_reasons",
+    } <= set(row)
+    assert row["triangulation_fallback_count"] == 0
 
 
 def test_online_pipeline_recovers_frequency_orientation_and_structure(synthetic):
@@ -119,7 +151,15 @@ def test_topspin_evaluation_writes_paper_tables_and_schema(synthetic, tmp_path):
         rows = list(csv.DictReader(handle))
     assert len(rows) == 1
     assert {"sequence_id", "frequency_est_hz", "reprojection_error_px",
-            "icp_rmse_mm", "runtime_s", "paper_metrics_eligible"} <= set(rows[0])
+            "icp_rmse_mm", "runtime_s", "paper_metrics_eligible",
+            "triangulation_fallback_count",
+            "triangulation_fallback_reasons"} <= set(rows[0])
+    with (tmp_path / "run" / "history" / "hubble-test-fast_optimizations.csv").open(
+            newline="", encoding="utf-8") as handle:
+        optimization_rows = list(csv.DictReader(handle))
+    assert optimization_rows
+    assert {"triangulation_fallback_count",
+            "triangulation_fallback_reasons"} <= set(optimization_rows[0])
     with (tmp_path / "run" / "history" / "hubble-test-fast_frequency.csv").open(
             newline="", encoding="utf-8") as handle:
         frequency_rows = list(csv.DictReader(handle))
@@ -130,7 +170,7 @@ def test_topspin_evaluation_writes_paper_tables_and_schema(synthetic, tmp_path):
     } <= set(frequency_rows[0])
     metrics = json.loads((tmp_path / "run" / "metrics.json").read_text(encoding="utf-8"))
     assert {"table2", "sequence_count", "runtime_provenance",
-            "evaluation_classification"} <= set(metrics)
+            "evaluation_classification", "backend_diagnostics"} <= set(metrics)
     assert not (tmp_path / "run" / "table_vs_paper.md").exists()
     assert report["method_profile"] == "experimental_interpretation"
     assert report["evaluation_classification"] == "exploratory_retrospective"

@@ -26,6 +26,13 @@ and table cells are identified by location rather than reproduced at length.
 | Head/tail sample count `N_sigma=5` | PDF p.4, Sec. 4.2, descriptor paragraph; PDF p.6, Table 2 | Descriptor uses **“last and respectively first”** events; table cell value `5`. |
 | Forward gate and `phi=30` | PDF p.4, Sec. 4.2, Eq. (3) and preceding paragraph; PDF p.6, Table 2 | **“spatio-temporal hemisphere of radius”**; Eq. (3) defines the gate; table cell value `30`. |
 
+The papers name eFAST, but the present offline audit does not pin an official
+eFAST source revision, code hash, or golden output.  The in-tree eFAST tests
+therefore establish stated arc/polarity behavior only.  They do not establish
+bit-for-bit or release-level identity with reference [35].  This remains an
+**Ambiguous (implementation fidelity)** limitation and was not resolved by
+tuning on TOPSPIN.
+
 ## What this source does not settle
 
 eSfO clusters an offline event stream.  eSpinSLAM instead says that this
@@ -34,6 +41,9 @@ track history.  Therefore the constants above are cited inputs, while their
 per-chunk use is **Ambiguous (adapted)** rather than Exact.  In particular:
 
 - neither source states a time-to-pixel scale in Euclidean `(t,x,y)`;
+- Eq. (6) says events within distance `lambda` of an event tuple, but neither
+  source defines whether that distance is spatial `(x,y)` or spatio-temporal
+  `(t,x,y)`; the reference profile freezes spatial `(x,y)` as an interpretation;
 - simultaneous current-chunk tracklets competing for one online track are not
   defined by eSfO;
 - applying `minPts=10` independently to small chunks can behave differently

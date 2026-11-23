@@ -43,6 +43,8 @@ SCENE_PATTERN = re.compile(
     r"^(hubble|soho|tdrs|camera|controller|dualshock|switch)[-_][a-z0-9]+[-_](slow|med|medium|fast)$",
     re.IGNORECASE,
 )
+TOPSPIN_PROVENANCE_MARKER = ".topspin_provenance.json"
+TOPSPIN_CONVERTER_SCHEMA = 2
 
 
 def parse_args() -> argparse.Namespace:
@@ -105,6 +107,38 @@ def _dev_scenes(path: Path | None) -> set[str]:
     return names
 
 
+def _time_unit(path: Path) -> str:
+    """Return an explicit unit only when the input provenance establishes it.
+
+    TOPSPIN's source CSV/TXT timestamps are documented in microseconds.  The
+    repository converter preserves those integer values in ``events.npz``,
+    but an arbitrary user-supplied NPZ has no such guarantee.  Consequently,
+    converted NPZ files are labelled ``us`` only when the adjacent schema-2
+    provenance marker identifies a verified converter output.
+    """
+
+    suffix = path.suffix.lower()
+    if suffix in (".csv", ".txt"):
+        return "us"
+    if suffix != ".npz" or path.name != "events.npz":
+        return ""
+    marker_path = path.parent / TOPSPIN_PROVENANCE_MARKER
+    try:
+        marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ""
+    if not isinstance(marker, dict):
+        return ""
+    outputs = marker.get("output_files")
+    return "us" if (
+        marker.get("schema_version") == TOPSPIN_CONVERTER_SCHEMA
+        and marker.get("converter_schema") == TOPSPIN_CONVERTER_SCHEMA
+        and marker.get("verified") is True
+        and isinstance(outputs, dict)
+        and isinstance(outputs.get("events.npz"), dict)
+    ) else ""
+
+
 def main() -> None:
     args = parse_args()
     root = args.data_root.resolve()
@@ -137,7 +171,7 @@ def main() -> None:
             "split": "dev" if name in dev else "test", "object": obj,
             "perspective": _perspective(name), "speed": _speed(name), "cad_path": cad,
             "cad_source": "user_supplied_unverified" if cad else "",
-            "time_unit": "us" if path.suffix.lower() in (".csv", ".txt") else "",
+            "time_unit": _time_unit(path),
         })
         row.update(_calibration(path.parent))
         row.update(_frame(path.parent))

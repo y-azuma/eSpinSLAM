@@ -57,7 +57,9 @@ eSpinSLAM Sec. 4.1はeSfOフロントエンドをオンライン化したと述�
 引用元eSfO（arXiv:2405.06216、Secs. 4.1-4.2、Eq. (3)、Table 2）を
 一次資料として監査し、次をreferenceへ固定した。
 
-- eFASTコーナー検出;
+- eFASTコーナー検出（arc/polarityの振る舞はテスト済み。ただし、
+  reference [35]の公式実装revision/hash/golden outputを固定できず、
+  implementation fidelityはAmbiguous）;
 - 密度半径`lambda=7`と、正負極性ごとに独立した平均密度;
 - 極性をクラスタ次元に入れないHDBSCAN、`minPts=10`、
   cluster-selection epsilon `5`;
@@ -103,8 +105,9 @@ reference modeの式(9)は次の意味で文字どおりに実装する。
 | 無効な推定 | 有効推定の履歴へ加えずskip | 「直近aleph回」が無効回を含むか未記載。 |
 | robust loss | Huber、`k=2 px` | Table 1はinlier threshold 2を示すが、M-estimator名を示さない。 |
 | HDBSCANの時間scale | timestamp secondsに倍率`1` | eSfOもpixelとtimeの相対scaleを示さない。 |
+| Eq. (6)の距離空間 | spatial `(x,y)`で半径`lambda=7` | event tupleからの距離としか書かれず、`(x,y)`と`(t,x,y)`を区別できない。 |
 | online track collision | deterministic many-to-one | offline eSfOは複数current trackletが1本へ競合する場合を定義しない。 |
-| 三角測量の数値破綻 | 前回値、なければ原点へfallbackし明示 | 退化時の処理が未記載。 |
+| 三角測量の数値破綻 | 前回値、なければ原点へfallbackし、件数/理由をoptimization history・per-sequence CSV・aggregate reportに記録 | 退化時の処理が未記載。 |
 | レンズ歪み | Eq. (11)の幾何だけundistort | 論文は入力が事前補正済みかを示さない。 |
 | Table 2再投影誤差 | 全inlier observationの平均をprimary、per-landmark平均も併記 | 集約方法が未記載。 |
 
