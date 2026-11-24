@@ -1,0 +1,148 @@
+{
+  "acquisition_audit_sha256": "df57db34c6e29a65400e14ed331297a3b3767e484bf44d125bcaf6bfe987c137",
+  "code_identity": {
+    "git_dirty": false,
+    "git_revision": "34f18493ba1d0f37da317445bd405ca7635b8c5a",
+    "lock_sha256": "3e90af4a5ed0c2cc58f3250e2c68394fa785530d4016b017266e1b2927859d1e",
+    "source_tree_sha256": "16ab88a6b085fb9aabdf3cb9cddb7273e1c6c7f297e4963789e4ad29a487894c"
+  },
+  "config": {
+    "backend": {
+      "final_offline_refinement": false,
+      "forget_revolutions": 3.0,
+      "huber_threshold_px": 2.0,
+      "interpretation_mode": "paper",
+      "landmark_association": true,
+      "landmark_merge_radius": 0.01,
+      "max_iterations": 100,
+      "max_mean_reprojection_error_px": 10.0,
+      "max_observations_per_track": 0,
+      "min_track_events": 3,
+      "min_triangulation_angle_deg": 0.0,
+      "optimization_cadence_revolutions": 0.1,
+      "optimize_frequency": false,
+      "orbit_radius": 10.0,
+      "solver_backend": "equivalent_custom"
+    },
+    "camera": {
+      "cx": null,
+      "cy": null,
+      "distortion": [],
+      "fx": null,
+      "fy": null
+    },
+    "data": {
+      "evaluation_split": "test",
+      "max_duration_seconds": null,
+      "sensor_size": [
+        1280,
+        720
+      ],
+      "text_columns": "txyp",
+      "time_unit": "auto"
+    },
+    "evaluation": {
+      "failure_policy": "report_and_mark_invalid",
+      "observation_times_seconds": [
+        0.25,
+        0.5,
+        0.75,
+        1.0,
+        1.5,
+        2.0,
+        3.0,
+        4.0,
+        5.0
+      ],
+      "pointcloud_max_reference_points": 30000
+    },
+    "frequency": {
+      "alignment_mode": "paper",
+      "coarse_alignment_samples": 2000,
+      "coarse_relative_step": 0.01,
+      "fft_bin_seconds": 0.01,
+      "harmonic_tolerance": 0.0,
+      "icp_iterations": 30,
+      "icp_tolerance_seconds": 1e-05,
+      "loop_history": 20,
+      "loop_std_threshold_hz": 0.001,
+      "max_alignment_samples": 10000,
+      "max_period_seconds": null,
+      "method": "loop_closure",
+      "min_period_seconds": 0.1,
+      "min_samples_per_half": 50,
+      "time_scale_px_per_second": 1.0,
+      "update_interval_seconds": 0.1
+    },
+    "frontend": {
+      "association_head_events": 5,
+      "association_max_gap_seconds": 0.05,
+      "association_radius_px": 30.0,
+      "chunk_events": 1000,
+      "cluster_by_polarity": false,
+      "cluster_min_samples": null,
+      "cluster_min_size": 10,
+      "cluster_selection_epsilon": 5.0,
+      "cluster_time_scale_px_per_second": 1.0,
+      "density_mean_per_polarity": true,
+      "density_radius_px": 7.0,
+      "interpretation_mode": "paper",
+      "retain_events_per_track": 1000
+    },
+    "logging": {
+      "wandb": false,
+      "wandb_entity": null,
+      "wandb_mode": "online",
+      "wandb_project": "snn-research",
+      "wandb_run_name": "espinslam-topspin-paper-reference",
+      "wandb_tags": [
+        "espinslam",
+        "paper-reference",
+        "topspin",
+        "exploratory"
+      ]
+    }
+  },
+  "evaluation_classification": "exploratory_retrospective",
+  "input_identities": {
+    "camera-topdown-fast": {
+      "archive_md5": "3fea11ad2a04d262a1440cdc97161be1",
+      "converter_schema": 2,
+      "event_path": "camera-topdown-fast/events.npz",
+      "events": {
+        "sha256": "8ad743cf6ecb47e67b2531ad7639eb70e9760c4ec7dea59915c6b3a1cf8c09ed",
+        "size_bytes": 409219846
+      }
+    },
+    "hubble-perpendicular-slow": {
+      "archive_md5": "791716392f201526d814267155291147",
+      "converter_schema": 2,
+      "event_path": "hubble-perpendicular-slow/events.npz",
+      "events": {
+        "sha256": "2562698af69c779acb7f8d81be360076a350a430b842d095c538d90b0585522a",
+        "size_bytes": 52773717
+      }
+    },
+    "tdrs-sideon-med": {
+      "archive_md5": "3de90dea1a29a24d949ffaa81ed59263",
+      "converter_schema": 2,
+      "event_path": "tdrs-sideon-med/events.npz",
+      "events": {
+        "sha256": "3bde9d34e02ef4b53c679a5dd42f5f65dd26ef4950caf2295c146e9f2259575f",
+        "size_bytes": 312178096
+      }
+    }
+  },
+  "manifest_sha256": "7f6fd50afb4aeacef354f0f501f7fe0681d7871a47f39a05b132a4cce9003312",
+  "method_profile": "paper_reference_config",
+  "paper_comparison_requested": false,
+  "protocol_schema": 3,
+  "run_fingerprint": "2933cdc4dd026345f4b0ede8a271426fe227dae27f2b4d36b59cff01c26d15b4",
+  "schema": 3,
+  "sequence_ids": [
+    "hubble-perpendicular-slow",
+    "tdrs-sideon-med",
+    "camera-topdown-fast"
+  ],
+  "setting": "eSpinSLAM"
+}

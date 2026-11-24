@@ -1,0 +1,32 @@
+[eSpinSLAM] [1/18] camera-diagonal-slow: f=0.037206187383739646 loop=True reproj=None icp_mm=None throughput=788823.7030422506
+[eSpinSLAM] [2/18] camera-perpendicular-med: f=0.6453154634842281 loop=True reproj=None icp_mm=None throughput=774301.155755754
+[eSpinSLAM] [3/18] camera-sideon-fast: f=2.7412780460533814 loop=True reproj=None icp_mm=None throughput=700763.8718859631
+[eSpinSLAM] [4/18] controller-perpendicular-slow: f=None loop=False reproj=None icp_mm=None throughput=1006190.4952995172
+[eSpinSLAM] [5/18] controller-sideon-med: f=1.9337485118133793 loop=True reproj=None icp_mm=None throughput=948152.0820111723
+[eSpinSLAM] [6/18] controller-topdown-fast: f=3.8041589843203005 loop=True reproj=None icp_mm=None throughput=753152.4945203076
+[eSpinSLAM] [7/18] hubble-sideon-slow: f=10.0 loop=True reproj=None icp_mm=None throughput=612155.958941393
+[eSpinSLAM] [8/18] hubble-topdown-med: f=3.2823890616557962 loop=True reproj=None icp_mm=None throughput=594634.9049941013
+[eSpinSLAM] [9/18] hubble-diagonal-fast: f=4.637980460789191 loop=True reproj=None icp_mm=None throughput=491427.59445380315
+[eSpinSLAM] [10/18] soho-topdown-slow: f=None loop=False reproj=None icp_mm=None throughput=823618.1183725669
+[eSpinSLAM] [11/18] soho-diagonal-med: f=None loop=False reproj=None icp_mm=None throughput=830270.5865718131
+[eSpinSLAM] [12/18] soho-sideon-fast: f=None loop=False reproj=None icp_mm=None throughput=852930.0729727793
+[eSpinSLAM] [13/18] switch-diagonal-slow: f=None loop=False reproj=None icp_mm=None throughput=870037.5346170047
+[eSpinSLAM] [14/18] switch-perpendicular-med: f=2.3009637194968904 loop=True reproj=None icp_mm=None throughput=772670.8170388453
+[eSpinSLAM] [15/18] switch-sideon-fast: f=None loop=False reproj=None icp_mm=None throughput=829653.6251967765
+[eSpinSLAM] [16/18] tdrs-perpendicular-slow: f=10.0 loop=True reproj=None icp_mm=None throughput=547515.8823615962
+[eSpinSLAM] [17/18] tdrs-topdown-med: f=5.542624716232211 loop=True reproj=None icp_mm=None throughput=608593.7955194822
+[eSpinSLAM] [18/18] tdrs-topdown-fast: f=3.6200359695706337 loop=True reproj=None icp_mm=None throughput=609004.2558588586
+| Metric | Hubble | SOHO | TDRS | Camera | Dualshock | Switch |
+|---|---|---|---|---|---|---|
+| Reprojection error (px) ↓ [eSpinSLAM, paper_reference_config, exploratory_retrospective, non-dev exploratory] | - | - | - | - | - | - |
+| Landmark-mean reprojection diagnostic (px) [eSpinSLAM, paper_reference_config, exploratory_retrospective, non-dev exploratory] | - | - | - | - | - | - |
+| ICP alignment RMSE (mm) ↓ [eSpinSLAM, paper_reference_config, exploratory_retrospective, non-dev exploratory] | - | - | - | - | - | - |
+
+{
+  "sequence_count": 18,
+  "loop_closure_rate": 0.6666666666666666,
+  "frequency_authoritative_median_relative_error_percent": null,
+  "frequency_same_speed_consistency_median_absolute_deviation_percent": 20.450752444583927,
+  "mean_throughput_ev_s": 745216.4971896658,
+  "runtime_seconds": 683.2373003909888
+}

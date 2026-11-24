@@ -15,9 +15,10 @@
 以下の5部に分離する。
 
 現在のreference候補は、Claude CodeとCodexが合意した根拠順位と
-計算上限に従って実装・レビュー中である。4070PCでの新しいTOPSPIN
-評価は、コードと評価プロトコルの相互承認後に実行する。本書には未完了
-の評価値を記入しない。
+計算上限に従って実装・レビュー中である。2026-11-24にRTX 4070 PCで
+監査済みdev 3 sceneと固定review 18 sceneを実行した。凍結済みD-003は
+0/3 sceneで不合格となったため、reference値を調整せず再現失敗として
+記録する。Gate Dの相互レビューと全72 sceneの実行は未完了である。
 
 ---
 
@@ -239,9 +240,56 @@ free-frequency custom solverはdirect GTSAMとの同値性が未検証なので�
 
 ### 4.4 新reference評価結果
 
-**未完了。** 4070PCでのデータ監査、変換、コードレビュー、benchmark、
-固定範囲の実行が完了した後に追記する。ここに旧`e4c75cd`の値を転記
-しない。
+2026-11-24、commit `34f18493ba1d0f37da317445bd405ca7635b8c5a`を
+clean treeで実行した。入力はZenodo record 10884694から取得・変換し、
+archive size/MD5、変換後file SHA-256、calibration、resolution、object、
+splitを`--require-verified-topspin`で再検証した。method configは
+`--require-reference`で完全一致を要求した。
+
+実行環境はUbuntu 24.04系（kernel 6.8.0-149）、x86_64、16 logical CPU、
+RAM 33,475,567,616 bytes、RTX 4070 12,282 MiB、Python 3.10.14である。
+source tree SHA-256は
+`16ab88a6b085fb9aabdf3cb9cddb7273e1c6c7f297e4963789e4ad29a487894c`、
+dependency lock SHA-256は
+`3e90af4a5ed0c2cc58f3250e2c68394fa785530d4016b017266e1b2927859d1e`である。
+
+#### D-003 canonical dev 3 scene
+
+- 実行時間: 120.29 s;
+- loop検出: 3/3;
+- 事前登録したloop artefact疑い: 0/3;
+- 最終inlier landmark: 全sceneで0;
+- 最終BA status: `not_run` 1件、`converged` 2件;
+- D-003 eligible: 0/3（必要数2）、`passed=false`。
+
+したがって、引用eSfOの値をonline 1,000-event chunkへ移した凍結一次解釈は、
+公開TOPSPIN上でD-003の最低viabilityを満たさなかった。これは論文手法そのもの
+の反証ではなく、未公開著者実装を曖昧な記述から再現した今回の一次解釈の
+**reproduction failure**である。D-011に従い、代替frontend定数の探索、
+harmonic guard、parallax guard、terminal BA等をreferenceへ追加しない。
+
+#### Fixed review 18 scene
+
+- 実行時間: 683.24 s（11分23秒）;
+- loop検出: 12/18（66.67%）;
+- valid reconstruction: 0/18;
+- reprojection error: 全objectでUnavailable;
+- CAD ICP RMSE: author CAD/scaleが公開されないためUnavailable;
+- raw frequency estimate: loop検出12件で0.0372--10.0 Hz;
+- same-speed consistency median absolute deviation: 20.45%;
+- mean throughput: 745,216 events/s。
+
+same-speed consistencyは同じnominal speed内のまとまりであって、真のfrequency
+MAEではない。公開releaseにauthoritative frequency labelがないため、周波数
+精度の成否をこの値から主張しない。18 sceneで再構成が1件も成立しなかった
+ことは、D-003失敗と整合するreference-pathの観測結果である。
+
+review 18の実測から72 sceneは約45.6分と予測され、D-008の48時間上限内で
+ある。ただしD-008に従い、全72 sceneはGate A--DをClaude CodeとCodexが
+相互承認した最終候補でのみ1回実行するため、現時点では未実行である。
+機械可読な集計、per-scene row、run identityは
+[`evidence/topspin_reference_20261124/`](evidence/topspin_reference_20261124/)
+に保存する。旧`e4c75cd`の値は混在させない。
 
 ---
 
