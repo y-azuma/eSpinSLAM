@@ -392,6 +392,10 @@ loop確定時の値は`frequency_loop_closure_hz`として別に保存する。
 - greedy one-to-oneまたはHungarianによるonline track association;
 - 全段でのundistortion;
 - 論文Table 3のFFT詳細が引用元からも一意にならない場合の複数解釈。
+- 後続のeSfO独立再現監査では、`phi=30`と`delta_t=30 ms`の次元整合から
+  `(t_ms,x,y)`を一次解釈にする方が論文由来と判断した。本再現の
+  事前凍結済み`seconds x 1`は過去結果のreferenceとして変更せず、
+  `t_ms`は将来のsensitivityとしてのみ扱う。
 
 これらを実装・評価する場合は、別config、別output directory、別表を
 使い、reference結果より高い性能が出てもreference既定を変更しない。
