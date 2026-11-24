@@ -23,6 +23,15 @@ from espinslam.data import load_event_sequence, read_manifest
 from espinslam.evaluation import rotation_metrics
 from espinslam.frequency import LoopClosureFrequencyEstimator
 from espinslam.frontend import EventFrontend
+from espinslam.pipeline import ESpinSLAM
+
+
+_CONFIRMATION_GRID = (
+    (3, 0.0005), (3, 0.001), (3, 0.002),
+    (5, 0.0005), (5, 0.001), (5, 0.002),
+    (10, 0.0005), (10, 0.001), (10, 0.002),
+    (20, 0.0005), (20, 0.001), (20, 0.002),
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -86,16 +95,52 @@ def _observations(sequence, frontend_config) -> np.ndarray:
             sequence.y[start:stop], sequence.p[start:stop],
         )
     values = frontend.pool.events()
-    if values.shape[0] < 2 * 50:
-        # A deterministic raw-event fallback is used only for tuning viability;
-        # the final online test pipeline has no such fallback.
-        count = min(sequence.event_count, 10_000)
-        if count:
-            indices = np.linspace(0, sequence.event_count - 1, count).round().astype(np.int64)
-            values = np.column_stack((
-                sequence.t[indices], sequence.x[indices], sequence.y[indices],
-            )).astype(np.float64, copy=False)
     return values
+
+
+def _online_estimates(sequence, frontend_config, frequency) -> list[float | None]:
+    """Replay the causal pre-loop path and retain every due update.
+
+    A deliberately unreachable confirmation history keeps the estimator from
+    changing the track pool through post-loop forgetting.  Invalid updates are
+    retained as ``None`` because the experimental estimator clears its
+    stability deque on such updates.
+    """
+
+    frontend = EventFrontend(sequence.width, sequence.height, frontend_config)
+    estimator = LoopClosureFrequencyEstimator(replace(frequency, loop_history=1_000_000))
+    estimated_version = -1
+    next_estimate = -math.inf
+    values: list[float | None] = []
+    chunk = frontend_config.chunk_events
+    for start in range(0, sequence.event_count, chunk):
+        stop = min(sequence.event_count, start + chunk)
+        frontend.push(
+            sequence.t[start:stop], sequence.x[start:stop],
+            sequence.y[start:stop], sequence.p[start:stop],
+        )
+        now = float(sequence.t[stop - 1])
+        if frontend.pool.version != estimated_version and now >= next_estimate:
+            estimate = estimator.update(frontend.pool.events())
+            values.append(float(estimate.frequency_hz) if estimate.valid else None)
+            estimated_version = frontend.pool.version
+            next_estimate = now + frequency.update_interval_seconds
+    return values
+
+
+def _confirmation_prediction(
+    values: list[float | None], history: int, threshold: float,
+) -> float | None:
+    window: list[float] = []
+    for value in values:
+        if value is None:
+            window.clear()
+            continue
+        window.append(value)
+        window = window[-history:]
+        if len(window) == history and float(np.std(window, ddof=1)) < threshold:
+            return float(value)
+    return None
 
 
 def _load_cache(path: Path) -> dict[str, dict]:
@@ -159,6 +204,79 @@ def _metrics(records: list[dict], names: list[str]) -> list[dict]:
     return results
 
 
+def _confirmation_metrics(records: list[dict]) -> list[dict]:
+    truth = np.asarray([row["omega_true_rad_s"] for row in records])
+    results = []
+    for history, threshold in _CONFIRMATION_GRID:
+        prediction = np.asarray([
+            math.nan if (value := _confirmation_prediction(
+                row["frequency_updates_hz"], history, threshold,
+            )) is None else 2.0 * math.pi * value
+            for row in records
+        ])
+        name = f"history_{history}_std_{threshold:g}"
+        results.append({
+            "name": name,
+            "loop_history": history,
+            "loop_std_threshold_hz": threshold,
+            **rotation_metrics(truth, prediction, len(records)),
+        })
+    return results
+
+
+def _evaluate_online_train(
+    rows, root, config, frequency, cache_path: Path,
+) -> list[dict]:
+    cache = _load_cache(cache_path)
+    for index, row in enumerate(rows, 1):
+        sequence_id = row["sequence_id"]
+        if sequence_id in cache:
+            continue
+        sequence = load_event_sequence(
+            row, root, config.data.sensor_size,
+            max_duration_seconds=config.data.max_duration_seconds,
+        )
+        record = {
+            "sequence_id": sequence_id,
+            "omega_true_rad_s": sequence.omega_rad_s,
+            "frequency_updates_hz": _online_estimates(
+                sequence, config.frontend, frequency,
+            ),
+        }
+        _append(cache_path, record)
+        cache[sequence_id] = record
+        print(f"train-online [{index}/{len(rows)}] {sequence_id}", flush=True)
+    return [cache[row["sequence_id"]] for row in rows]
+
+
+def _evaluate_exact_validation(
+    rows, root, config, cache_path: Path,
+) -> list[dict]:
+    cache = _load_cache(cache_path)
+    model = ESpinSLAM(config)
+    for index, row in enumerate(rows, 1):
+        sequence_id = row["sequence_id"]
+        if sequence_id in cache:
+            continue
+        sequence = load_event_sequence(
+            row, root, config.data.sensor_size,
+            max_duration_seconds=config.data.max_duration_seconds,
+        )
+        result = model.process(sequence, reconstruct_structure=False)
+        record = {
+            "sequence_id": sequence_id,
+            "omega_true_rad_s": sequence.omega_rad_s,
+            "omega_pred_rad_s": result.omega_rad_s if result.valid else None,
+        }
+        _append(cache_path, record)
+        cache[sequence_id] = record
+        print(
+            f"val-online [{index}/{len(rows)}] {sequence_id}: valid={result.valid}",
+            flush=True,
+        )
+    return [cache[row["sequence_id"]] for row in rows]
+
+
 def _rank(item: dict) -> tuple:
     return (
         -item["coverage"],
@@ -188,12 +306,14 @@ def main() -> None:
     variants = _variants(config.frequency, low, high)
     names = [name for name, _ in variants]
     fingerprint = {
+        "protocol_version": 2,
         "config_sha256": _sha256(args.config),
         "manifest_sha256": _sha256(args.manifest),
         "train_sequence_ids": [row["sequence_id"] for row in train],
         "validation_sequence_ids": [row["sequence_id"] for row in validation],
         "period_range_seconds": [low, high],
         "variants": {name: asdict(value) for name, value in variants},
+        "confirmation_grid": [list(value) for value in _CONFIRMATION_GRID],
     }
     fingerprint_path = args.output_dir / "run_fingerprint.json"
     if fingerprint_path.is_file():
@@ -208,14 +328,37 @@ def main() -> None:
         args.output_dir / "train_predictions.jsonl", label="train",
     )
     train_metrics = sorted(_metrics(train_records, names), key=_rank)
-    selected_name = train_metrics[0]["name"]
-    selected_frequency = dict(variants)[selected_name]
-    selected_only = [(selected_name, selected_frequency)]
-    validation_records = _evaluate_rows(
-        validation, root, config, selected_only,
-        args.output_dir / "validation_predictions.jsonl", label="val",
+    alignment_name = train_metrics[0]["name"]
+    alignment_frequency = dict(variants)[alignment_name]
+    online_train_records = _evaluate_online_train(
+        train, root, config, alignment_frequency,
+        args.output_dir / "train_online_updates.jsonl",
     )
-    validation_metrics = _metrics(validation_records, [selected_name])[0]
+    confirmation_metrics = sorted(
+        _confirmation_metrics(online_train_records), key=_rank,
+    )
+    confirmation = confirmation_metrics[0]
+    selected_name = f"{alignment_name}__{confirmation['name']}"
+    selected_frequency = replace(
+        alignment_frequency,
+        loop_history=confirmation["loop_history"],
+        loop_std_threshold_hz=confirmation["loop_std_threshold_hz"],
+    )
+    selected_config_object = replace(config, frequency=selected_frequency)
+    validation_records = _evaluate_exact_validation(
+        validation, root, selected_config_object,
+        args.output_dir / "validation_online_predictions.jsonl",
+    )
+    validation_truth = np.asarray([
+        row["omega_true_rad_s"] for row in validation_records
+    ])
+    validation_prediction = np.asarray([
+        math.nan if row["omega_pred_rad_s"] is None else row["omega_pred_rad_s"]
+        for row in validation_records
+    ])
+    validation_metrics = rotation_metrics(
+        validation_truth, validation_prediction, len(validation_records),
+    )
 
     selected_config = config.as_dict()
     selected_config["frequency"] = asdict(selected_frequency)
@@ -232,9 +375,11 @@ def main() -> None:
         "objective": "maximum train coverage, then minimum train MAE and RMSE",
         "selected_name": selected_name,
         "selected_frequency": asdict(selected_frequency),
-        "train_selected_metrics": train_metrics[0],
+        "train_alignment_selected_metrics": train_metrics[0],
+        "train_confirmation_selected_metrics": confirmation,
         "validation_metrics": validation_metrics,
-        "train_candidates": train_metrics,
+        "train_alignment_candidates": train_metrics,
+        "train_confirmation_candidates": confirmation_metrics,
         "runtime_seconds": time.monotonic() - started,
     }
     (args.output_dir / "tuning_results.json").write_text(

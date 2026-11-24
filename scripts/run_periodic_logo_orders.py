@@ -72,7 +72,7 @@ def main() -> None:
             raise FileNotFoundError(manifest)
 
         order_dir = output_root / f"order{order}"
-        tuning_dir = order_dir / "tuning"
+        tuning_dir = order_dir / "tuning_online_v2"
         test_dir = order_dir / "held_out_test"
         order_dir.mkdir(parents=True, exist_ok=True)
         log_path = order_dir / "run.log"
