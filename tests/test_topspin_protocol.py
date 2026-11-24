@@ -15,9 +15,25 @@ from espinslam.frequency import FrequencyEstimate
 from espinslam.pipeline import ESpinSLAMResult
 from espinslam.topspin import (
     REVIEW18, TOPSPIN_SCENES, _checkpoint_fingerprint, _prepare_run_directory,
-    _method_profile, _reference_mismatches, _reference_mode, _safe_sequence_id, _sequence_row,
-    _validate_verified_manifest_row, evaluate_topspin, evaluate_topspin_ablations, table2,
+    _method_profile, _reference_mismatches, _reference_mode, _safe_sequence_id,
+    _same_speed_consistency, _sequence_row, _validate_verified_manifest_row,
+    evaluate_topspin, evaluate_topspin_ablations, table2,
 )
+
+
+def test_same_speed_consistency_uses_loop_closure_not_post_ba_estimate():
+    rows = [
+        {"speed": "slow", "frequency_loop_closure_hz": 0.1,
+         "frequency_est_hz": 10.0},
+        {"speed": "slow", "frequency_loop_closure_hz": 0.2,
+         "frequency_est_hz": 10.0},
+    ]
+    by_speed, deviations = _same_speed_consistency(rows)
+
+    assert by_speed["slow"]["median_hz"] == pytest.approx(0.15)
+    assert by_speed["slow"]["min_hz"] == 0.1
+    assert by_speed["slow"]["max_hz"] == 0.2
+    assert np.allclose(deviations, [100.0 / 3.0, 100.0 / 3.0])
 
 
 def _result(sequence_id="scene"):

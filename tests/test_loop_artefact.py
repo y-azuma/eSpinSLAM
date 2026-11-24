@@ -128,6 +128,13 @@ def test_suspected_loop_is_reported_but_excluded_from_d003_viability():
         loop_closed=True,
         loop_closure_time=2.0,
         reconstruction=reconstruction,
+        frequency_history=[FrequencyRecord(
+            event_time=2.0,
+            wall_seconds=0.1,
+            frequency_hz=0.5,
+            loop_closed=True,
+            period_seconds=2.0,
+        )],
         optimizations=[optimization],
         loop_artefact_suspected=True,
         loop_artefact_reason="all_confirming_periods_within_one_grid_step_of_half_span",
@@ -141,6 +148,10 @@ def test_suspected_loop_is_reported_but_excluded_from_d003_viability():
         scale_source="",
     )
     assert row["loop_closed"] is True
+    assert row["frequency_loop_closure_hz"] == 0.5
+    assert row["frequency_est_definition"] == "last_valid_online_estimate"
+    assert row["first_optimization_landmarks"] == 4
+    assert row["first_optimization_removed_reprojection"] == 0
     assert row["loop_artefact_suspected"] is True
     assert row["d003_viability_eligible"] is False
 

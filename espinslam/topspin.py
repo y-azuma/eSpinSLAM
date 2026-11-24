@@ -765,12 +765,35 @@ def _sequence_row(row: dict[str, str], result: ESpinSLAMResult, *,
     frequency_source = str(row.get("frequency_source") or "").strip()
     frequency_authoritative = _is_authoritative(frequency_source)
     truth = declared_reference if frequency_authoritative else None
-    estimate = result.frequency_hz
+    valid_frequency_records = [
+        record for record in result.frequency_history
+        if math.isfinite(record.frequency_hz)
+    ]
+    last_frequency_record = (
+        valid_frequency_records[-1] if valid_frequency_records else None
+    )
+    loop_confirmation_record = next(
+        (record for record in valid_frequency_records if record.loop_closed), None,
+    )
+    # ``frequency_est_hz`` is deliberately the final valid output of the
+    # online Eq. (9) estimator, not a later BA frequency.  Reference mode fixes
+    # f during BA, but the distinction matters for the frequency-optimisation
+    # ablation and for auditing a post-loop collapse of H.
+    estimate = (
+        float(last_frequency_record.frequency_hz)
+        if last_frequency_record is not None else result.frequency_hz
+    )
+    loop_confirmation_frequency = (
+        float(loop_confirmation_record.frequency_hz)
+        if loop_confirmation_record is not None
+        else (result.frequency_hz if result.loop_closed else math.nan)
+    )
     reconstruction = result.reconstruction
     observation_mean = _nullable(reconstruction.mean_observation_error_px)
     landmark_mean = _nullable(reconstruction.mean_reprojection_error_px)
     last_optimization_status = (
         str(result.optimizations[-1].termination_status) if result.optimizations else None)
+    first_optimization = result.optimizations[0] if result.optimizations else None
     # A point cloud can be geometrically non-empty even when the last solver
     # call merely exhausted its iteration budget.  Keep that raw result, but
     # do not let it enter paper-comparison aggregate metrics as a success.
@@ -810,6 +833,25 @@ def _sequence_row(row: dict[str, str], result: ESpinSLAMResult, *,
         "frequency_reference_authoritative": frequency_authoritative,
         "frequency_true_hz": truth,
         "frequency_est_hz": _nullable(estimate),
+        "frequency_est_definition": "last_valid_online_estimate",
+        "frequency_est_at_search_boundary": (
+            bool(last_frequency_record.at_search_boundary)
+            if last_frequency_record is not None else None
+        ),
+        "frequency_system_hz": _nullable(result.frequency_hz),
+        "frequency_loop_closure_hz": _nullable(loop_confirmation_frequency),
+        "frequency_loop_closure_period_s": (
+            _nullable(loop_confirmation_record.period_seconds)
+            if loop_confirmation_record is not None else None
+        ),
+        "frequency_loop_closure_at_search_boundary": (
+            bool(loop_confirmation_record.at_search_boundary)
+            if loop_confirmation_record is not None else None
+        ),
+        "frequency_loop_closure_period_over_span": (
+            _nullable(loop_confirmation_record.period_over_span)
+            if loop_confirmation_record is not None else None
+        ),
         "frequency_abs_error_hz": _nullable(abs(estimate - truth)) if truth is not None else None,
         "frequency_rel_error_percent": (
             _nullable(abs(estimate - truth) / truth * 100.0) if truth else None),
@@ -835,6 +877,36 @@ def _sequence_row(row: dict[str, str], result: ESpinSLAMResult, *,
         "icp_failure_reason": icp_reason,
         "reconstruction_valid": reconstruction.valid,
         "last_optimization_status": last_optimization_status,
+        "first_optimization_event_time_s": (
+            _nullable(first_optimization.event_time) if first_optimization else None
+        ),
+        "first_optimization_frequency_hz": (
+            _nullable(first_optimization.frequency_hz) if first_optimization else None
+        ),
+        "first_optimization_status": (
+            str(first_optimization.termination_status) if first_optimization else None
+        ),
+        "first_optimization_landmarks": (
+            int(first_optimization.landmarks) if first_optimization else None
+        ),
+        "first_optimization_observations": (
+            int(first_optimization.observations) if first_optimization else None
+        ),
+        "first_optimization_removed_short": (
+            int(first_optimization.removed_short) if first_optimization else None
+        ),
+        "first_optimization_removed_reprojection": (
+            int(first_optimization.removed_reprojection) if first_optimization else None
+        ),
+        "first_optimization_removed_radius": (
+            int(first_optimization.removed_radius) if first_optimization else None
+        ),
+        "first_optimization_fused": (
+            int(first_optimization.fused) if first_optimization else None
+        ),
+        "first_optimization_iterations": (
+            int(first_optimization.iterations) if first_optimization else None
+        ),
         "paper_metrics_eligible": paper_metrics_eligible,
         "reconstruction_reason": reconstruction.reason,
         "events": result.event_count,
@@ -865,6 +937,46 @@ def _mean_std(values: list[float]) -> tuple[float | None, float | None]:
     if not finite.size:
         return None, None
     return float(finite.mean()), float(finite.std())
+
+
+def _same_speed_consistency(
+    rows: list[dict[str, Any]],
+) -> tuple[dict[str, dict[str, Any]], list[float]]:
+    """Return same-speed agreement at the loop-closure decision.
+
+    A later online estimate can be produced after BA/outlier elimination has
+    changed ``H``.  Using that value would conflate frequency agreement with
+    post-closure failure propagation, so this diagnostic intentionally uses
+    only the first estimate whose stability window closed the loop.
+    """
+
+    by_speed: dict[str, dict[str, Any]] = {}
+    deviations: list[float] = []
+    for speed in sorted({row["speed"] for row in rows}):
+        values = [
+            row["frequency_loop_closure_hz"] for row in rows
+            if row["speed"] == speed
+            and row["frequency_loop_closure_hz"] is not None
+        ]
+        if not values:
+            continue
+        median = float(np.median(values))
+        speed_deviations = (
+            [abs(value - median) / median * 100.0 for value in values]
+            if median else []
+        )
+        deviations.extend(speed_deviations)
+        by_speed[speed] = {
+            "count": len(values),
+            "median_hz": median,
+            "std_hz": float(np.std(values)),
+            "min_hz": float(np.min(values)),
+            "max_hz": float(np.max(values)),
+            "median_absolute_deviation_from_speed_median_percent": (
+                float(np.median(speed_deviations)) if speed_deviations else None
+            ),
+        }
+    return by_speed, deviations
 
 
 def _d003_viability_summary(
@@ -1502,22 +1614,7 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
         _plot_throughput_summary(primary, output_dir / "fig5_throughput_summary.png")
     frequency_errors = [r["frequency_rel_error_percent"] for r in primary
                         if r["frequency_rel_error_percent"] is not None]
-    by_speed = {}
-    consistency_deviations = []
-    for speed in sorted({r["speed"] for r in primary}):
-        values = [r["frequency_est_hz"] for r in primary
-                  if r["speed"] == speed and r["frequency_est_hz"] is not None]
-        if values:
-            median = float(np.median(values))
-            deviations = ([abs(value - median) / median * 100.0 for value in values]
-                          if median else [])
-            consistency_deviations.extend(deviations)
-            by_speed[speed] = {"count": len(values), "median_hz": median,
-                               "std_hz": float(np.std(values)),
-                               "min_hz": float(np.min(values)), "max_hz": float(np.max(values)),
-                               "median_absolute_deviation_from_speed_median_percent": (
-                                   float(np.median(deviations)) if deviations else None),
-                               }
+    by_speed, consistency_deviations = _same_speed_consistency(primary)
     report = {
         "method": "eSpinSLAM reproduction candidate",
         "paper": "Event-based Spinning Object SLAM, ICCVW 2025",
@@ -1577,6 +1674,7 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
             float(np.median(frequency_errors)) if frequency_errors else None),
         "frequency_same_speed_consistency_median_absolute_deviation_percent": (
             float(np.median(consistency_deviations)) if consistency_deviations else None),
+        "frequency_same_speed_consistency_source": "frequency_loop_closure_hz",
         "frequency_by_speed_hz": by_speed,
         "mean_throughput_ev_s": _mean_std([r["throughput_ev_s"] for r in primary])[0],
         "mean_frontend_throughput_ev_s": _mean_std(

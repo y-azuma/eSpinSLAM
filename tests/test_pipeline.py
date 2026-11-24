@@ -132,7 +132,11 @@ def test_paper_reference_profile_top_level_smoke_schema_and_trace():
         assert isinstance(record.at_search_boundary, bool)
         assert isinstance(record.near_half_span, bool)
     assert {
-        "frequency_est_hz", "reconstruction_valid", "last_optimization_status",
+        "frequency_est_hz", "frequency_loop_closure_hz",
+        "frequency_est_at_search_boundary", "reconstruction_valid",
+        "last_optimization_status", "first_optimization_landmarks",
+        "first_optimization_removed_reprojection",
+        "first_optimization_removed_radius",
         "triangulation_fallback_count", "triangulation_fallback_reasons",
     } <= set(row)
     assert row["triangulation_fallback_count"] == 0
@@ -305,6 +309,7 @@ def test_reference_top_level_dispatches_to_real_equivalent_custom_solver(
     assert calls[0]["optimize_frequency"] is config.backend.optimize_frequency
     assert len(result.optimizations) == 1
     assert result.optimizations[0].termination_status != "not_run"
+    assert result.optimizations[0].landmarks == len(points)
 
 
 def test_online_pipeline_recovers_frequency_orientation_and_structure(synthetic):
@@ -373,7 +378,11 @@ def test_topspin_evaluation_writes_paper_tables_and_schema(synthetic, tmp_path):
     with (tmp_path / "run" / "per_sequence.csv").open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     assert len(rows) == 1
-    assert {"sequence_id", "frequency_est_hz", "reprojection_error_px",
+    assert {"sequence_id", "frequency_est_hz", "frequency_loop_closure_hz",
+            "frequency_est_definition", "frequency_est_at_search_boundary",
+            "first_optimization_status", "first_optimization_landmarks",
+            "first_optimization_removed_reprojection",
+            "first_optimization_removed_radius", "reprojection_error_px",
             "icp_rmse_mm", "runtime_s", "paper_metrics_eligible",
             "triangulation_fallback_count",
             "triangulation_fallback_reasons"} <= set(rows[0])
@@ -394,6 +403,9 @@ def test_topspin_evaluation_writes_paper_tables_and_schema(synthetic, tmp_path):
     metrics = json.loads((tmp_path / "run" / "metrics.json").read_text(encoding="utf-8"))
     assert {"table2", "sequence_count", "runtime_provenance",
             "evaluation_classification", "backend_diagnostics"} <= set(metrics)
+    assert metrics["frequency_same_speed_consistency_source"] == (
+        "frequency_loop_closure_hz"
+    )
     assert not (tmp_path / "run" / "table_vs_paper.md").exists()
     assert report["method_profile"] == "experimental_interpretation"
     assert report["evaluation_classification"] == "exploratory_retrospective"
