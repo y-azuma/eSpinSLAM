@@ -11,13 +11,15 @@ import pytest
 from scipy.spatial import cKDTree
 from scipy.spatial.transform import Rotation
 
-from espinslam.backend import empty_reconstruction
+from espinslam.backend import IncrementalBackend, empty_reconstruction
 from espinslam.config import (
     BackendConfig, CameraConfig, ESpinSLAMConfig, FrequencyConfig, FrontendConfig,
     load_config,
 )
 from espinslam.data import EventSequence
 from espinslam.frequency import FrequencyEstimate
+from espinslam.frontend import TrackPool
+from espinslam.geometry import BundleAdjustmentResult
 from espinslam.pipeline import ESpinSLAM
 from espinslam.synthetic import make_scene, simulate_events
 from espinslam.topspin import (
@@ -56,18 +58,50 @@ def _config(scene) -> ESpinSLAMConfig:
 
 
 def test_paper_reference_profile_top_level_smoke_schema_and_trace():
-    """Gate the real reference profile without imposing an accuracy target."""
+    """Exercise the literal Eq. (9) path without imposing an accuracy target.
+
+    A deterministic moving-square stream is repeated at 0.15-second chunk
+    intervals.  It passes through the actual reference eFAST, density,
+    HDBSCAN, online association, and frequency paths, and necessarily reaches
+    the paper estimator at least ``aleph`` times.  This prevents a no-track
+    12-event fixture from passing while Eq. (9) or its audit wiring is broken.
+    No method setting from ``topspin_reference.jsonc`` is changed; only the
+    synthetic sensor size and camera intrinsics are supplied.
+    """
 
     config = load_config("examples/configs/topspin_reference.jsonc")
     assert _reference_mode(config)
-    t = np.linspace(0.0, 0.02, 12)
+    base_t, base_x, base_y = [], [], []
+    for step in range(40):
+        column = 30 + 12 + step
+        for row in range(30, 42):
+            base_t.append(step * 1e-3 + row * 1e-6)
+            base_x.append(column)
+            base_y.append(row)
+        for column_x in range(30 + step, 43 + step):
+            base_t.append(step * 1e-3 + 5e-4 + column_x * 1e-6)
+            base_x.append(column_x)
+            base_y.append(30)
+    order = np.argsort(base_t)
+    base_t = np.asarray(base_t, dtype=np.float64)[order]
+    base_x = np.asarray(base_x)[order]
+    base_y = np.asarray(base_y)[order]
+    assert base_t.size == config.frontend.chunk_events
+    # More than aleph chunks ensure at least aleph due estimator updates.  The
+    # 0.15-s spacing is above the untouched 0.1-s reference update interval.
+    chunks = config.frequency.loop_history + 5
+    t = np.concatenate([base_t + 0.15 * index for index in range(chunks)])
+    x = np.tile(base_x, chunks)
+    y = np.tile(base_y, chunks)
+    p = np.ones(t.size, dtype=np.uint8)
     sequence = EventSequence(
-        "reference-smoke", np.arange(12) + 20, np.arange(12) + 30, t,
-        np.arange(12) % 2, math.nan, 1280, 720, {}, Path("synthetic-reference-smoke"),
+        "reference-smoke", x, y, t, p,
+        math.nan, 160, 120, {}, Path("synthetic-reference-smoke"),
     )
     result = ESpinSLAM(config).process(
         sequence,
-        camera=CameraConfig(fx=500.0, fy=500.0, cx=640.0, cy=360.0),
+        camera=CameraConfig(fx=100.0, fy=100.0, cx=80.0, cy=60.0),
+        reconstruct_structure=False,
     )
     row = _sequence_row(
         {"sequence_id": sequence.sequence_id, "object": "synthetic"}, result,
@@ -75,13 +109,125 @@ def test_paper_reference_profile_top_level_smoke_schema_and_trace():
     )
     assert result.sequence_id == sequence.sequence_id
     assert result.event_count == sequence.event_count
-    assert len(result.frequency_history) == 1
-    assert result.frequency_history[0].icp_termination == "not_run"
+    assert len(result.frequency_history) >= config.frequency.loop_history
+    valid = [record for record in result.frequency_history
+             if math.isfinite(record.frequency_hz)]
+    assert valid
+    for record in valid:
+        assert math.isfinite(record.period_seconds)
+        assert math.isfinite(record.alignment_cost)
+        assert math.isfinite(record.grid_seed_seconds)
+        assert math.isfinite(record.grid_seed_cost)
+        assert record.icp_iterations_used >= 1
+        assert record.icp_termination in {"converged", "max_iterations"}
+        assert isinstance(record.icp_clipped_to_search_interval, bool)
+        assert math.isfinite(record.observation_span_seconds)
+        assert math.isfinite(record.period_over_span)
+        assert isinstance(record.at_search_boundary, bool)
+        assert isinstance(record.near_half_span, bool)
     assert {
         "frequency_est_hz", "reconstruction_valid", "last_optimization_status",
         "triangulation_fallback_count", "triangulation_fallback_reasons",
     } <= set(row)
     assert row["triangulation_fallback_count"] == 0
+
+
+def test_reference_injected_loop_orders_forget_ba_outliers_and_records_diagnostics(
+        monkeypatch, tmp_path):
+    """A forced loop exercises the reference Fig. 3 path without an accuracy gate."""
+
+    calls: list[str] = []
+
+    class SpyPool(TrackPool):
+        def forget(self, cutoff_time):
+            calls.append("forget")
+            return super().forget(cutoff_time)
+
+        def remove(self, track_ids):
+            track_ids = list(track_ids)
+            if track_ids:
+                calls.append("outlier-removal")
+            return super().remove(track_ids)
+
+    pool = SpyPool(retain=1000)
+    pool.add(
+        1, np.asarray((0.0, 0.1, 0.2, 0.3)),
+        np.asarray((40.0, 41.0, 42.0, 43.0)),
+        np.asarray((50.0, 51.0, 52.0, 53.0)),
+    )
+
+    class Frontend:
+        def __init__(self, width, height, config):
+            self.pool = pool
+
+        def push(self, t, x, y, p):
+            # The fixture already contains one retained paper track.
+            pass
+
+    class ForcedLoopEstimator:
+        def __init__(self, config):
+            self.loop_closed = False
+            self.current = FrequencyEstimate(1.0, 1.0, 0.0, True)
+
+        def update(self, events):
+            self.loop_closed = True
+            return self.current
+
+    class OrderedBackend(IncrementalBackend):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # Force the later-run Sec. 4.2.4 branch so a failed triangulation
+            # exercises the explicitly reported fallback diagnostic.
+            self.initialized = True
+            self.frequency_hz = 1.0
+
+        def _associate_landmarks(self, pool, tracks, initial):
+            calls.append("associate")
+            return tracks, initial, 0
+
+    def fake_triangulate(*args, **kwargs):
+        calls.append("triangulate")
+        return None
+
+    def fake_bundle_adjust(times, pixels, owners, initial_points, initial_rotation,
+                           frequency_hz, *args, **kwargs):
+        calls.append("ba")
+        count = int(times.size)
+        # Deliberately large residuals make the real post-BA outlier removal
+        # path execute; this is a path/order test, not an accuracy assertion.
+        return BundleAdjustmentResult(
+            np.eye(3), frequency_hz, np.asarray(initial_points),
+            np.full(len(initial_points), 100.0), np.full(count, 100.0),
+            1.0, 0.5, 2, "converged",
+        )
+
+    import espinslam.backend as backend_module
+    import espinslam.pipeline as pipeline_module
+    monkeypatch.setattr(pipeline_module, "EventFrontend", Frontend)
+    monkeypatch.setattr(pipeline_module, "LoopClosureFrequencyEstimator", ForcedLoopEstimator)
+    monkeypatch.setattr(pipeline_module, "IncrementalBackend", OrderedBackend)
+    monkeypatch.setattr(backend_module, "triangulate", fake_triangulate)
+    monkeypatch.setattr(backend_module, "bundle_adjust", fake_bundle_adjust)
+
+    config = load_config("examples/configs/topspin_reference.jsonc")
+    assert _reference_mode(config)
+    sequence = EventSequence(
+        "reference-forced-loop", np.asarray((40, 41, 42, 43)),
+        np.asarray((50, 51, 52, 53)), np.asarray((0.0, 0.1, 0.2, 0.3)),
+        np.ones(4, dtype=np.uint8), math.nan, 160, 120, {}, tmp_path,
+    )
+    result = ESpinSLAM(config).process(
+        sequence,
+        camera=CameraConfig(fx=100.0, fy=100.0, cx=80.0, cy=60.0),
+    )
+    assert calls.index("forget") < calls.index("ba") < calls.index("outlier-removal")
+    assert calls.index("triangulate") < calls.index("associate") < calls.index("ba")
+    assert len(result.optimizations) == 1
+    report = result.optimizations[0]
+    assert report.termination_status == "converged"
+    assert report.triangulation_fallback_count == 1
+    assert report.triangulation_fallback_reasons == "triangulation_failed_used_origin:1"
+    assert report.removed_reprojection == 1
 
 
 def test_online_pipeline_recovers_frequency_orientation_and_structure(synthetic):

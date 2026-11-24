@@ -179,7 +179,10 @@ ABLATIONS = {
 # Frozen method/evaluation values from examples/configs/topspin_reference.jsonc.
 # Logging is deliberately excluded: changing a W&B destination does not change
 # the evaluated method.  Everything that can affect input selection, the
-# estimator, reconstruction, or a reported metric is compared exactly.
+# estimator, reconstruction, or a reported metric is compared exactly.  The
+# shared-schema ``association_max_gap_seconds`` placeholder is also pinned for
+# reproducible serialization, although the paper-mode front end does not read
+# it (traceability-matrix row 18).
 REFERENCE_PROTOCOL = {
     "data.sensor_size": [1280, 720],
     "data.max_duration_seconds": None,
@@ -773,6 +776,19 @@ def _sequence_row(row: dict[str, str], result: ESpinSLAMResult, *,
     # do not let it enter paper-comparison aggregate metrics as a success.
     paper_metrics_eligible = bool(
         reconstruction.valid and last_optimization_status != "max_iterations")
+    # D-003 is a dev-scene interpretation-viability gate, distinct from the
+    # raw paper output and from Table-2 metric eligibility.  A loop which
+    # matches the preregistered literal-Eq.-(9) artefact signatures remains in
+    # the record but cannot satisfy the two-of-three viability minimum.
+    d003_viability_eligible = bool(
+        result.loop_closed
+        and not result.loop_artefact_suspected
+        and int(reconstruction.points.shape[0]) >= 4
+        and bool(result.optimizations)
+        # ``not_run`` is an OptimizationReport placeholder created when no
+        # bundle-adjustment problem was formed; it is not a BA termination.
+        and last_optimization_status not in (None, "", "not_run", "max_iterations")
+    )
     fallback_count = sum(
         int(getattr(report, "triangulation_fallback_count", 0))
         for report in result.optimizations
@@ -799,6 +815,9 @@ def _sequence_row(row: dict[str, str], result: ESpinSLAMResult, *,
             _nullable(abs(estimate - truth) / truth * 100.0) if truth else None),
         "loop_closed": result.loop_closed,
         "loop_closure_time_s": _nullable(result.loop_closure_time),
+        "loop_artefact_suspected": result.loop_artefact_suspected,
+        "loop_artefact_reason": result.loop_artefact_reason,
+        "d003_viability_eligible": d003_viability_eligible,
         "landmarks": int(reconstruction.points.shape[0]),
         "observations": int(reconstruction.observation_count),
         # Paper Eq. (12)/Table 2 primary: one mean over every inlier
@@ -846,6 +865,69 @@ def _mean_std(values: list[float]) -> tuple[float | None, float | None]:
     if not finite.size:
         return None, None
     return float(finite.mean()), float(finite.std())
+
+
+def _d003_viability_summary(
+    rows: list[dict[str, Any]], *,
+    reference_mode: bool,
+    verified_acquisition: bool,
+) -> dict[str, Any]:
+    """Summarise the frozen two-of-three dev gate without hiding raw loops.
+
+    Canonical scene names alone are not enough to establish D-003 evidence:
+    the run must also use the exact full-method reference profile and the
+    audited public TOPSPIN acquisition.  Otherwise the diagnostics remain
+    visible, but ``passed`` is deliberately unavailable.
+    """
+
+    dev = [row for row in rows if row.get("split") == "dev"]
+    selected_ids = [str(row.get("sequence_id") or "") for row in dev]
+    selected_set = set(selected_ids)
+    eligible_count = sum(bool(row.get("d003_viability_eligible")) for row in dev)
+    # Three arbitrary ``split=dev`` rows must never be promoted to the frozen
+    # D-003 gate.  This matters for verified subset runs because the acquisition
+    # audit validates the public files but fixed split membership is only
+    # mandatory for an exact-all-72 paper-comparison invocation.
+    canonical_selection_complete = (
+        len(selected_ids) == len(TOPSPIN_DEV_SCENES)
+        and selected_set == TOPSPIN_DEV_SCENES
+    )
+    qualification_reasons = []
+    if not reference_mode:
+        qualification_reasons.append(
+            "method is not the exact full eSpinSLAM reference profile"
+        )
+    if not verified_acquisition:
+        qualification_reasons.append(
+            "verified TOPSPIN acquisition audit is unavailable"
+        )
+    if not canonical_selection_complete:
+        qualification_reasons.append("selection is not exactly the canonical three dev scenes")
+    complete = not qualification_reasons
+    return {
+        "scope": "canonical three dev scenes only",
+        "scene_count": len(dev),
+        "reference_profile": bool(reference_mode),
+        "verified_acquisition": bool(verified_acquisition),
+        "canonical_selection_complete": canonical_selection_complete,
+        "qualification_reasons": qualification_reasons,
+        "canonical_scene_ids": sorted(TOPSPIN_DEV_SCENES),
+        "selected_dev_scene_ids": selected_ids,
+        "missing_canonical_scenes": sorted(TOPSPIN_DEV_SCENES - selected_set),
+        "unexpected_dev_scenes": sorted(selected_set - TOPSPIN_DEV_SCENES),
+        "required_eligible_scenes": 2,
+        "eligible_scene_count": eligible_count,
+        "complete": complete,
+        "passed": (eligible_count >= 2) if complete else None,
+        "artefact_suspected_sequences": [
+            str(row["sequence_id"]) for row in dev
+            if bool(row.get("loop_artefact_suspected"))
+        ],
+        "note": (
+            "Raw loop detections remain reported. A preregistered search-boundary "
+            "or span/2 artefact does not count toward the D-003 two-of-three gate."
+        ),
+    }
 
 
 def table2(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1346,7 +1428,13 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
              "grid_seed_cost": _nullable(r.grid_seed_cost),
              "icp_iterations_used": r.icp_iterations_used,
              "icp_termination": r.icp_termination,
-             "icp_clipped_to_search_interval": r.icp_clipped_to_search_interval}
+             "icp_clipped_to_search_interval": r.icp_clipped_to_search_interval,
+             "observation_span_seconds": _nullable(r.observation_span_seconds),
+             "period_over_span": _nullable(r.period_over_span),
+             "at_search_boundary": r.at_search_boundary,
+             "near_half_span": r.near_half_span,
+             "loop_artefact_suspected": r.loop_artefact_suspected,
+             "loop_artefact_reason": r.loop_artefact_reason}
             for r in result.frequency_history
         ] or [{"event_time_s": None}])
         scene_artifacts = [optimization_history, frequency_history]
@@ -1463,6 +1551,11 @@ def evaluate_topspin(config: ESpinSLAMConfig, data_root: Path, manifest_path: Pa
             bool(r["paper_metrics_eligible"]) for r in primary),
         "geometrically_valid_sequence_count": sum(
             bool(r["reconstruction_valid"]) for r in primary),
+        "d003_viability": _d003_viability_summary(
+            results,
+            reference_mode=(reference_mode and setting_name == "eSpinSLAM"),
+            verified_acquisition=acquisition_audit is not None,
+        ),
         "backend_diagnostics": {
             "triangulation_fallback_count": sum(
                 int(r["triangulation_fallback_count"]) for r in results

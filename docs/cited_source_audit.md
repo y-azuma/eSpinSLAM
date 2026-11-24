@@ -6,7 +6,7 @@ per-chunk eSpinSLAM adaptation exact.
 
 ## Source identity
 
-- Elias Elms, Gabriel Latif, and Tat-Jun Chin, *Event-based
+- Ethan Elms, Yasir Latif, Tae Ha Park, and Tat-Jun Chin, *Event-based
   Structure-from-Orbit*, CVPR 2024 / arXiv:2405.06216.
 - Audited PDF: arXiv version, 10 PDF pages, SHA-256
   `7ad59e3495d37a0772e8d2274db9202a0c1601f1434779aaa4ad3b826d6caa00`.

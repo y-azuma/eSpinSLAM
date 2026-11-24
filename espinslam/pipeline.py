@@ -10,7 +10,7 @@ time (Sec. 4.2.2). No ground-truth label is read during inference.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import math
 import time
 
@@ -19,7 +19,7 @@ from .backend import (
     IncrementalBackend, OptimizationReport, Reconstruction, UndistortionMap,
     empty_reconstruction,
 )
-from .config import CameraConfig, ESpinSLAMConfig
+from .config import CameraConfig, ESpinSLAMConfig, FrequencyConfig
 from .data import EventSequence
 from .frequency import FrequencyEstimate, LoopClosureFrequencyEstimator
 from .frontend import EventFrontend
@@ -40,6 +40,76 @@ class FrequencyRecord:
     icp_iterations_used: int = 0
     icp_termination: str = "not_run"
     icp_clipped_to_search_interval: bool = False
+    # Ground-truth-free diagnostics for the predeclared D-003 viability audit.
+    # They do not alter Eq. (9), the stability test, or loop closure itself.
+    observation_span_seconds: float = math.nan
+    period_over_span: float = math.nan
+    at_search_boundary: bool = False
+    near_half_span: bool = False
+    loop_artefact_suspected: bool = False
+    loop_artefact_reason: str = ""
+
+
+def _frequency_record_diagnostics(
+    estimate: FrequencyEstimate,
+    observation_span_seconds: float,
+    config: FrequencyConfig,
+) -> tuple[float, bool, bool]:
+    """Return ``T*/span`` and two frozen, ground-truth-free audit flags.
+
+    The flags implement only the D-003 viability diagnostic.  In particular,
+    they are not fed back into :class:`LoopClosureFrequencyEstimator`.
+    """
+
+    period = float(estimate.period_seconds)
+    span = float(observation_span_seconds)
+    if not estimate.valid or not (math.isfinite(period) and math.isfinite(span) and span > 0):
+        return math.nan, False, False
+    ratio = period / span
+    maximum = (span if config.max_period_seconds is None
+               else min(float(config.max_period_seconds), span))
+    tolerance = float(config.icp_tolerance_seconds)
+    at_boundary = (
+        math.isclose(period, float(config.min_period_seconds), rel_tol=0.0,
+                     abs_tol=tolerance)
+        or math.isclose(period, maximum, rel_tol=0.0, abs_tol=tolerance)
+    )
+    half_span = 0.5 * span
+    # "One coarse-grid step" is multiplicative because D-004 froze a
+    # geometric grid with nominal ratio 1 + coarse_relative_step.
+    multiplicative_distance = max(period / half_span, half_span / period)
+    near_half_span = (
+        multiplicative_distance <= 1.0 + float(config.coarse_relative_step) + 1e-12
+    )
+    return ratio, at_boundary, near_half_span
+
+
+def _loop_artefact_diagnostic(
+    records: list[FrequencyRecord], loop_history: int,
+) -> tuple[bool, str]:
+    """Classify the *confirmed* window without changing loop detection.
+
+    D-003 excludes a loop from the two-of-three viability count when every
+    estimate in the confirmation window is either at a search boundary, or
+    every estimate follows the known literal-Eq.-(9) ``span / 2`` attractor.
+    """
+
+    # The paper estimator retains only valid estimates in its stability deque;
+    # invalid updates neither append nor clear it.  Mirror that exact window
+    # here rather than accidentally counting diagnostic records for invalid
+    # updates.
+    valid_records = [
+        record for record in records
+        if math.isfinite(record.frequency_hz) and math.isfinite(record.period_seconds)
+    ]
+    window = valid_records[-loop_history:]
+    if len(window) != loop_history:
+        return False, ""
+    if all(record.at_search_boundary for record in window):
+        return True, "all_confirming_periods_at_search_boundary"
+    if all(record.near_half_span for record in window):
+        return True, "all_confirming_periods_within_one_grid_step_of_half_span"
+    return False, ""
 
 
 @dataclass(frozen=True)
@@ -61,6 +131,10 @@ class ESpinSLAMResult:
     frontend_seconds: float = math.nan
     frequency_seconds: float = math.nan
     backend_seconds: float = math.nan
+    # Raw loop closure remains available above.  This separate flag is used
+    # only by the frozen D-003 dev-scene viability audit.
+    loop_artefact_suspected: bool = False
+    loop_artefact_reason: str = ""
 
     @property
     def frequency_hz(self) -> float:
@@ -162,11 +236,21 @@ class ESpinSLAM:
                 )
             if due_estimate:
                 tick = time.perf_counter()
-                estimate = estimator.update(pool.events())
+                pool_events = pool.events()
+                estimate = estimator.update(pool_events)
                 timers["frequency"] += time.perf_counter() - tick
                 estimated_version = pool.version
                 next_estimate = now + config.frequency.update_interval_seconds
-                history.append(FrequencyRecord(
+                observation_span = (
+                    float(pool_events[:, 0].max() - pool_events[:, 0].min())
+                    if pool_events.shape[0] else math.nan
+                )
+                period_over_span, at_boundary, near_half_span = (
+                    _frequency_record_diagnostics(
+                        estimate, observation_span, config.frequency,
+                    )
+                )
+                record = FrequencyRecord(
                     now - origin, time.perf_counter() - started,
                     estimate.frequency_hz if estimate.valid else math.nan,
                     estimator.loop_closed,
@@ -177,7 +261,23 @@ class ESpinSLAM:
                     estimate.icp_iterations_used,
                     estimate.icp_termination,
                     estimate.icp_clipped_to_search_interval,
-                ))
+                    observation_span,
+                    period_over_span,
+                    at_boundary,
+                    near_half_span,
+                )
+                if (config.frequency.method == "loop_closure"
+                        and config.frequency.alignment_mode == "paper"
+                        and estimator.loop_closed and not loop_was_closed):
+                    suspected, reason = _loop_artefact_diagnostic(
+                        [*history, record], config.frequency.loop_history,
+                    )
+                    record = replace(
+                        record,
+                        loop_artefact_suspected=suspected,
+                        loop_artefact_reason=reason,
+                    )
+                history.append(record)
                 if estimator.loop_closed and not math.isfinite(loop_time):
                     loop_time = now - origin
             if not estimator.loop_closed:
@@ -211,4 +311,7 @@ class ESpinSLAM:
             estimator.current, estimator.loop_closed, loop_time, reconstruction,
             history, list(backend.reports), len(pool), time.perf_counter() - started,
             timers["frontend"], timers["frequency"], timers["backend"],
+            any(record.loop_artefact_suspected for record in history),
+            next((record.loop_artefact_reason for record in history
+                  if record.loop_artefact_suspected), ""),
         )

@@ -31,6 +31,8 @@
     "cluster_time_scale_px_per_second": 1.0,
     "cluster_by_polarity": false,
     "association_radius_px": 30.0,
+    // Schema-compatible placeholder only: paper-mode association uses the
+    // cited forward spatio-temporal hemisphere and never reads this gap.
     "association_max_gap_seconds": 0.05,
     "association_head_events": 5,
     "retain_events_per_track": 1000

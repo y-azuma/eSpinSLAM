@@ -157,8 +157,14 @@ public TOPSPIN runでは、record 10884694がそれらを含まないため、ma
 - 合成GTは数式、Jacobian、処理順、solver同値性を確認する
   **synthetic verification**であり、論文性能の再現を示さない。
 - dev 3 sceneは、論文にも引用元にも値がない必須数値のviability確認
-  専用である。frequency error、reprojection error、landmark数を最適化
-  しない。
+  専用である。過去の探索的TOPSPIN/dev artifactは既に閲覧済みで、以下の
+  診断規則は「公開データ未閲覧」を主張するものではなく、最初の監査済み
+  reference-profile D-003 dev benchmark前に凍結したものである。frequency
+  error、reprojection error、landmark数を最適化しない。生のloop検出は常に
+  保存するが、初めて安定条件を満たす
+  20推定のすべてが検索端、または1%幾何gridの1刻み以内で
+  `span/2`に追従する場合は`loop_artefact_suspected`とし、2/3の
+  viability数に含めない。この判定はGTを読まず、推定器の出力も変えない。
 - 固定18 sceneは実装レビュー用であり、結果から実装解釈を変えない。
 - 公開72 sceneはすでに開発中に閲覧済みなので、最終候補で1回実行して
   も**exploratory / retrospective**であり、held-out、test、confirmatory

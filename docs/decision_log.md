@@ -51,14 +51,31 @@ For a parameter missing from the paper and citations:
    defined and at least **two of the three** dev scenes each produce:
    - a detected loop;
    - at least four inlier landmarks after outlier removal; and
-   - a BA termination status other than `max_iterations`.
-3. `camera-topdown-fast` is marked near the Sec. 4.3 degeneracy. Failure on it
+   - at least one actual BA, with the final termination status neither
+     `not_run` nor `max_iterations`.
+3. Before the first **audited reference-profile D-003 dev benchmark**, a
+   ground-truth-free artefact rule is frozen for the `aleph=20` estimates that
+   first satisfy the paper's loop-stability test.  Historical exploratory
+   TOPSPIN/dev artifacts had already been viewed and remain explicitly
+   excluded; this is not a claim that the public data were unseen.  Record the
+   observed span and `T*/span` on every update.  The raw loop
+   output is preserved but does **not** count toward the two-of-three minimum
+   when either of the following holds for every estimate in that confirming
+   window:
+   - `T*` is at the lower or upper search endpoint (within the already frozen
+     `1e-5 s` ICP tolerance); or
+   - `T*` is within one nominal geometric-grid step of `span/2`, i.e. its
+     multiplicative distance from `span/2` is at most `1 + 0.01`.
+   Such a loop is reported as `loop_artefact_suspected`; the estimator,
+   stability test, and reconstruction path are not changed.  A guard or
+   harmonic correction is Future Work, not part of this reproduction.
+4. `camera-topdown-fast` is marked near the Sec. 4.3 degeneracy. Failure on it
    alone does not disqualify a candidate; its outcome remains reported.
-4. Do not rank viable candidates by frequency error, reprojection error,
+5. Do not rank viable candidates by frequency error, reprojection error,
    landmark count, CAD alignment, loop time, or throughput.
-5. If more than one candidate is viable, choose by: value supported by a cited
+6. If more than one candidate is viable, choose by: value supported by a cited
    reference, then library default, then the predeclared neutral/simple value.
-6. Freeze the selected value. Sensitivity results do not retroactively change
+7. Freeze the selected value. Sensitivity results do not retroactively change
    the primary interpretation.
 
 The parameter registry below is an execution gate. Values resolved by a cited
@@ -311,4 +328,5 @@ to reuse earlier empirically optimized values.
 | 2026-11-24 | **History correction:** commit `9bb723d` bundled the already-agreed D-006 thresholds with later Gate C measurements and references that did not yet exist at that commit. The thresholds were agreed during the external Claude/Codex session before implementation, but that commit does not independently prove the ordering. History is not rewritten; measured values are now explicitly separated under “Gate C evidence.” | Audit-trail correction; no method or threshold changed | Claude review response and Codex correction |
 | 2026-11-24 | Reclassified cited eSfO constants in the online chunked front end from Exact to **Ambiguous (adapted)**; froze “report reproduction failure, do not sweep” if cited values fail D-003; documented the seconds/`phi=30` long-time association limitation. | Cross-review of offline cited method versus online adaptation | Claude review response and Codex correction |
 | 2026-11-24 | Recorded unresolved eFAST source identity and Eq. (6) distance-domain ambiguity; retained existing behavior without performance-motivated changes. | Independent source-fidelity audit | Codex pre-review audit |
+| 2026-11-24 | Before the first audited reference-profile D-003 dev benchmark, froze the ground-truth-free search-boundary / `span/2` loop-artefact diagnostic. Historical exploratory TOPSPIN/dev artifacts were already known and stay excluded; no claim of unseen public data is made. Raw inference is unchanged; suspected loops are reported but excluded from the two-of-three viability count. | Literal Eq. (9) synthetic-path audit; no new audited dev benchmark executed | Claude re-review request B2 and Codex implementation |
 
