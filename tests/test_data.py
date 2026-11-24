@@ -33,6 +33,35 @@ def test_npz_manifest_loader_preserves_explicit_test_membership(tmp_path):
     assert sequence.p.tolist() == [0, 1, 0]
 
 
+def test_event_snn_stream_manifest_loader_converts_microseconds(tmp_path):
+    events = tmp_path / "events"
+    events.mkdir()
+    np.savez_compressed(
+        events / "debris_000003.npz",
+        x=np.asarray((0, 21, 41), dtype=np.int16),
+        y=np.asarray((0, 40, 81), dtype=np.int16),
+        t_us=np.asarray((434, 1_434, 2_434), dtype=np.int64),
+        p01=np.asarray((0, 1, 0), dtype=np.uint8),
+        omega_rad_s=np.asarray(3.0, dtype=np.float32),
+    )
+    manifest = tmp_path / "manifest.csv"
+    with manifest.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(
+            stream, fieldnames=("sequence_id", "event_path", "split")
+        )
+        writer.writeheader()
+        writer.writerow({
+            "sequence_id": "debris_000003",
+            "event_path": "events/debris_000003.npz",
+            "split": "train",
+        })
+    row = read_manifest(manifest, tmp_path)[0]
+    sequence = load_event_sequence(row, tmp_path, (42, 82))
+    assert np.allclose(sequence.t, np.asarray((0.000434, 0.001434, 0.002434)))
+    assert sequence.p.tolist() == [0, 1, 0]
+    assert sequence.metadata["event_schema"] == "event_snn_torch_xy_t_us_p01"
+
+
 def _events():
     t_us = np.asarray([10, 500, 4_000_000, 17_000_000, 33_600_000], dtype=np.int64)
     x = np.asarray([0, 5, 640, 1279, 33])

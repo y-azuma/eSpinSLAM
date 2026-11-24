@@ -140,8 +140,22 @@ def load_event_sequence(
         with np.load(event_path, allow_pickle=False) as archive:
             x = _numeric(archive, "x", ndim=1)
             y = _numeric(archive, "y", ndim=1)
-            t = _numeric(archive, "t", ndim=1).astype(np.float64, copy=False)
-            p = _numeric(archive, "p", ndim=1)
+            if "t" in archive.files and "p" in archive.files:
+                t = _numeric(archive, "t", ndim=1).astype(np.float64, copy=False)
+                p = _numeric(archive, "p", ndim=1)
+                event_schema = "espinslam_xy_tp_seconds"
+            elif "t_us" in archive.files and "p01" in archive.files:
+                # event_snn_torch's fused event-stream cache preserves the
+                # source event order and integer microsecond timestamps.  Read
+                # it directly so preparing an eSpinSLAM view does not duplicate
+                # tens of gigabytes of event arrays.
+                t = _numeric(archive, "t_us", ndim=1).astype(np.float64) * 1e-6
+                p = _numeric(archive, "p01", ndim=1)
+                event_schema = "event_snn_torch_xy_t_us_p01"
+            else:
+                raise ValueError(
+                    "event NPZ must contain either x/y/t/p or x/y/t_us/p01"
+                )
             omega = float(_numeric(archive, "omega_rad_s", ndim=0))
     except (OSError, ValueError, TypeError) as error:
         raise ValueError(f"failed to load {event_path}: {error}") from error
@@ -159,6 +173,7 @@ def load_event_sequence(
         name: value.strip() for name, value in row.items()
         if isinstance(value, str) and value.strip()
     }
+    metadata["event_schema"] = event_schema
     scene_dir = event_path.parent
     for candidate in (scene_dir / "scene_config.json", scene_dir / "meta" / "scene_metadata.json"):
         if candidate.is_file():
