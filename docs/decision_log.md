@@ -53,6 +53,7 @@ For a parameter missing from the paper and citations:
    - at least four inlier landmarks after outlier removal; and
    - at least one actual BA, with the final termination status neither
      `not_run` nor `max_iterations`.
+   The custom-solver status `stalled` counts as an actual BA satisfying this termination criterion.
 3. Before the first **audited reference-profile D-003 dev benchmark**, a
    ground-truth-free artefact rule is frozen for the `aleph=20` estimates that
    first satisfy the paper's loop-stability test.  Historical exploratory
