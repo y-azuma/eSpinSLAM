@@ -240,18 +240,27 @@ free-frequency custom solverはdirect GTSAMとの同値性が未検証なので�
 
 ### 4.4 新reference評価結果
 
-2026-11-24、commit `34f18493ba1d0f37da317445bd405ca7635b8c5a`を
-clean treeで実行した。入力はZenodo record 10884694から取得・変換し、
+2026-11-24、まずcommit `34f18493ba1d0f37da317445bd405ca7635b8c5a`を
+clean treeで監査実行した。その後、手法・設定・入力を変えず、loop確定時の
+周波数と初回BA内訳を保存するreporting-only変更
+`6b4868a474fc2b79eed66552d11b14811a0aecd8`で、同じRTX 4070ホスト上の
+dev 3 sceneとfixed review 18 sceneを再実行した。以下の表、内訳、実行時間は
+この修正版再実行の値であり、最初の`34f1849`実行の結果と混在させない。
+入力はZenodo record 10884694から取得・変換し、
 archive size/MD5、変換後file SHA-256、calibration、resolution、object、
 splitを`--require-verified-topspin`で再検証した。method configは
 `--require-reference`で完全一致を要求した。
 
 実行環境はUbuntu 24.04系（kernel 6.8.0-149）、x86_64、16 logical CPU、
 RAM 33,475,567,616 bytes、RTX 4070 12,282 MiB、Python 3.10.14である。
-source tree SHA-256は
+最初の`34f1849`実行のsource tree SHA-256は
 `16ab88a6b085fb9aabdf3cb9cddb7273e1c6c7f297e4963789e4ad29a487894c`、
+修正版`6b4868a`再実行のsource tree SHA-256は
+`206875ef7da611d9e614b7e73126375b42b1ab28c8b1c1e46769389150e7fcc2`、
 dependency lock SHA-256は
 `3e90af4a5ed0c2cc58f3250e2c68394fa785530d4016b017266e1b2927859d1e`である。
+両source treeの差はreportingとそのテストで、reference手法コード・設定値・
+入力sceneは同一である。
 
 #### D-003 canonical dev 3 scene
 
@@ -312,6 +321,14 @@ MAEではない。旧20.45%は初回BA後に`H`が崩壊したあとの最終onl
 labelがないため、修正後の2.92%からも周波数精度の成否を主張しない。18
 sceneで再構成が1件も成立しなかったことは、D-003失敗と整合する
 reference-pathの観測結果である。
+
+また、2.92%という群内medianは一部の大きな不一致を隠す。loop検出12件の
+うち、`camera-perpendicular-med`、`tdrs-perpendicular-slow`、
+`tdrs-topdown-med`のloop確定値は各speed群中央値のおよそ0.5倍、1.86倍、
+1.98倍だった。このため、2.92%だけを全sceneの良好な一致と解釈しない。
+同じ入力・コードでも、別ホストとの浮動小数点差によりBA反復数や初回BAの
+除去理由内訳が境界で僅かに変わることを確認した。結論は変わらないが、
+以後の全72 sceneは同じRTX 4070ホストでのみ実行する。
 
 review 18の実測から72 sceneは約46.1分と予測され、D-008の48時間上限内で
 ある。ただしD-008に従い、全72 sceneはGate A--DをClaude CodeとCodexが
