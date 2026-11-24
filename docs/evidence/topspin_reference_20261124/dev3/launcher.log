@@ -1,6 +1,6 @@
-[eSpinSLAM] [1/3] hubble-perpendicular-slow: f=7.229254005432044 loop=True reproj=None icp_mm=None throughput=382436.672805748
-[eSpinSLAM] [2/3] tdrs-sideon-med: f=10.0 loop=True reproj=None icp_mm=None throughput=616489.8874828622
-[eSpinSLAM] [3/3] camera-topdown-fast: f=4.894419448628182 loop=True reproj=None icp_mm=None throughput=445106.009269947
+[eSpinSLAM] [1/3] hubble-perpendicular-slow: f=7.229254005432044 loop=True reproj=None icp_mm=None throughput=382444.10815377
+[eSpinSLAM] [2/3] tdrs-sideon-med: f=10.0 loop=True reproj=None icp_mm=None throughput=615890.4316846527
+[eSpinSLAM] [3/3] camera-topdown-fast: f=4.894419448628182 loop=True reproj=None icp_mm=None throughput=446582.20368410624
 | Metric |  |
 |---|
 | Reprojection error (px) ↓ [eSpinSLAM, paper_reference_config, exploratory_retrospective, non-dev exploratory] |  |
@@ -13,5 +13,5 @@
   "frequency_authoritative_median_relative_error_percent": null,
   "frequency_same_speed_consistency_median_absolute_deviation_percent": null,
   "mean_throughput_ev_s": null,
-  "runtime_seconds": 120.28793797499384
+  "runtime_seconds": 120.09187317601754
 }

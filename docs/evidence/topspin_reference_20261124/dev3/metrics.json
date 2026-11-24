@@ -10,7 +10,7 @@
   "paper_comparison_ineligibility_reasons": [
     "selection is not exactly all 72 TOPSPIN scenes"
   ],
-  "run_fingerprint": "2933cdc4dd026345f4b0ede8a271426fe227dae27f2b4d36b59cff01c26d15b4",
+  "run_fingerprint": "b7930756ecd5454a5d00645a9594122e1e04ba8109642698fdaa783df1aa3885",
   "reference_config_mismatches": [],
   "evidence_scope": "exploratory_retrospective",
   "public_data_limitations": {
@@ -64,6 +64,7 @@
   "loop_closure_rate": null,
   "frequency_authoritative_median_relative_error_percent": null,
   "frequency_same_speed_consistency_median_absolute_deviation_percent": null,
+  "frequency_same_speed_consistency_source": "frequency_loop_closure_hz",
   "frequency_by_speed_hz": {},
   "mean_throughput_ev_s": null,
   "mean_frontend_throughput_ev_s": null,
@@ -153,9 +154,9 @@
     }
   ],
   "paper_comparison_table_all72": null,
-  "runtime_seconds": 120.28793797499384,
-  "scene_runtime_sum_seconds": 120.28793797499384,
-  "invocation_wall_seconds": 124.71754496599897,
+  "runtime_seconds": 120.09187317601754,
+  "scene_runtime_sum_seconds": 120.09187317601754,
+  "invocation_wall_seconds": 123.76526843997999,
   "runtime_provenance": {
     "hostname": "azumayudai-B660M-Pro-RS",
     "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.39",
@@ -172,7 +173,7 @@
       "--manifest",
       "/home/azumayudai/Desktop/ws_snn/datasets/TOPSPIN_v1/raw_paper_verified/manifest.csv",
       "--output-dir",
-      "runs/20261124_topspin_reference_dev3",
+      "runs/20261124_topspin_reference_dev3_r1r2_6b4868a",
       "--scene-list",
       "examples/splits/topspin_dev.txt",
       "--require-reference",
@@ -181,9 +182,9 @@
     "logical_cpu_count": 16,
     "memory_bytes": 33475567616,
     "gpu": "NVIDIA GeForce RTX 4070, 12282 MiB, 565.57.01",
-    "git_revision": "34f18493ba1d0f37da317445bd405ca7635b8c5a",
+    "git_revision": "6b4868a474fc2b79eed66552d11b14811a0aecd8",
     "git_dirty": false,
-    "source_tree_sha256": "16ab88a6b085fb9aabdf3cb9cddb7273e1c6c7f297e4963789e4ad29a487894c",
+    "source_tree_sha256": "206875ef7da611d9e614b7e73126375b42b1ab28c8b1c1e46769389150e7fcc2",
     "lock_sha256": "3e90af4a5ed0c2cc58f3250e2c68394fa785530d4016b017266e1b2927859d1e",
     "packages": {
       "numpy": "2.2.6",

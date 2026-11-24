@@ -2,9 +2,9 @@
   "acquisition_audit_sha256": "df57db34c6e29a65400e14ed331297a3b3767e484bf44d125bcaf6bfe987c137",
   "code_identity": {
     "git_dirty": false,
-    "git_revision": "34f18493ba1d0f37da317445bd405ca7635b8c5a",
+    "git_revision": "6b4868a474fc2b79eed66552d11b14811a0aecd8",
     "lock_sha256": "3e90af4a5ed0c2cc58f3250e2c68394fa785530d4016b017266e1b2927859d1e",
-    "source_tree_sha256": "16ab88a6b085fb9aabdf3cb9cddb7273e1c6c7f297e4963789e4ad29a487894c"
+    "source_tree_sha256": "206875ef7da611d9e614b7e73126375b42b1ab28c8b1c1e46769389150e7fcc2"
   },
   "config": {
     "backend": {
@@ -137,7 +137,7 @@
   "method_profile": "paper_reference_config",
   "paper_comparison_requested": false,
   "protocol_schema": 3,
-  "run_fingerprint": "2933cdc4dd026345f4b0ede8a271426fe227dae27f2b4d36b59cff01c26d15b4",
+  "run_fingerprint": "b7930756ecd5454a5d00645a9594122e1e04ba8109642698fdaa783df1aa3885",
   "schema": 3,
   "sequence_ids": [
     "hubble-perpendicular-slow",

@@ -10,7 +10,7 @@
   "paper_comparison_ineligibility_reasons": [
     "selection is not exactly all 72 TOPSPIN scenes"
   ],
-  "run_fingerprint": "13bd765503e59f8c4f19a61f5dfcfc588feac9ec60211fb3404e6e214fdc0bfe",
+  "run_fingerprint": "c99cad24253f98654bbfbe4128d7628bcb121074a77063567d947ba6838aaff2",
   "reference_config_mismatches": [],
   "evidence_scope": "exploratory_retrospective",
   "public_data_limitations": {
@@ -65,35 +65,36 @@
   "summary_scope": "test-labelled non-dev exploratory scenes",
   "loop_closure_rate": 0.6666666666666666,
   "frequency_authoritative_median_relative_error_percent": null,
-  "frequency_same_speed_consistency_median_absolute_deviation_percent": 20.450752444583927,
+  "frequency_same_speed_consistency_median_absolute_deviation_percent": 2.922126534939858,
+  "frequency_same_speed_consistency_source": "frequency_loop_closure_hz",
   "frequency_by_speed_hz": {
     "fast": {
       "count": 4,
-      "median_hz": 3.712097476945467,
-      "std_hz": 0.6738314864231469,
-      "min_hz": 2.7412780460533814,
-      "max_hz": 4.637980460789191,
-      "median_absolute_deviation_from_speed_median_percent": 13.7111767341867
+      "median_hz": 0.12966764497126354,
+      "std_hz": 0.006510672800969529,
+      "min_hz": 0.12952489234675074,
+      "max_hz": 0.14465346911448343,
+      "median_absolute_deviation_from_speed_median_percent": 0.10911970788643661
     },
     "medium": {
       "count": 5,
-      "median_hz": 2.3009637194968904,
-      "std_hz": 1.6358107308774825,
-      "min_hz": 0.6453154634842281,
-      "max_hz": 5.542624716232211,
-      "median_absolute_deviation_from_speed_median_percent": 42.65279516764811
+      "median_hz": 0.07188548177258251,
+      "std_hz": 0.03446409486928539,
+      "min_hz": 0.03601179350942432,
+      "max_hz": 0.1420804463101247,
+      "median_absolute_deviation_from_speed_median_percent": 5.612933864652043
     },
     "slow": {
       "count": 3,
-      "median_hz": 10.0,
-      "std_hz": 4.696506042976224,
+      "median_hz": 0.04103275075384901,
+      "std_hz": 0.01763648847263117,
       "min_hz": 0.037206187383739646,
-      "max_hz": 10.0,
-      "median_absolute_deviation_from_speed_median_percent": 0.0
+      "max_hz": 0.0763850540633243,
+      "median_absolute_deviation_from_speed_median_percent": 9.325632086097519
     }
   },
-  "mean_throughput_ev_s": 745216.4971896658,
-  "mean_frontend_throughput_ev_s": 798419.8686151622,
+  "mean_throughput_ev_s": 734302.4971045256,
+  "mean_frontend_throughput_ev_s": 786932.2559245187,
   "mean_scene_event_rate_ev_s": 449184.1556042748,
   "real_time_rate": 0.7777777777777778,
   "table2": [
@@ -258,9 +259,9 @@
     }
   ],
   "paper_comparison_table_all72": null,
-  "runtime_seconds": 683.2373003909888,
-  "scene_runtime_sum_seconds": 683.2373003909888,
-  "invocation_wall_seconds": 711.1360372429772,
+  "runtime_seconds": 691.6109716020001,
+  "scene_runtime_sum_seconds": 691.6109716020001,
+  "invocation_wall_seconds": 716.8802003690216,
   "runtime_provenance": {
     "hostname": "azumayudai-B660M-Pro-RS",
     "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.39",
@@ -277,7 +278,7 @@
       "--manifest",
       "/home/azumayudai/Desktop/ws_snn/datasets/TOPSPIN_v1/raw_paper_verified/manifest.csv",
       "--output-dir",
-      "runs/20261124_topspin_reference_review18",
+      "runs/20261124_topspin_reference_review18_r1r2_6b4868a",
       "--review-subset",
       "--require-reference",
       "--require-verified-topspin"
@@ -285,9 +286,9 @@
     "logical_cpu_count": 16,
     "memory_bytes": 33475567616,
     "gpu": "NVIDIA GeForce RTX 4070, 12282 MiB, 565.57.01",
-    "git_revision": "34f18493ba1d0f37da317445bd405ca7635b8c5a",
+    "git_revision": "6b4868a474fc2b79eed66552d11b14811a0aecd8",
     "git_dirty": false,
-    "source_tree_sha256": "16ab88a6b085fb9aabdf3cb9cddb7273e1c6c7f297e4963789e4ad29a487894c",
+    "source_tree_sha256": "206875ef7da611d9e614b7e73126375b42b1ab28c8b1c1e46769389150e7fcc2",
     "lock_sha256": "3e90af4a5ed0c2cc58f3250e2c68394fa785530d4016b017266e1b2927859d1e",
     "packages": {
       "numpy": "2.2.6",

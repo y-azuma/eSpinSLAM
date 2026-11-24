@@ -255,36 +255,65 @@ dependency lock SHA-256は
 
 #### D-003 canonical dev 3 scene
 
-- 実行時間: 120.29 s;
+- reporting監査修正版での再実行時間: 120.09 s;
 - loop検出: 3/3;
 - 事前登録したloop artefact疑い: 0/3;
 - 最終inlier landmark: 全sceneで0;
 - 最終BA status: `not_run` 1件、`converged` 2件;
 - D-003 eligible: 0/3（必要数2）、`passed=false`。
 
-したがって、引用eSfOの値をonline 1,000-event chunkへ移した凍結一次解釈は、
-公開TOPSPIN上でD-003の最低viabilityを満たさなかった。これは論文手法そのもの
-の反証ではなく、未公開著者実装を曖昧な記述から再現した今回の一次解釈の
-**reproduction failure**である。D-011に従い、代替frontend定数の探索、
-harmonic guard、parallax guard、terminal BA等をreferenceへ追加しない。
+失敗はloop確定前の周波数帯ではなく、その直後の最初のBAから始まった。
+
+| Scene | loop確定時の`f*` (Hz) | 初回BA後の残存track | reprojection除去 | radius除去 | 最終online推定 (Hz) |
+|---|---:|---:|---:|---:|---:|
+| Hubble perpendicular slow | 0.073685 | 2 / 91 | 81 | 8 | 7.229254 |
+| TDRS side-on medium | 0.139795 | 3 / 127 | 106 | 18 | 10.0（探索端） |
+| Camera top-down fast | 0.129476 | 1 / 184 | 1 | 182 | 4.894419 |
+
+loop確定時の3値は論文Fig. 6から読める約0.04--0.16 Hzの帯域内である。
+最初のBAは`converged`したが97--99%のtrackを除去した。その後は、論文に
+記載された処理順どおり、痩せた`H`でEq. (9)を再推定し、有効推定の大半が
+消失、残る推定は高周波側へ移動した。高い`f`を使うEq. (12)のforgetが
+さらに`H`を削り、回復しなかった。`frequency_est_hz`はこの「最後に有効
+だったonline推定」であり、loop確定値は`frequency_loop_closure_hz`へ別に
+保存する。
+
+最初のBAが適合しなかった根本原因は未特定である。候補は、固定した`f*`の
+分解能、秒単位へ適応したfront-end trackの品質（`phi=30`、many-to-one
+associationを含む）、Camera sceneにおけるSec. 4.3の縮退であり、いずれも
+論文から一意に再現できないAmbiguous項目である。Hubbleの確定窓は
+`T*=13.00 -> 13.57 s`、`T*/span=0.58 -> 0.54`と緩やかにdriftしており、
+凍結済みの`span/2 +/- 1%`診断では疑い扱いにならない。この規則を結果確認後
+に変更しない。
+
+したがって、凍結一次解釈は公開TOPSPIN上でD-003の最低viabilityを
+満たさなかった。これは論文手法そのものの反証ではなく、未公開著者実装を
+曖昧な記述から再現した今回の一次解釈の**reproduction failure**である。
+D-011に従い、代替frontend定数の探索、harmonic guard、parallax guard、
+terminal BA等をreferenceへ追加しない。原因切り分け実験はreferenceと分離した
+Future Workとする。
 
 #### Fixed review 18 scene
 
-- 実行時間: 683.24 s（11分23秒）;
+- reporting監査修正版での実行時間: 691.61 s（11分32秒）;
 - loop検出: 12/18（66.67%）;
 - valid reconstruction: 0/18;
 - reprojection error: 全objectでUnavailable;
 - CAD ICP RMSE: author CAD/scaleが公開されないためUnavailable;
-- raw frequency estimate: loop検出12件で0.0372--10.0 Hz;
-- same-speed consistency median absolute deviation: 20.45%;
-- mean throughput: 745,216 events/s。
+- loop確定時のfrequency: loop検出12件で0.0360--0.1447 Hz;
+- 最後に有効だったonline estimate: loop検出12件で0.0372--10.0 Hz;
+- loop確定値によるsame-speed consistency median absolute deviation: 2.92%;
+- mean throughput: 734,302 events/s。
 
 same-speed consistencyは同じnominal speed内のまとまりであって、真のfrequency
-MAEではない。公開releaseにauthoritative frequency labelがないため、周波数
-精度の成否をこの値から主張しない。18 sceneで再構成が1件も成立しなかった
-ことは、D-003失敗と整合するreference-pathの観測結果である。
+MAEではない。旧20.45%は初回BA後に`H`が崩壊したあとの最終online値から
+計算されており、この目的には無効だった。修正版はloopを確定した時点の
+`frequency_loop_closure_hz`だけを使う。公開releaseにauthoritative frequency
+labelがないため、修正後の2.92%からも周波数精度の成否を主張しない。18
+sceneで再構成が1件も成立しなかったことは、D-003失敗と整合する
+reference-pathの観測結果である。
 
-review 18の実測から72 sceneは約45.6分と予測され、D-008の48時間上限内で
+review 18の実測から72 sceneは約46.1分と予測され、D-008の48時間上限内で
 ある。ただしD-008に従い、全72 sceneはGate A--DをClaude CodeとCodexが
 相互承認した最終候補でのみ1回実行するため、現時点では未実行である。
 機械可読な集計、per-scene row、run identityは
