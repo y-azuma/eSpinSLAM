@@ -137,6 +137,26 @@ def _load_reference(path: Path | None, maximum: int) -> np.ndarray | None:
     return points
 
 
+def _reference_for_row(
+    row: dict[str, str], data_root: Path, default: np.ndarray | None,
+    maximum: int,
+) -> tuple[np.ndarray | None, str]:
+    """Load evaluation-only CAD for one sequence, constrained to data_root."""
+
+    if default is not None:
+        return default, "command_line_reference"
+    relative = row.get("reference_pointcloud_path", "").strip()
+    if not relative:
+        return None, ""
+    root = data_root.resolve()
+    path = (root / relative).resolve()
+    if not path.is_relative_to(root):
+        raise ValueError("reference_pointcloud_path resolves outside data root")
+    if not path.is_file():
+        raise ValueError(f"missing per-sequence reference point cloud: {path}")
+    return _load_reference(path, maximum), relative
+
+
 def _pointcloud_metrics(rows: list[dict], total: int) -> dict:
     valid = [row for row in rows if row["valid"]]
     if not valid:
@@ -174,14 +194,15 @@ def evaluate(
         raise ValueError("manifest contains no held-out test rows")
     if maximum_sequences > 0:
         rows = rows[:maximum_sequences]
-    reference = _load_reference(
+    default_reference = _load_reference(
         reference_path, config.evaluation.pointcloud_max_reference_points,
     )
     model = ESpinSLAM(config)
     predictions: list[dict] = []
     time_predictions: list[dict] = []
     pointcloud_rows: list[dict] = []
-    representative: tuple[float, str, PointCloudAlignment] | None = None
+    representative: tuple[float, str, PointCloudAlignment, np.ndarray] | None = None
+    reference_count = 0
 
     for index, row in enumerate(rows, 1):
         sequence = load_event_sequence(
@@ -231,6 +252,11 @@ def evaluate(
                 "valid": math.isfinite(confirmed),
                 "failure_reason": "" if math.isfinite(confirmed) else "loop not yet detected",
             })
+        reference, reference_label = _reference_for_row(
+            row, data_root, default_reference,
+            config.evaluation.pointcloud_max_reference_points,
+        )
+        reference_count += int(reference is not None)
         alignment = (
             align_similarity_icp(result.reconstruction.points, reference)
             if reference is not None and result.reconstruction.valid
@@ -248,6 +274,7 @@ def evaluate(
             "icp_rmse_m": _nullable(alignment.icp_rmse_m),
             "chamfer_rmse_m": _nullable(alignment.chamfer_rmse_m),
             "similarity_scale": _nullable(alignment.scale),
+            "reference_pointcloud_path": reference_label,
             "failure_reason": alignment.reason,
         })
         if alignment.valid:
@@ -258,7 +285,9 @@ def evaluate(
                 reference=reference.astype(np.float32),
             )
             if representative is None or alignment.icp_rmse_m < representative[0]:
-                representative = (alignment.icp_rmse_m, sequence.sequence_id, alignment)
+                representative = (
+                    alignment.icp_rmse_m, sequence.sequence_id, alignment, reference,
+                )
         print(
             f"[{index}/{len(rows)}] {sequence.sequence_id}: "
             f"omega={prediction:.6g} tracks={result.track_count} "
@@ -287,10 +316,11 @@ def evaluate(
         time_summary.append({"observation_seconds": observation_seconds, **values})
 
     aligned = representative[2].aligned_points if representative else None
+    plot_reference = representative[3] if representative else default_reference
     pointcloud_sequence_id = representative[1] if representative else None
     plot_paths = create_report_plots(
         predictions, time_summary, output_dir,
-        reference=reference, aligned=aligned,
+        reference=plot_reference, aligned=aligned,
         pointcloud_sequence_id=pointcloud_sequence_id,
     )
     _write_csv(output_dir / "predictions.csv", predictions)
@@ -344,7 +374,8 @@ def evaluate(
         },
         "runtime_seconds": time.monotonic() - started,
         "sequence_count": len(rows),
-        "reference_pointcloud_available": reference is not None,
+        "reference_pointcloud_available": reference_count > 0,
+        "reference_pointcloud_sequence_count": reference_count,
         "representative_pointcloud_sequence": pointcloud_sequence_id,
         "plots": [path.name for path in plot_paths],
         "config": config.as_dict(),

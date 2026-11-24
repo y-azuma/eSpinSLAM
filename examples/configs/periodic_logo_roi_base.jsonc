@@ -1,0 +1,81 @@
+// Dataset-calibrated eSpinSLAM baseline for a fair comparison with the
+// event_snn_torch fixed-ROI inputs.  This is an experimental domain-transfer
+// profile, not the paper-reference TOPSPIN profile.
+{
+  "data": {
+    "sensor_size": [42, 82],
+    "max_duration_seconds": 4.0,
+    "time_unit": "us",
+    "evaluation_split": "test"
+  },
+  "camera": {
+    "fx": 264.30555555555554,
+    "fy": 264.30555555555554,
+    "cx": 22.0,
+    "cy": 41.5,
+    "distortion": [-0.018, 0.003, 0.0002, -0.0001]
+  },
+  "frontend": {
+    "interpretation_mode": "experimental",
+    "chunk_events": 1000,
+    "density_radius_px": 1.5,
+    "density_mean_per_polarity": false,
+    "cluster_min_size": 5,
+    "cluster_min_samples": 3,
+    "cluster_selection_epsilon": 0.0,
+    "cluster_time_scale_px_per_second": 500.0,
+    "cluster_by_polarity": true,
+    "association_radius_px": 2.5,
+    "association_max_gap_seconds": 0.05,
+    "association_head_events": 5,
+    "retain_events_per_track": 1000
+  },
+  "frequency": {
+    "method": "loop_closure",
+    "alignment_mode": "experimental",
+    "update_interval_seconds": 0.1,
+    "min_period_seconds": 1.0,
+    "max_period_seconds": 4.0,
+    "time_scale_px_per_second": 100.0,
+    "max_alignment_samples": 10000,
+    "coarse_alignment_samples": 2000,
+    "coarse_relative_step": 0.01,
+    "icp_iterations": 30,
+    "icp_tolerance_seconds": 0.00001,
+    "harmonic_tolerance": 0.15,
+    "min_samples_per_half": 50,
+    "loop_std_threshold_hz": 0.001,
+    "loop_history": 20,
+    "fft_bin_seconds": 0.01
+  },
+  "backend": {
+    "interpretation_mode": "experimental",
+    "solver_backend": "equivalent_custom",
+    "orbit_radius": 10.0,
+    "min_track_events": 3,
+    "huber_threshold_px": 1.0,
+    "max_mean_reprojection_error_px": 5.0,
+    "landmark_merge_radius": 0.01,
+    "optimization_cadence_revolutions": 0.1,
+    "forget_revolutions": 3.0,
+    "max_iterations": 100,
+    "min_triangulation_angle_deg": 1.5,
+    "max_observations_per_track": 0,
+    "optimize_frequency": false,
+    "landmark_association": true,
+    "final_offline_refinement": true
+  },
+  "evaluation": {
+    "observation_times_seconds": [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0],
+    "pointcloud_max_reference_points": 30000,
+    "failure_policy": "report_and_mark_invalid"
+  },
+  "logging": {
+    "wandb": false,
+    "wandb_mode": "online",
+    "wandb_project": "snn-research",
+    "wandb_entity": "2075905828-the-university-of-tokyo",
+    "wandb_run_name": "espinslam-periodic-logo-roi",
+    "wandb_tags": ["espinslam", "periodic-logo", "fixed-roi", "train-tuned"]
+  }
+}
