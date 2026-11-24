@@ -31,6 +31,12 @@ aggregation source.
 | fixed review 18 | 691.61 s | 12/18 | 0/18 | retrospective implementation review |
 | exact all 72 | 2,634.17 s | 51/72 | 1/72 | exploratory/retrospective paper comparison |
 
+These results are a **reproduction failure of the frozen primary
+interpretation**, not a successful reproduction of the paper's performance
+and not a refutation of the paper. D-003 failed with `0/3` eligible scenes;
+the all-72 run had only `1/72` valid reconstructions, so Table 2 was not
+reproduced.
+
 The corrected review-18 same-speed consistency median absolute deviation is
 `2.9221%`, computed from the frequency that first closed each loop, not from
 the last valid online estimate after BA/outlier elimination changed `H`.  The
@@ -47,6 +53,12 @@ reconstruction (`camera-perpendicular-slow`, 5.7243 px observation-weighted
 reprojection error), and loop-closure-frequency same-speed MAD `7.4867%`.
 The three frozen dev scenes remain excluded from the non-dev summary.  The
 all-72 result does not revise the preregistered D-003 failure.
+
+The generated paper-comparison table is preserved as immutable evaluator
+evidence. Its Camera entry, `5.72 +/- 0.00 px`, comes from only `1/12`
+Camera scenes, not an aggregate over all twelve. With `n=1`, no spread is
+available; `+/- 0.00` must not be read as stability. Every other object cell
+is unavailable because no reconstruction for that object was valid.
 
 `dev3/`, `review18/`, and `all72/` contain the evaluator's exact `metrics.json`,
 `per_sequence.csv`, and `run_manifest.json`, plus the launcher transcript and

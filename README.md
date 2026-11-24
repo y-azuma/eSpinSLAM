@@ -19,6 +19,18 @@ The frozen decisions and the paper-to-code mapping are in
 [`docs/traceability_matrix.md`](docs/traceability_matrix.md). A narrative
 summary is in [`docs/reproduction_report.md`](docs/reproduction_report.md).
 
+## Outcome on public TOPSPIN
+
+The frozen primary interpretation did **not** reproduce the paper's reported
+performance. The preregistered D-003 viability check failed with `0/3`
+eligible development scenes, and the single authorised all-72 run produced
+only `1/72` valid reconstructions. Consequently, Table 2 was not reproduced.
+This repository records a paper-faithful reproduction **attempt that failed on
+public TOPSPIN**; it is not a refutation of the paper, whose authors' code and
+several consequential implementation details are unavailable. See
+[`docs/reproduction_report.md` §4.4](docs/reproduction_report.md#44-新reference評価結果)
+for the run identity, failure chain, and evidence boundary.
+
 ## Implemented pipeline
 
 | Paper location | Implementation | Reproduction boundary |

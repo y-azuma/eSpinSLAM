@@ -14,11 +14,13 @@
 部分、公開データでは評価不能な部分、探索的な結果、論文外の改善案を
 以下の5部に分離する。
 
-現在のreference候補は、Claude CodeとCodexが合意した根拠順位と
-計算上限に従って実装・レビュー中である。2026-11-24にRTX 4070 PCで
-監査済みdev 3 sceneと固定review 18 sceneを実行した。凍結済みD-003は
-0/3 sceneで不合格となったため、reference値を調整せず再現失敗として
-記録する。Gate Dの相互レビューと全72 sceneの実行は未完了である。
+凍結した一次解釈は、Claude CodeとCodexが合意した根拠順位と
+計算上限に従って実装・監査した。2026-11-24にRTX 4070 PCで
+実行した事前凍結D-003はeligible `0/3`で不合格となり、Gate D
+承認後に1回だけ実行した全72 sceneでもvalid reconstructionは
+`1/72`だった。したがって論文Table 2の性能は再現できていない。
+これは、未公開著者実装を曖昧な記述から復元した凍結一次解釈の
+**reproduction failure**であり、論文自体の反証ではない。
 
 ---
 
@@ -259,8 +261,9 @@ RAM 33,475,567,616 bytes、RTX 4070 12,282 MiB、Python 3.10.14である。
 `206875ef7da611d9e614b7e73126375b42b1ab28c8b1c1e46769389150e7fcc2`、
 dependency lock SHA-256は
 `3e90af4a5ed0c2cc58f3250e2c68394fa785530d4016b017266e1b2927859d1e`である。
-両source treeの差はreportingとそのテストで、reference手法コード・設定値・
-入力sceneは同一である。
+ハッシュ対象source treeの差は`espinslam/topspin.py`のreportingのみで、
+reference手法コード・設定値・入力sceneは同一である。対応テストも
+追加したが、`tests/`はsource-tree hashの対象外である。
 
 #### D-003 canonical dev 3 scene
 
@@ -349,6 +352,11 @@ SHA-256は修正版再実行と同じ`206875ef...fcc2`である。明示的に
 - authoritative frequency error: Unavailable;
 - CAD ICP RMSE: Unavailable。
 
+paper-comparison表のCamera欄`5.72 +/- 0.00 px`は、Camera 12 sceneの
+平均ではなく、validだった`1/12` sceneだけの値である。`n=1`のため
+分布のspreadは推定できず、表の`+/- 0.00`を再現性や安定性の根拠に
+しない。その他のobject欄はvalid reconstructionがないためUnavailableである。
+
 reprojection値を出した他の4 sceneは最終landmarkが1--2点で、事前定義した
 最低4点を満たさないためTable 2集計から除外した。非dev loop確定値の群別
 中央値/MADはfast 0.1295 Hz / 1.08%、medium 0.07268 Hz / 1.33%、slow
@@ -359,6 +367,9 @@ reprojection値を出した他の4 sceneは最終landmarkが1--2点で、事前�
 評価である。D-003を通過させるconfirmationではなく、0/3 eligibleだった
 凍結decisionを変更しない。論文Table 2の再投影誤差を再現できたとは主張
 できず、今回の一次解釈では72 scene中1 sceneしか有効再構成にならなかった。
+全72のFig. 6は凍結した定義どおり、BA後の崩壊を含む「最後に有効だった
+online推定」を描くため、10 Hzの探索端に到達した12 sceneも含む。
+loop確定時の値は`frequency_loop_closure_hz`として別に保存する。
 
 機械可読な集計、per-scene row、run identityは
 [`evidence/topspin_reference_20261124/`](evidence/topspin_reference_20261124/)
