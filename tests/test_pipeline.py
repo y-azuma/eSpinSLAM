@@ -20,7 +20,7 @@ from espinslam.data import EventSequence
 from espinslam.efast import CIRCLE3, CIRCLE4
 from espinslam.frequency import FrequencyEstimate
 from espinslam.frontend import TrackPool
-from espinslam.geometry import BundleAdjustmentResult
+from espinslam.geometry import BundleAdjustmentResult, project_points
 from espinslam.pipeline import ESpinSLAM
 from espinslam.synthetic import make_scene, simulate_events
 from espinslam.topspin import (
@@ -234,6 +234,77 @@ def test_reference_injected_loop_orders_forget_ba_outliers_and_records_diagnosti
     assert report.triangulation_fallback_count == 1
     assert report.triangulation_fallback_reasons == "triangulation_failed_used_origin:1"
     assert report.removed_reprojection == 1
+
+
+def test_reference_top_level_dispatches_to_real_equivalent_custom_solver(
+        monkeypatch, tmp_path):
+    """The reference pipeline reaches the real Huber-k=2 in-tree solver."""
+
+    config = load_config("examples/configs/topspin_reference.jsonc")
+    assert _reference_mode(config)
+    assert config.backend.solver_backend == "equivalent_custom"
+    assert config.backend.huber_threshold_px == 2.0
+
+    camera = CameraConfig(fx=100.0, fy=100.0, cx=80.0, cy=60.0)
+    intrinsic = camera.matrix()
+    frequency_hz = 0.5
+    times = np.linspace(0.0, 1.5, 24)
+    points = np.asarray([
+        (-0.7, -0.5, -0.3), (-0.6, 0.4, 0.2), (-0.2, -0.6, 0.5),
+        (-0.1, 0.7, -0.4), (0.3, -0.5, -0.2), (0.4, 0.6, 0.4),
+        (0.7, -0.1, 0.3), (0.6, 0.2, -0.5),
+    ])
+    pool = TrackPool(retain=1000)
+    for track_id, point in enumerate(points, start=1):
+        pixels = project_points(
+            np.repeat(point[None], times.size, axis=0), times,
+            frequency_hz, config.backend.orbit_radius, np.eye(3), intrinsic,
+        )
+        assert np.isfinite(pixels).all()
+        pool.add(track_id, times, pixels[:, 0], pixels[:, 1])
+
+    class Frontend:
+        def __init__(self, width, height, frontend_config):
+            self.pool = pool
+
+        def push(self, t, x, y, p):
+            pass
+
+    class ForcedLoopEstimator:
+        def __init__(self, frequency_config):
+            self.loop_closed = False
+            self.current = FrequencyEstimate(frequency_hz, 1.0 / frequency_hz, 0.0, True)
+
+        def update(self, events):
+            self.loop_closed = True
+            return self.current
+
+    import espinslam.backend as backend_module
+    import espinslam.pipeline as pipeline_module
+    actual_solver = backend_module.bundle_adjust
+    calls: list[dict[str, object]] = []
+
+    def recording_solver(*args, **kwargs):
+        calls.append(dict(kwargs))
+        return actual_solver(*args, **kwargs)
+
+    monkeypatch.setattr(pipeline_module, "EventFrontend", Frontend)
+    monkeypatch.setattr(pipeline_module, "LoopClosureFrequencyEstimator", ForcedLoopEstimator)
+    monkeypatch.setattr(backend_module, "bundle_adjust", recording_solver)
+
+    sequence = EventSequence(
+        "reference-real-solver", np.asarray((80, 80)), np.asarray((60, 60)),
+        np.asarray((0.0, 1.5)), np.ones(2, dtype=np.uint8), math.nan,
+        160, 120, {}, tmp_path,
+    )
+    result = ESpinSLAM(config).process(sequence, camera=camera)
+
+    assert len(calls) == 1
+    assert calls[0]["huber_threshold_px"] == config.backend.huber_threshold_px
+    assert calls[0]["max_iterations"] == config.backend.max_iterations
+    assert calls[0]["optimize_frequency"] is config.backend.optimize_frequency
+    assert len(result.optimizations) == 1
+    assert result.optimizations[0].termination_status != "not_run"
 
 
 def test_online_pipeline_recovers_frequency_orientation_and_structure(synthetic):
