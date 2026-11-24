@@ -54,7 +54,9 @@ def run(command: list[str], *, root: Path, log_path: Path) -> None:
 def main() -> None:
     args = parse_args()
     root = args.repo_root.resolve()
-    python = str(args.python.resolve())
+    # Keep the virtual-environment entry point itself.  Resolving its symlink
+    # would invoke the base interpreter without the venv's site-packages.
+    python = str(args.python.expanduser().absolute())
     output_root = (root / args.output_root).resolve()
     output_root.mkdir(parents=True, exist_ok=True)
     base_config = root / "examples/configs/periodic_logo_roi_base.jsonc"
