@@ -17,6 +17,7 @@ from espinslam.config import (
     load_config,
 )
 from espinslam.data import EventSequence
+from espinslam.efast import CIRCLE3, CIRCLE4
 from espinslam.frequency import FrequencyEstimate
 from espinslam.frontend import TrackPool
 from espinslam.geometry import BundleAdjustmentResult
@@ -60,10 +61,12 @@ def _config(scene) -> ESpinSLAMConfig:
 def test_paper_reference_profile_top_level_smoke_schema_and_trace():
     """Exercise the literal Eq. (9) path without imposing an accuracy target.
 
-    A deterministic moving-square stream is repeated at 0.15-second chunk
-    intervals.  It passes through the actual reference eFAST, density,
-    HDBSCAN, online association, and frequency paths, and necessarily reaches
-    the paper estimator at least ``aleph`` times.  This prevents a no-track
+    A deterministic stream explicitly seeds the two eFAST arcs before each
+    centre event and is repeated at 0.15-second chunk intervals.  Dense 3x3
+    centre locations keep HDBSCAN away from platform-sensitive border cases.
+    The stream passes through the actual reference eFAST, density, HDBSCAN,
+    online association, and frequency paths, and necessarily reaches the
+    paper estimator at least ``aleph`` times.  This prevents a no-track
     12-event fixture from passing while Eq. (9) or its audit wiring is broken.
     No method setting from ``topspin_reference.jsonc`` is changed; only the
     synthetic sensor size and camera intrinsics are supplied.
@@ -71,21 +74,23 @@ def test_paper_reference_profile_top_level_smoke_schema_and_trace():
 
     config = load_config("examples/configs/topspin_reference.jsonc")
     assert _reference_mode(config)
+    centres = tuple((x, y) for x in (48, 50, 52) for y in (48, 50, 52))
     base_t, base_x, base_y = [], [], []
-    for step in range(40):
-        column = 30 + 12 + step
-        for row in range(30, 42):
-            base_t.append(step * 1e-3 + row * 1e-6)
-            base_x.append(column)
-            base_y.append(row)
-        for column_x in range(30 + step, 43 + step):
-            base_t.append(step * 1e-3 + 5e-4 + column_x * 1e-6)
-            base_x.append(column_x)
-            base_y.append(30)
-    order = np.argsort(base_t)
-    base_t = np.asarray(base_t, dtype=np.float64)[order]
-    base_x = np.asarray(base_x)[order]
-    base_y = np.asarray(base_y)[order]
+    timestamp = 0.0
+    for repetition in range(125):
+        centre_x, centre_y = centres[repetition % len(centres)]
+        for offset_x, offset_y in np.vstack((CIRCLE3[:3], CIRCLE4[:4])):
+            base_t.append(timestamp)
+            base_x.append(centre_x + int(offset_x))
+            base_y.append(centre_y + int(offset_y))
+            timestamp += 1e-7
+        base_t.append(timestamp)
+        base_x.append(centre_x)
+        base_y.append(centre_y)
+        timestamp += 1e-7
+    base_t = np.asarray(base_t, dtype=np.float64)
+    base_x = np.asarray(base_x)
+    base_y = np.asarray(base_y)
     assert base_t.size == config.frontend.chunk_events
     # More than aleph chunks ensure at least aleph due estimator updates.  The
     # 0.15-s spacing is above the untouched 0.1-s reference update interval.
@@ -109,10 +114,11 @@ def test_paper_reference_profile_top_level_smoke_schema_and_trace():
     )
     assert result.sequence_id == sequence.sequence_id
     assert result.event_count == sequence.event_count
+    assert result.track_count > 0
     assert len(result.frequency_history) >= config.frequency.loop_history
     valid = [record for record in result.frequency_history
              if math.isfinite(record.frequency_hz)]
-    assert valid
+    assert len(valid) >= config.frequency.loop_history
     for record in valid:
         assert math.isfinite(record.period_seconds)
         assert math.isfinite(record.alignment_cost)
