@@ -211,6 +211,12 @@ def evaluate(
         )
         result = model.process(sequence, reconstruct_structure=True)
         prediction = result.omega_rad_s if result.valid else math.nan
+        latest_frequency = result.frequency.frequency_hz
+        forced_prediction = (
+            prediction if math.isfinite(prediction)
+            else 2.0 * math.pi * latest_frequency
+            if math.isfinite(latest_frequency) else math.nan
+        )
         fallback_count, fallback_reasons = _fallback_summary(result.optimizations)
         predictions.append({
             "sequence_id": sequence.sequence_id,
@@ -218,8 +224,16 @@ def evaluate(
             "omega_pred_rad_s": _nullable(prediction),
             "omega_true_deg_s": math.degrees(sequence.omega_rad_s),
             "omega_pred_deg_s": _nullable(math.degrees(prediction)),
+            "omega_forced_pred_rad_s": _nullable(forced_prediction),
+            "omega_forced_pred_deg_s": _nullable(math.degrees(forced_prediction)),
             "absolute_error_rad_s": _nullable(abs(prediction - sequence.omega_rad_s)),
             "absolute_error_deg_s": _nullable(math.degrees(abs(prediction - sequence.omega_rad_s))),
+            "forced_absolute_error_rad_s": _nullable(
+                abs(forced_prediction - sequence.omega_rad_s)
+            ),
+            "forced_absolute_error_deg_s": _nullable(
+                math.degrees(abs(forced_prediction - sequence.omega_rad_s))
+            ),
             "percentage_error": _nullable(
                 abs(prediction - sequence.omega_rad_s) / max(sequence.omega_rad_s, 1e-9) * 100.0,
             ),
@@ -301,6 +315,12 @@ def evaluate(
         for row in predictions
     ], dtype=np.float64)
     final_metrics = rotation_metrics(truth, prediction, len(rows))
+    forced_prediction = np.asarray([
+        math.nan if row["omega_forced_pred_rad_s"] is None
+        else row["omega_forced_pred_rad_s"]
+        for row in predictions
+    ], dtype=np.float64)
+    forced_metrics = rotation_metrics(truth, forced_prediction, len(rows))
     time_summary: list[dict] = []
     for observation_seconds in config.evaluation.observation_times_seconds:
         subset = [
@@ -359,6 +379,29 @@ def evaluate(
             "No frame-based or raw-event fallbacks: sequences without loop closure abstain.",
         ],
         "rotation": final_metrics,
+        "rotation_accepted_only": final_metrics,
+        "rotation_forced_output": forced_metrics,
+        "comparison_summary": {
+            "accepted_sequence_count": final_metrics["valid_count"],
+            "accepted_ratio": final_metrics["coverage"],
+            "accepted_mae_rad_s": final_metrics["mae_rad_s"],
+            "accepted_mae_deg_s": (
+                None if final_metrics["mae_rad_s"] is None
+                else math.degrees(final_metrics["mae_rad_s"])
+            ),
+            "forced_output_sequence_count": forced_metrics["valid_count"],
+            "forced_output_ratio": forced_metrics["coverage"],
+            "forced_output_mae_rad_s": forced_metrics["mae_rad_s"],
+            "forced_output_mae_deg_s": (
+                None if forced_metrics["mae_rad_s"] is None
+                else math.degrees(forced_metrics["mae_rad_s"])
+            ),
+            "no_frequency_estimate_count": len(rows) - forced_metrics["valid_count"],
+            "forced_output_definition": (
+                "confirmed estimate when accepted, otherwise the latest valid "
+                "unconfirmed frequency; sequences with no frequency estimate remain missing"
+            ),
+        },
         "pointcloud": _pointcloud_metrics(pointcloud_rows, len(rows)),
         "backend_diagnostics": {
             "triangulation_fallback_count": sum(
