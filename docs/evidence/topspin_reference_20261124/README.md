@@ -8,7 +8,11 @@ aggregation source.
 
 ## Frozen execution identity
 
-- Git commit: `6b4868a474fc2b79eed66552d11b14811a0aecd8`
+- corrected dev-3/review-18 Git commit:
+  `6b4868a474fc2b79eed66552d11b14811a0aecd8`
+- exact all-72 Git commit:
+  `a2bdf2985a70fc55da49ed6182104e2f10cb989a` (docs-only changes after
+  `6b4868a`; the method/source hash below is unchanged)
 - source-tree SHA-256:
   `206875ef7da611d9e614b7e73126375b42b1ab28c8b1c1e46769389150e7fcc2`
 - dependency-lock SHA-256:
@@ -25,6 +29,7 @@ aggregation source.
 |---|---:|---:|---:|---|
 | canonical dev 3 | 120.09 s | 3/3 | 0/3 | D-003 `passed=false`, eligible 0/3 |
 | fixed review 18 | 691.61 s | 12/18 | 0/18 | retrospective implementation review |
+| exact all 72 | 2,634.17 s | 51/72 | 1/72 | exploratory/retrospective paper comparison |
 
 The corrected review-18 same-speed consistency median absolute deviation is
 `2.9221%`, computed from the frequency that first closed each loop, not from
@@ -35,9 +40,18 @@ authoritative frequency labels or author CAD/scale, so true frequency error
 and CAD ICP RMSE remain unavailable. No method parameter was selected or
 modified after these results.
 
-`dev3/` and `review18/` contain the evaluator's exact `metrics.json`,
+The all-72 run was executed exactly once after Gate D approval, on the same
+RTX 4070 host, with `--require-reference --require-verified-topspin
+--paper-comparison`.  Its 69 non-dev scenes have 48 loop closures, one valid
+reconstruction (`camera-perpendicular-slow`, 5.7243 px observation-weighted
+reprojection error), and loop-closure-frequency same-speed MAD `7.4867%`.
+The three frozen dev scenes remain excluded from the non-dev summary.  The
+all-72 result does not revise the preregistered D-003 failure.
+
+`dev3/`, `review18/`, and `all72/` contain the evaluator's exact `metrics.json`,
 `per_sequence.csv`, and `run_manifest.json`, plus the launcher transcript and
 exit code.  Their `history/` directories contain every frequency-estimation
 and optimisation record needed to audit the observed failure chain. Full scene
-checkpoints and figures remain on the 4070PC under the corresponding immutable
-`runs/20261124_topspin_reference_*_r1r2_6b4868a` directories.
+checkpoints remain on the 4070PC under the corresponding immutable run
+directories.  The all-72 figures and tables are committed here; its restart
+checkpoints are intentionally not duplicated in Git.

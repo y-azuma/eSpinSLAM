@@ -330,9 +330,36 @@ reference-pathの観測結果である。
 除去理由内訳が境界で僅かに変わることを確認した。結論は変わらないが、
 以後の全72 sceneは同じRTX 4070ホストでのみ実行する。
 
-review 18の実測から72 sceneは約46.1分と予測され、D-008の48時間上限内で
-ある。ただしD-008に従い、全72 sceneはGate A--DをClaude CodeとCodexが
-相互承認した最終候補でのみ1回実行するため、現時点では未実行である。
+#### Gate D承認後の全72 scene
+
+Gate D承認後、docs-only変更`a2bdf2985a70fc55da49ed6182104e2f10cb989a`
+のclean treeを、上記と同じRTX 4070ホストで1回だけ実行した。手法source
+SHA-256は修正版再実行と同じ`206875ef...fcc2`である。明示的に
+`--require-reference --require-verified-topspin --paper-comparison`を指定し、
+72/72 checkpoint、exit status 0、`paper_comparison_eligible=true`を確認した。
+
+- scene処理時間合計: 2,634.17 s（43分54秒）;
+- acquisition監査と集計を含むinvocation wall time: 2,750.70 s（45分51秒）;
+- loop検出: all 72で51/72（70.83%）、非dev 69で48/69（69.57%）;
+- 幾何的にvalidかつpaper metric eligibleな再構成: 1/72;
+- 有効scene: `camera-perpendicular-slow`、4 landmarks、54 observations、
+  observation-weighted reprojection error 5.7243 px;
+- loop確定値のsame-speed consistency（非dev）: 7.49%;
+- mean throughput（非dev）: 685,442 events/s;
+- authoritative frequency error: Unavailable;
+- CAD ICP RMSE: Unavailable。
+
+reprojection値を出した他の4 sceneは最終landmarkが1--2点で、事前定義した
+最低4点を満たさないためTable 2集計から除外した。非dev loop確定値の群別
+中央値/MADはfast 0.1295 Hz / 1.08%、medium 0.07268 Hz / 1.33%、slow
+0.04457 Hz / 17.06%だった。群内MADは真値誤差ではなく、slow群では特に
+散らばりが大きい。
+
+この全72実行は、公開データ全体における失敗分布を記録する回顧的・探索的
+評価である。D-003を通過させるconfirmationではなく、0/3 eligibleだった
+凍結decisionを変更しない。論文Table 2の再投影誤差を再現できたとは主張
+できず、今回の一次解釈では72 scene中1 sceneしか有効再構成にならなかった。
+
 機械可読な集計、per-scene row、run identityは
 [`evidence/topspin_reference_20261124/`](evidence/topspin_reference_20261124/)
 に保存する。旧`e4c75cd`の値は混在させない。

@@ -1,0 +1,86 @@
+[eSpinSLAM] [1/72] camera-diagonal-fast: f=10.0 loop=True reproj=None icp_mm=None throughput=719257.9768896345
+[eSpinSLAM] [2/72] camera-diagonal-med: f=1.641942033826666 loop=True reproj=5.822800216767353 icp_mm=None throughput=727000.3605887294
+[eSpinSLAM] [3/72] camera-diagonal-slow: f=0.037206187383739646 loop=True reproj=None icp_mm=None throughput=753406.9222601545
+[eSpinSLAM] [4/72] camera-perpendicular-fast: f=1.166765662424814 loop=True reproj=None icp_mm=None throughput=738432.1999284202
+[eSpinSLAM] [5/72] camera-perpendicular-med: f=0.6453154634842281 loop=True reproj=None icp_mm=None throughput=731222.6701360745
+[eSpinSLAM] [6/72] camera-perpendicular-slow: f=0.03671110703666227 loop=True reproj=5.724325503230438 icp_mm=None throughput=723106.0540102604
+[eSpinSLAM] [7/72] camera-sideon-fast: f=2.7412780460533814 loop=True reproj=None icp_mm=None throughput=654725.9145721465
+[eSpinSLAM] [8/72] camera-sideon-med: f=1.9301340829346019 loop=True reproj=3.2609253601728962 icp_mm=None throughput=629652.4503805883
+[eSpinSLAM] [9/72] camera-sideon-slow: f=0.926642648202005 loop=True reproj=None icp_mm=None throughput=642064.23047759
+[eSpinSLAM] [10/72] camera-topdown-fast: f=4.894419448628182 loop=True reproj=None icp_mm=None throughput=410872.7483259491
+[eSpinSLAM] [11/72] camera-topdown-med: f=2.130325188736293 loop=True reproj=None icp_mm=None throughput=340625.05438715994
+[eSpinSLAM] [12/72] camera-topdown-slow: f=2.0698813561987683 loop=True reproj=None icp_mm=None throughput=413675.3002200832
+[eSpinSLAM] [13/72] controller-diagonal-fast: f=6.321117719036357 loop=True reproj=None icp_mm=None throughput=825375.4623015055
+[eSpinSLAM] [14/72] controller-diagonal-med: f=2.5979867141720248 loop=True reproj=None icp_mm=None throughput=836532.6658457742
+[eSpinSLAM] [15/72] controller-diagonal-slow: f=0.03601617759256392 loop=False reproj=None icp_mm=None throughput=821641.1959636769
+[eSpinSLAM] [16/72] controller-perpendicular-fast: f=0.032707786360457514 loop=False reproj=None icp_mm=None throughput=886117.2757870201
+[eSpinSLAM] [17/72] controller-perpendicular-med: f=0.025884245604610126 loop=False reproj=None icp_mm=None throughput=942862.1765226335
+[eSpinSLAM] [18/72] controller-perpendicular-slow: f=None loop=False reproj=None icp_mm=None throughput=838400.5287714349
+[eSpinSLAM] [19/72] controller-sideon-fast: f=1.6604221418556089 loop=True reproj=None icp_mm=None throughput=792682.8344344066
+[eSpinSLAM] [20/72] controller-sideon-med: f=1.9337485118133793 loop=True reproj=None icp_mm=None throughput=813100.8538541386
+[eSpinSLAM] [21/72] controller-sideon-slow: f=0.036484257991005145 loop=False reproj=None icp_mm=None throughput=798851.7537477663
+[eSpinSLAM] [22/72] controller-topdown-fast: f=3.8041589843203005 loop=True reproj=None icp_mm=None throughput=648145.7596940324
+[eSpinSLAM] [23/72] controller-topdown-med: f=1.6197374621525387 loop=True reproj=None icp_mm=None throughput=636716.3920971716
+[eSpinSLAM] [24/72] controller-topdown-slow: f=0.496267483903491 loop=True reproj=None icp_mm=None throughput=631295.119242809
+[eSpinSLAM] [25/72] hubble-diagonal-fast: f=4.637980460789191 loop=True reproj=None icp_mm=None throughput=443659.8916975577
+[eSpinSLAM] [26/72] hubble-diagonal-med: f=3.91228279841782 loop=True reproj=None icp_mm=None throughput=494253.1666302097
+[eSpinSLAM] [27/72] hubble-diagonal-slow: f=2.087013303652106 loop=True reproj=None icp_mm=None throughput=558819.8088953685
+[eSpinSLAM] [28/72] hubble-perpendicular-fast: f=10.0 loop=True reproj=None icp_mm=None throughput=373072.6386200665
+[eSpinSLAM] [29/72] hubble-perpendicular-med: f=10.0 loop=True reproj=None icp_mm=None throughput=397011.10826154595
+[eSpinSLAM] [30/72] hubble-perpendicular-slow: f=7.229254005432044 loop=True reproj=None icp_mm=None throughput=387079.9731835816
+[eSpinSLAM] [31/72] hubble-sideon-fast: f=3.996394267450261 loop=True reproj=None icp_mm=None throughput=539299.9112779511
+[eSpinSLAM] [32/72] hubble-sideon-med: f=1.4681303595008341 loop=True reproj=None icp_mm=None throughput=551820.8596892086
+[eSpinSLAM] [33/72] hubble-sideon-slow: f=10.0 loop=True reproj=None icp_mm=None throughput=615216.177413059
+[eSpinSLAM] [34/72] hubble-topdown-fast: f=2.983055158812405 loop=True reproj=None icp_mm=None throughput=627494.2361825135
+[eSpinSLAM] [35/72] hubble-topdown-med: f=3.2823890616557962 loop=True reproj=None icp_mm=None throughput=584148.3153390344
+[eSpinSLAM] [36/72] hubble-topdown-slow: f=1.209708131619779 loop=True reproj=None icp_mm=None throughput=623628.1312890047
+[eSpinSLAM] [37/72] soho-diagonal-fast: f=0.035934337039886306 loop=False reproj=None icp_mm=None throughput=814985.2953891313
+[eSpinSLAM] [38/72] soho-diagonal-med: f=0.03499970718744964 loop=False reproj=None icp_mm=None throughput=836706.6985130524
+[eSpinSLAM] [39/72] soho-diagonal-slow: f=0.03448067211048213 loop=False reproj=None icp_mm=None throughput=807081.5808667736
+[eSpinSLAM] [40/72] soho-perpendicular-fast: f=1.6921233738798112 loop=True reproj=None icp_mm=None throughput=676043.2159890042
+[eSpinSLAM] [41/72] soho-perpendicular-med: f=0.8270761117144839 loop=True reproj=None icp_mm=None throughput=688327.2176941826
+[eSpinSLAM] [42/72] soho-perpendicular-slow: f=0.03968788238876015 loop=False reproj=None icp_mm=None throughput=391732.40666483215
+[eSpinSLAM] [43/72] soho-sideon-fast: f=0.022131761408312092 loop=False reproj=None icp_mm=None throughput=850180.2809784699
+[eSpinSLAM] [44/72] soho-sideon-med: f=None loop=False reproj=None icp_mm=None throughput=875328.5670252127
+[eSpinSLAM] [45/72] soho-sideon-slow: f=None loop=False reproj=None icp_mm=None throughput=928619.4955404361
+[eSpinSLAM] [46/72] soho-topdown-fast: f=0.032843778587068384 loop=False reproj=None icp_mm=None throughput=781542.0443223191
+[eSpinSLAM] [47/72] soho-topdown-med: f=0.03873505332863131 loop=False reproj=None icp_mm=None throughput=810717.4978068774
+[eSpinSLAM] [48/72] soho-topdown-slow: f=0.04547754869040436 loop=False reproj=None icp_mm=None throughput=815835.2927689453
+[eSpinSLAM] [49/72] switch-diagonal-fast: f=0.03146778105221095 loop=False reproj=None icp_mm=None throughput=828624.4661912122
+[eSpinSLAM] [50/72] switch-diagonal-med: f=0.03665929747653362 loop=False reproj=None icp_mm=None throughput=878698.6935561909
+[eSpinSLAM] [51/72] switch-diagonal-slow: f=0.036706846724510224 loop=False reproj=None icp_mm=None throughput=866760.4705411502
+[eSpinSLAM] [52/72] switch-perpendicular-fast: f=2.310818548235548 loop=True reproj=None icp_mm=None throughput=739927.6718256994
+[eSpinSLAM] [53/72] switch-perpendicular-med: f=2.3009637194968904 loop=True reproj=None icp_mm=None throughput=774924.0581322984
+[eSpinSLAM] [54/72] switch-perpendicular-slow: f=0.036722344650796636 loop=True reproj=4.638870733014323 icp_mm=None throughput=724754.3371266798
+[eSpinSLAM] [55/72] switch-sideon-fast: f=0.03246967613911102 loop=False reproj=None icp_mm=None throughput=835169.2248545958
+[eSpinSLAM] [56/72] switch-sideon-med: f=0.035061237571090885 loop=False reproj=None icp_mm=None throughput=866622.4529624651
+[eSpinSLAM] [57/72] switch-sideon-slow: f=0.03841374960317715 loop=False reproj=None icp_mm=None throughput=827642.2444763923
+[eSpinSLAM] [58/72] switch-topdown-fast: f=3.523616936590787 loop=True reproj=None icp_mm=None throughput=679175.9019154335
+[eSpinSLAM] [59/72] switch-topdown-med: f=1.9215911954694487 loop=True reproj=None icp_mm=None throughput=609411.7340385283
+[eSpinSLAM] [60/72] switch-topdown-slow: f=0.8550777582380841 loop=True reproj=None icp_mm=None throughput=619075.3292457277
+[eSpinSLAM] [61/72] tdrs-diagonal-fast: f=10.0 loop=True reproj=None icp_mm=None throughput=672758.3171448498
+[eSpinSLAM] [62/72] tdrs-diagonal-med: f=9.712743327871534 loop=True reproj=None icp_mm=None throughput=635735.3890922059
+[eSpinSLAM] [63/72] tdrs-diagonal-slow: f=10.0 loop=True reproj=None icp_mm=None throughput=619992.9510519451
+[eSpinSLAM] [64/72] tdrs-perpendicular-fast: f=10.0 loop=True reproj=5.863308057499356 icp_mm=None throughput=629912.7106093147
+[eSpinSLAM] [65/72] tdrs-perpendicular-med: f=10.0 loop=True reproj=None icp_mm=None throughput=614810.6773255384
+[eSpinSLAM] [66/72] tdrs-perpendicular-slow: f=10.0 loop=True reproj=None icp_mm=None throughput=548328.5832722078
+[eSpinSLAM] [67/72] tdrs-sideon-fast: f=10.0 loop=True reproj=None icp_mm=None throughput=646849.7610021589
+[eSpinSLAM] [68/72] tdrs-sideon-med: f=10.0 loop=True reproj=None icp_mm=None throughput=517088.5659012163
+[eSpinSLAM] [69/72] tdrs-sideon-slow: f=10.0 loop=True reproj=None icp_mm=None throughput=423908.8669790681
+[eSpinSLAM] [70/72] tdrs-topdown-fast: f=3.6200359695706337 loop=True reproj=None icp_mm=None throughput=468742.3858086021
+[eSpinSLAM] [71/72] tdrs-topdown-med: f=5.542624716232211 loop=True reproj=None icp_mm=None throughput=565367.0862748838
+[eSpinSLAM] [72/72] tdrs-topdown-slow: f=2.648240483068197 loop=True reproj=None icp_mm=None throughput=587868.0907379792
+| Metric | Hubble | SOHO | TDRS | Camera | Dualshock | Switch |
+|---|---|---|---|---|---|---|
+| Reprojection error (px) ↓ [eSpinSLAM, paper_reference_config, exploratory_retrospective, non-dev exploratory] | - | - | - | 5.72 ± 0.00 | - | - |
+| Landmark-mean reprojection diagnostic (px) [eSpinSLAM, paper_reference_config, exploratory_retrospective, non-dev exploratory] | - | - | - | 5.09 ± 0.00 | - | - |
+| ICP alignment RMSE (mm) ↓ [eSpinSLAM, paper_reference_config, exploratory_retrospective, non-dev exploratory] | - | - | - | - | - | - |
+
+{
+  "sequence_count": 72,
+  "loop_closure_rate": 0.6956521739130435,
+  "frequency_authoritative_median_relative_error_percent": null,
+  "frequency_same_speed_consistency_median_absolute_deviation_percent": 7.486676965759519,
+  "mean_throughput_ev_s": 685441.686885987,
+  "runtime_seconds": 2634.17422470398
+}

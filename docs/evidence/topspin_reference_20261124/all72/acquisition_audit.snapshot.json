@@ -1,0 +1,1955 @@
+{
+  "archive_cache": "/home/azumayudai/Desktop/ws_snn/datasets/TOPSPIN_v1/archives",
+  "converter_schema": 2,
+  "generated_at_utc": "2026-11-23T17:27:25.591205+00:00",
+  "record_fingerprint_sha256": "c97ac90550208bd2225f9d116016cd188b9f9037638ee2c608a376de8f6208e7",
+  "record_id": 10884694,
+  "record_url": "https://zenodo.org/api/records/10884694",
+  "scenes": {
+    "camera-diagonal-fast": {
+      "actual_md5": "fd48ac793edee93142158a25c2c19187",
+      "archive_filename": "camera-diagonal-fast.tar.gz",
+      "archive_size_bytes": 248154806,
+      "converter_schema": 2,
+      "event_count": 43378821,
+      "events_npz": "camera-diagonal-fast/events.npz",
+      "expected_md5": "fd48ac793edee93142158a25c2c19187",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "2a31eeedbe718029678617afb819f2363687f20b04e7330becca41873c701ab2",
+          "size_bytes": 563925631
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-diagonal-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:19:54.296262+00:00"
+    },
+    "camera-diagonal-med": {
+      "actual_md5": "7957c0a60ae66e3909c2cb793313330d",
+      "archive_filename": "camera-diagonal-med.tar.gz",
+      "archive_size_bytes": 136405750,
+      "converter_schema": 2,
+      "event_count": 23151709,
+      "events_npz": "camera-diagonal-med/events.npz",
+      "expected_md5": "7957c0a60ae66e3909c2cb793313330d",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "5e2aa4c89a75fc011ca2669a3d1f15ebb1ad75c8c8e2caf6b63b03a15671ee67",
+          "size_bytes": 300973175
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-diagonal-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:20:00.600874+00:00"
+    },
+    "camera-diagonal-slow": {
+      "actual_md5": "d8ba46733a261e47ee8a75cab4d36b69",
+      "archive_filename": "camera-diagonal-slow.tar.gz",
+      "archive_size_bytes": 65953242,
+      "converter_schema": 2,
+      "event_count": 10905437,
+      "events_npz": "camera-diagonal-slow/events.npz",
+      "expected_md5": "d8ba46733a261e47ee8a75cab4d36b69",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "684a3997b7d6bb4305d0cc13eb6b7964ba9885996e53ffa4f5e9e3aa41270bfc",
+          "size_bytes": 141771639
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-diagonal-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:20:03.626778+00:00"
+    },
+    "camera-perpendicular-fast": {
+      "actual_md5": "d1c2d3c170700b090e6ad7358ea4cc34",
+      "archive_filename": "camera-perpendicular-fast.tar.gz",
+      "archive_size_bytes": 203980645,
+      "converter_schema": 2,
+      "event_count": 35707285,
+      "events_npz": "camera-perpendicular-fast/events.npz",
+      "expected_md5": "d1c2d3c170700b090e6ad7358ea4cc34",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "b59ed3ab4d3ca8e8a506eaa21a6c3e6a6f415b638ea94f6980683423d39b7d40",
+          "size_bytes": 464195663
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-perpendicular-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:20:12.883723+00:00"
+    },
+    "camera-perpendicular-med": {
+      "actual_md5": "e5c32d273e3302f151a971f72da84783",
+      "archive_filename": "camera-perpendicular-med.tar.gz",
+      "archive_size_bytes": 112303118,
+      "converter_schema": 2,
+      "event_count": 19107040,
+      "events_npz": "camera-perpendicular-med/events.npz",
+      "expected_md5": "e5c32d273e3302f151a971f72da84783",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "dc4818192c80511ed9f9c8358802eeab018172f2fb0910aaa6a3441f8c1e983f",
+          "size_bytes": 248392478
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-perpendicular-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:20:18.073579+00:00"
+    },
+    "camera-perpendicular-slow": {
+      "actual_md5": "1a26deef9369aae429ef1a630a7645ed",
+      "archive_filename": "camera-perpendicular-slow.tar.gz",
+      "archive_size_bytes": 54586985,
+      "converter_schema": 2,
+      "event_count": 9041804,
+      "events_npz": "camera-perpendicular-slow/events.npz",
+      "expected_md5": "1a26deef9369aae429ef1a630a7645ed",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "7ecfc0294b7155dd3f76b04d2d3139ea5627e73b85455cf7dc4175959c897603",
+          "size_bytes": 117544410
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-perpendicular-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:20:20.591331+00:00"
+    },
+    "camera-sideon-fast": {
+      "actual_md5": "e92c622019ebceb93a3902da8748b878",
+      "archive_filename": "camera-sideon-fast.tar.gz",
+      "archive_size_bytes": 244002779,
+      "converter_schema": 2,
+      "event_count": 42853600,
+      "events_npz": "camera-sideon-fast/events.npz",
+      "expected_md5": "e92c622019ebceb93a3902da8748b878",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "faea478d11b419f2504e64566be48e3a39df67f6ccb4ead1d04e4f600e92944b",
+          "size_bytes": 557097758
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-sideon-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:20:31.671741+00:00"
+    },
+    "camera-sideon-med": {
+      "actual_md5": "e255fa0163940d14aee2828fa97081e7",
+      "archive_filename": "camera-sideon-med.tar.gz",
+      "archive_size_bytes": 134705538,
+      "converter_schema": 2,
+      "event_count": 22991581,
+      "events_npz": "camera-sideon-med/events.npz",
+      "expected_md5": "e255fa0163940d14aee2828fa97081e7",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "6801614b9e3fddc460ff475ee2f729558f2b7ef315fd8f75f599ddfe8813f939",
+          "size_bytes": 298891511
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-sideon-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:20:37.854202+00:00"
+    },
+    "camera-sideon-slow": {
+      "actual_md5": "7f8d5e5aecf7faf44d139a4993d39d76",
+      "archive_filename": "camera-sideon-slow.tar.gz",
+      "archive_size_bytes": 62056095,
+      "converter_schema": 2,
+      "event_count": 10274265,
+      "events_npz": "camera-sideon-slow/events.npz",
+      "expected_md5": "7f8d5e5aecf7faf44d139a4993d39d76",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "aca153dc3b3e283e79bfebcc80517f4554c18c8cb45f30aef61aa7673a2f518f",
+          "size_bytes": 133566403
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-sideon-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:20:40.715774+00:00"
+    },
+    "camera-topdown-fast": {
+      "actual_md5": "3fea11ad2a04d262a1440cdc97161be1",
+      "archive_filename": "camera-topdown-fast.tar.gz",
+      "archive_size_bytes": 180106466,
+      "converter_schema": 2,
+      "event_count": 31478376,
+      "events_npz": "camera-topdown-fast/events.npz",
+      "expected_md5": "3fea11ad2a04d262a1440cdc97161be1",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "8ad743cf6ecb47e67b2531ad7639eb70e9760c4ec7dea59915c6b3a1cf8c09ed",
+          "size_bytes": 409219846
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-topdown-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:20:48.853547+00:00"
+    },
+    "camera-topdown-med": {
+      "actual_md5": "2aad8e5e69cd26dc3436c33b0f7b166f",
+      "archive_filename": "camera-topdown-med.tar.gz",
+      "archive_size_bytes": 100976654,
+      "converter_schema": 2,
+      "event_count": 17194931,
+      "events_npz": "camera-topdown-med/events.npz",
+      "expected_md5": "2aad8e5e69cd26dc3436c33b0f7b166f",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "b0489592c95f3ad6fdd189ef2acc3235b21bfa2c2a76d1476afc43e1fa2cb227",
+          "size_bytes": 223535061
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-topdown-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:20:53.534896+00:00"
+    },
+    "camera-topdown-slow": {
+      "actual_md5": "36090a71e37758cc8a2f617a362c49a5",
+      "archive_filename": "camera-topdown-slow.tar.gz",
+      "archive_size_bytes": 48671514,
+      "converter_schema": 2,
+      "event_count": 8089661,
+      "events_npz": "camera-topdown-slow/events.npz",
+      "expected_md5": "36090a71e37758cc8a2f617a362c49a5",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "b061fbd7f78d9c95f5184f89135845fa1c2dd18fc7008f8c992d13c50ce32fbe",
+          "size_bytes": 105166551
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "camera-topdown-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:20:55.801781+00:00"
+    },
+    "controller-diagonal-fast": {
+      "actual_md5": "23973ab0b721256ecb6f8ed3ebfb7166",
+      "archive_filename": "controller-diagonal-fast.tar.gz",
+      "archive_size_bytes": 364190004,
+      "converter_schema": 2,
+      "event_count": 64114355,
+      "events_npz": "controller-diagonal-fast/events.npz",
+      "expected_md5": "23973ab0b721256ecb6f8ed3ebfb7166",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "f75392db404178d96f7ea98192ddd9f87342cc0698d8517c66b140ec951071d6",
+          "size_bytes": 833487573
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-diagonal-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:21:12.398100+00:00"
+    },
+    "controller-diagonal-med": {
+      "actual_md5": "95afa27aed1eb9bd7f34eadebcb08fe2",
+      "archive_filename": "controller-diagonal-med.tar.gz",
+      "archive_size_bytes": 196453740,
+      "converter_schema": 2,
+      "event_count": 33515940,
+      "events_npz": "controller-diagonal-med/events.npz",
+      "expected_md5": "95afa27aed1eb9bd7f34eadebcb08fe2",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "00dce4059ce29b4015a162e614cfb4d880fed3c3c03f8a151742413781ce5cfc",
+          "size_bytes": 435708178
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-diagonal-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:21:21.511397+00:00"
+    },
+    "controller-diagonal-slow": {
+      "actual_md5": "fd31b8d8ccd0cebf6ca09192649d5c9a",
+      "archive_filename": "controller-diagonal-slow.tar.gz",
+      "archive_size_bytes": 90775176,
+      "converter_schema": 2,
+      "event_count": 14974834,
+      "events_npz": "controller-diagonal-slow/events.npz",
+      "expected_md5": "fd31b8d8ccd0cebf6ca09192649d5c9a",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "82128e10f102877a38f803e452de318a76ac286375f87bebd17f5171a1cbefcd",
+          "size_bytes": 194673800
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-diagonal-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:21:25.642806+00:00"
+    },
+    "controller-perpendicular-fast": {
+      "actual_md5": "f6adcb85780d9edc8a694f5ecda55962",
+      "archive_filename": "controller-perpendicular-fast.tar.gz",
+      "archive_size_bytes": 379271306,
+      "converter_schema": 2,
+      "event_count": 66153678,
+      "events_npz": "controller-perpendicular-fast/events.npz",
+      "expected_md5": "f6adcb85780d9edc8a694f5ecda55962",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "4eefea035e5edee2f68b22d640fd1bfb4d9a76e8418e227ceeccc487fd447f75",
+          "size_bytes": 859998772
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-perpendicular-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:21:42.705206+00:00"
+    },
+    "controller-perpendicular-med": {
+      "actual_md5": "1ba4dcc8242fbf6ccc07348f90783f24",
+      "archive_filename": "controller-perpendicular-med.tar.gz",
+      "archive_size_bytes": 178683872,
+      "converter_schema": 2,
+      "event_count": 30098874,
+      "events_npz": "controller-perpendicular-med/events.npz",
+      "expected_md5": "1ba4dcc8242fbf6ccc07348f90783f24",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "c42db4840ef28ec992ebc0db95bc23e1caf373fd500c57bc13b19e2a677aa219",
+          "size_bytes": 391286320
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-perpendicular-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:21:50.953706+00:00"
+    },
+    "controller-perpendicular-slow": {
+      "actual_md5": "a245eebf59c849adb63b44dea6894954",
+      "archive_filename": "controller-perpendicular-slow.tar.gz",
+      "archive_size_bytes": 81084375,
+      "converter_schema": 2,
+      "event_count": 13174216,
+      "events_npz": "controller-perpendicular-slow/events.npz",
+      "expected_md5": "a245eebf59c849adb63b44dea6894954",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "ba3029837c32f59c74da6fc57fef62134999466a1d1e41ef4a86875ccf3e7a73",
+          "size_bytes": 171265766
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-perpendicular-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:21:54.625672+00:00"
+    },
+    "controller-sideon-fast": {
+      "actual_md5": "f9865fc6ad178776e06c1c1448fdc7f4",
+      "archive_filename": "controller-sideon-fast.tar.gz",
+      "archive_size_bytes": 395561107,
+      "converter_schema": 2,
+      "event_count": 69188916,
+      "events_npz": "controller-sideon-fast/events.npz",
+      "expected_md5": "f9865fc6ad178776e06c1c1448fdc7f4",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "0d89064681247e56e97d1064575382df9e98b4a99eb1523c8b9b355b379fcbb9",
+          "size_bytes": 899456866
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-sideon-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:22:12.633855+00:00"
+    },
+    "controller-sideon-med": {
+      "actual_md5": "7d33662fb62a49a5c3dbaf98ae9649ce",
+      "archive_filename": "controller-sideon-med.tar.gz",
+      "archive_size_bytes": 207097871,
+      "converter_schema": 2,
+      "event_count": 35028539,
+      "events_npz": "controller-sideon-med/events.npz",
+      "expected_md5": "7d33662fb62a49a5c3dbaf98ae9649ce",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "7f32ba9f45cd909698691cf157793abec9b264713e177ecc461a1bc2f7410ee4",
+          "size_bytes": 455371965
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-sideon-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:22:22.159657+00:00"
+    },
+    "controller-sideon-slow": {
+      "actual_md5": "150cd7a12fbb86840303ff0e623d8444",
+      "archive_filename": "controller-sideon-slow.tar.gz",
+      "archive_size_bytes": 82935219,
+      "converter_schema": 2,
+      "event_count": 13495281,
+      "events_npz": "controller-sideon-slow/events.npz",
+      "expected_md5": "150cd7a12fbb86840303ff0e623d8444",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "eec78152abffa613ee55ffbb27346ede5eb190475ed76643f0ee89a1132ab706",
+          "size_bytes": 175439611
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-sideon-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:22:25.955799+00:00"
+    },
+    "controller-topdown-fast": {
+      "actual_md5": "45cf287642e23bdd6e6de740ac55ab9d",
+      "archive_filename": "controller-topdown-fast.tar.gz",
+      "archive_size_bytes": 359549259,
+      "converter_schema": 2,
+      "event_count": 62919652,
+      "events_npz": "controller-topdown-fast/events.npz",
+      "expected_md5": "45cf287642e23bdd6e6de740ac55ab9d",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "c2eef3f1b7a2709178e46215b6f5b73196b3a6db7764f94db40aaec0242bd7b3",
+          "size_bytes": 817956434
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-topdown-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:22:42.051564+00:00"
+    },
+    "controller-topdown-med": {
+      "actual_md5": "e116f640a0bad34e4e82856a8e1724ab",
+      "archive_filename": "controller-topdown-med.tar.gz",
+      "archive_size_bytes": 198386114,
+      "converter_schema": 2,
+      "event_count": 33683736,
+      "events_npz": "controller-topdown-med/events.npz",
+      "expected_md5": "e116f640a0bad34e4e82856a8e1724ab",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "7831ffeb22370685f880167ba3520f9b4c437118fb71a7e3ec6135380f40fc7a",
+          "size_bytes": 437889526
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-topdown-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:22:51.166369+00:00"
+    },
+    "controller-topdown-slow": {
+      "actual_md5": "49fbba6faa3e2e5db65aa19ece37559d",
+      "archive_filename": "controller-topdown-slow.tar.gz",
+      "archive_size_bytes": 94891308,
+      "converter_schema": 2,
+      "event_count": 15575163,
+      "events_npz": "controller-topdown-slow/events.npz",
+      "expected_md5": "49fbba6faa3e2e5db65aa19ece37559d",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "ea5ae817604358045ac57ff2de4f0f3bdd3e2b4d9fb6e18a2b0c66b9c96242fc",
+          "size_bytes": 202478077
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "controller-topdown-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:22:55.482861+00:00"
+    },
+    "hubble-diagonal-fast": {
+      "actual_md5": "f12bf4d8ad55835bb0317e1b683cc330",
+      "archive_filename": "hubble-diagonal-fast.tar.gz",
+      "archive_size_bytes": 119205225,
+      "converter_schema": 2,
+      "event_count": 20674726,
+      "events_npz": "hubble-diagonal-fast/events.npz",
+      "expected_md5": "f12bf4d8ad55835bb0317e1b683cc330",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "23139fadd311016dc42ad8e2a9bb015002cc7e0f0af5faf62e432b207d59f5d4",
+          "size_bytes": 268772396
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-diagonal-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:00.867650+00:00"
+    },
+    "hubble-diagonal-med": {
+      "actual_md5": "1f3c0cd52935c885acc30d3e379ba754",
+      "archive_filename": "hubble-diagonal-med.tar.gz",
+      "archive_size_bytes": 63745179,
+      "converter_schema": 2,
+      "event_count": 10810714,
+      "events_npz": "hubble-diagonal-med/events.npz",
+      "expected_md5": "1f3c0cd52935c885acc30d3e379ba754",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "4c6eeb4b8446e2ca4f04059e6fc5acc6035150f3e004c7b6fd3080460defcedf",
+          "size_bytes": 140540240
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-diagonal-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:03.818963+00:00"
+    },
+    "hubble-diagonal-slow": {
+      "actual_md5": "4682080d8ff82d864dcd5332e91644b5",
+      "archive_filename": "hubble-diagonal-slow.tar.gz",
+      "archive_size_bytes": 31439925,
+      "converter_schema": 2,
+      "event_count": 5211879,
+      "events_npz": "hubble-diagonal-slow/events.npz",
+      "expected_md5": "4682080d8ff82d864dcd5332e91644b5",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "d7d302af48651588363ebad9ee2875b99e7e0cdca3299266e2388084eecd32c3",
+          "size_bytes": 67755385
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-diagonal-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:05.322968+00:00"
+    },
+    "hubble-perpendicular-fast": {
+      "actual_md5": "27da28e8cc90c58a669a27a8a503e7cd",
+      "archive_filename": "hubble-perpendicular-fast.tar.gz",
+      "archive_size_bytes": 91800511,
+      "converter_schema": 2,
+      "event_count": 15968868,
+      "events_npz": "hubble-perpendicular-fast/events.npz",
+      "expected_md5": "27da28e8cc90c58a669a27a8a503e7cd",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "53409755f69edb7be4be90e359c87aab05a355f572f69f7028136440a47cd498",
+          "size_bytes": 207596242
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-perpendicular-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:09.499412+00:00"
+    },
+    "hubble-perpendicular-med": {
+      "actual_md5": "e1d2d60dcbb1a9add2550553427c89fe",
+      "archive_filename": "hubble-perpendicular-med.tar.gz",
+      "archive_size_bytes": 49127303,
+      "converter_schema": 2,
+      "event_count": 8386638,
+      "events_npz": "hubble-perpendicular-med/events.npz",
+      "expected_md5": "e1d2d60dcbb1a9add2550553427c89fe",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "39df062409bac5cd75ebb11acd2d0f4b3e5bca03cac96e2642a8f2bef3915c1a",
+          "size_bytes": 109027252
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-perpendicular-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:11.812241+00:00"
+    },
+    "hubble-perpendicular-slow": {
+      "actual_md5": "791716392f201526d814267155291147",
+      "archive_filename": "hubble-perpendicular-slow.tar.gz",
+      "archive_size_bytes": 24362060,
+      "converter_schema": 2,
+      "event_count": 4059443,
+      "events_npz": "hubble-perpendicular-slow/events.npz",
+      "expected_md5": "791716392f201526d814267155291147",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "2562698af69c779acb7f8d81be360076a350a430b842d095c538d90b0585522a",
+          "size_bytes": 52773717
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-perpendicular-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:12.977734+00:00"
+    },
+    "hubble-sideon-fast": {
+      "actual_md5": "6d6fb7014fc9705cab525f747b0a4e5b",
+      "archive_filename": "hubble-sideon-fast.tar.gz",
+      "archive_size_bytes": 165557415,
+      "converter_schema": 2,
+      "event_count": 29173866,
+      "events_npz": "hubble-sideon-fast/events.npz",
+      "expected_md5": "6d6fb7014fc9705cab525f747b0a4e5b",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "853280ab9e14ffcc58e5050e9be8befaeecf9b712a5472b34429605a7d79cf9f",
+          "size_bytes": 379261216
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-sideon-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:20.404454+00:00"
+    },
+    "hubble-sideon-med": {
+      "actual_md5": "a3ff3efa42bf63641038e7e94e0f21be",
+      "archive_filename": "hubble-sideon-med.tar.gz",
+      "archive_size_bytes": 89968416,
+      "converter_schema": 2,
+      "event_count": 15417180,
+      "events_npz": "hubble-sideon-med/events.npz",
+      "expected_md5": "a3ff3efa42bf63641038e7e94e0f21be",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "b91bbbe46c07dc2a8c16b8c84e3ec9ddb21c64bebfb4da1845de1a41d53a49af",
+          "size_bytes": 200424298
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-sideon-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:24.593223+00:00"
+    },
+    "hubble-sideon-slow": {
+      "actual_md5": "56bfc59f54519c1635f7ac853720bc5c",
+      "archive_filename": "hubble-sideon-slow.tar.gz",
+      "archive_size_bytes": 44260118,
+      "converter_schema": 2,
+      "event_count": 7415398,
+      "events_npz": "hubble-sideon-slow/events.npz",
+      "expected_md5": "56bfc59f54519c1635f7ac853720bc5c",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "3b892c60c443dc1178aa3c7997e223cfe667a8a4509e5585863d1136f48479e7",
+          "size_bytes": 96401132
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-sideon-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:26.685218+00:00"
+    },
+    "hubble-topdown-fast": {
+      "actual_md5": "9680e78beb6e420b2292b18f1b94b936",
+      "archive_filename": "hubble-topdown-fast.tar.gz",
+      "archive_size_bytes": 345986507,
+      "converter_schema": 2,
+      "event_count": 62551917,
+      "events_npz": "hubble-topdown-fast/events.npz",
+      "expected_md5": "9680e78beb6e420b2292b18f1b94b936",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "b8984eb6c68101eb96e281005be6ee046d4e21f0dcd39708393acd39c19c4f5a",
+          "size_bytes": 813175879
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-topdown-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:42.626730+00:00"
+    },
+    "hubble-topdown-med": {
+      "actual_md5": "018e9b2b1675b99f13856e4179a80fdd",
+      "archive_filename": "hubble-topdown-med.tar.gz",
+      "archive_size_bytes": 200318918,
+      "converter_schema": 2,
+      "event_count": 35210422,
+      "events_npz": "hubble-topdown-med/events.npz",
+      "expected_md5": "018e9b2b1675b99f13856e4179a80fdd",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "6bc2d9bf9c7be2b2922eb4e5237ebbb81c24686a102f82438c0e351235543223",
+          "size_bytes": 457736444
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-topdown-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:52.122908+00:00"
+    },
+    "hubble-topdown-slow": {
+      "actual_md5": "674a2e2e0a2bd100de3747d3e08e3156",
+      "archive_filename": "hubble-topdown-slow.tar.gz",
+      "archive_size_bytes": 99884482,
+      "converter_schema": 2,
+      "event_count": 16995881,
+      "events_npz": "hubble-topdown-slow/events.npz",
+      "expected_md5": "674a2e2e0a2bd100de3747d3e08e3156",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "9feaf1addb683b355511f98bae619b23789d9ae9462dc8a2592b424e6aea5dae",
+          "size_bytes": 220947411
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "hubble-topdown-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:23:56.750268+00:00"
+    },
+    "soho-diagonal-fast": {
+      "actual_md5": "3bd1fbffffa415eaa60be98049c150b0",
+      "archive_filename": "soho-diagonal-fast.tar.gz",
+      "archive_size_bytes": 175526186,
+      "converter_schema": 2,
+      "event_count": 30374433,
+      "events_npz": "soho-diagonal-fast/events.npz",
+      "expected_md5": "3bd1fbffffa415eaa60be98049c150b0",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "a206218116a932f801e0fdcc102cffc76bbcb7430c63ff8014a07a061990c8ec",
+          "size_bytes": 394868587
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-diagonal-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:04.711721+00:00"
+    },
+    "soho-diagonal-med": {
+      "actual_md5": "f40a89d3195d23a125da555d39b70b3b",
+      "archive_filename": "soho-diagonal-med.tar.gz",
+      "archive_size_bytes": 94958708,
+      "converter_schema": 2,
+      "event_count": 15944462,
+      "events_npz": "soho-diagonal-med/events.npz",
+      "expected_md5": "f40a89d3195d23a125da555d39b70b3b",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "1a09ea18d8dc62c7747b3aadd77f855e5c13c1ef091573db0b225bb9477b40e2",
+          "size_bytes": 207278964
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-diagonal-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:09.072364+00:00"
+    },
+    "soho-diagonal-slow": {
+      "actual_md5": "d228bee6975500aa041c96ddecc340ab",
+      "archive_filename": "soho-diagonal-slow.tar.gz",
+      "archive_size_bytes": 44297813,
+      "converter_schema": 2,
+      "event_count": 7247240,
+      "events_npz": "soho-diagonal-slow/events.npz",
+      "expected_md5": "d228bee6975500aa041c96ddecc340ab",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "ac4d2e1e177f4919ca23ee7cb2016034d61ac1cd82d069489bc02f5b34ff8a2c",
+          "size_bytes": 94215078
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-diagonal-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:11.144706+00:00"
+    },
+    "soho-perpendicular-fast": {
+      "actual_md5": "e11de5006c008871a4cf94b7fbc4c3da",
+      "archive_filename": "soho-perpendicular-fast.tar.gz",
+      "archive_size_bytes": 111527241,
+      "converter_schema": 2,
+      "event_count": 18965650,
+      "events_npz": "soho-perpendicular-fast/events.npz",
+      "expected_md5": "e11de5006c008871a4cf94b7fbc4c3da",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "e004bec47d5ef0d7673da9743f8b1084f6a7b17bd4141afa7afcb138071304ad",
+          "size_bytes": 246554408
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-perpendicular-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:16.139915+00:00"
+    },
+    "soho-perpendicular-med": {
+      "actual_md5": "41f136743a99595d3135356407b0d236",
+      "archive_filename": "soho-perpendicular-med.tar.gz",
+      "archive_size_bytes": 57631700,
+      "converter_schema": 2,
+      "event_count": 9568930,
+      "events_npz": "soho-perpendicular-med/events.npz",
+      "expected_md5": "41f136743a99595d3135356407b0d236",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "924cc4794e43973187a24d0c5803d153a71982044a9fa0e6b42c9a636031ec70",
+          "size_bytes": 124397048
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-perpendicular-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:18.791559+00:00"
+    },
+    "soho-perpendicular-slow": {
+      "actual_md5": "3b11ea48a6d2cecef1e592e98e5f876d",
+      "archive_filename": "soho-perpendicular-slow.tar.gz",
+      "archive_size_bytes": 29338602,
+      "converter_schema": 2,
+      "event_count": 4792856,
+      "events_npz": "soho-perpendicular-slow/events.npz",
+      "expected_md5": "3b11ea48a6d2cecef1e592e98e5f876d",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "834c9792e772f77f8f58f94b029081bd768e005729fb624867d5fa3c183c8653",
+          "size_bytes": 62308086
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-perpendicular-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:20.166705+00:00"
+    },
+    "soho-sideon-fast": {
+      "actual_md5": "b2f9a9a4f2a178bdf1c3c0b531e284f5",
+      "archive_filename": "soho-sideon-fast.tar.gz",
+      "archive_size_bytes": 194841050,
+      "converter_schema": 2,
+      "event_count": 33582207,
+      "events_npz": "soho-sideon-fast/events.npz",
+      "expected_md5": "b2f9a9a4f2a178bdf1c3c0b531e284f5",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "48e8824868282beff5742973ae8ef65d0f9f05f2ee5ca497ab7ff81dafd2cb84",
+          "size_bytes": 436569649
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-sideon-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:28.915907+00:00"
+    },
+    "soho-sideon-med": {
+      "actual_md5": "0e3ab41200aa5ed3ac8df95a3c91ed5d",
+      "archive_filename": "soho-sideon-med.tar.gz",
+      "archive_size_bytes": 103156472,
+      "converter_schema": 2,
+      "event_count": 17240964,
+      "events_npz": "soho-sideon-med/events.npz",
+      "expected_md5": "0e3ab41200aa5ed3ac8df95a3c91ed5d",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "801bf45863438a3b7eae688c294fc62c656e0f0507fa3b3e3da0031c07da36d0",
+          "size_bytes": 224133490
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-sideon-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:33.662392+00:00"
+    },
+    "soho-sideon-slow": {
+      "actual_md5": "0dc2f790b51fb82b539f349163df3cfb",
+      "archive_filename": "soho-sideon-slow.tar.gz",
+      "archive_size_bytes": 50175196,
+      "converter_schema": 2,
+      "event_count": 8151470,
+      "events_npz": "soho-sideon-slow/events.npz",
+      "expected_md5": "0dc2f790b51fb82b539f349163df3cfb",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "bc492f09ed5bb5aaa717222e54d236e2fe945f0292f32b28b2960a7317952b22",
+          "size_bytes": 105970068
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-sideon-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:35.948385+00:00"
+    },
+    "soho-topdown-fast": {
+      "actual_md5": "ef95c7f9820559611e95c8f007ada62f",
+      "archive_filename": "soho-topdown-fast.tar.gz",
+      "archive_size_bytes": 178506370,
+      "converter_schema": 2,
+      "event_count": 30710796,
+      "events_npz": "soho-topdown-fast/events.npz",
+      "expected_md5": "ef95c7f9820559611e95c8f007ada62f",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "bf3d1f0797671d09267e880a2a7ca82fb2cdd2b28b1c526eccea4358b3f29aa2",
+          "size_bytes": 399241306
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-topdown-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:43.962923+00:00"
+    },
+    "soho-topdown-med": {
+      "actual_md5": "222d532925c79d897e238a35fd588072",
+      "archive_filename": "soho-topdown-med.tar.gz",
+      "archive_size_bytes": 94741200,
+      "converter_schema": 2,
+      "event_count": 15807873,
+      "events_npz": "soho-topdown-med/events.npz",
+      "expected_md5": "222d532925c79d897e238a35fd588072",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "af722628ac8aff3c79a226310d10e70b2d83138bb820d60f95dbdef18990058b",
+          "size_bytes": 205503307
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-topdown-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:48.316055+00:00"
+    },
+    "soho-topdown-slow": {
+      "actual_md5": "a1b47a13a6b4ea5cf277bfcfc333a691",
+      "archive_filename": "soho-topdown-slow.tar.gz",
+      "archive_size_bytes": 43537830,
+      "converter_schema": 2,
+      "event_count": 7066399,
+      "events_npz": "soho-topdown-slow/events.npz",
+      "expected_md5": "a1b47a13a6b4ea5cf277bfcfc333a691",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "93f733113553ea0f7d1d7496bb433c5f23d2005784e01f337aa8f97fb3078e2d",
+          "size_bytes": 91864145
+        },
+        "meta.json": {
+          "sha256": "c060be567684a9d26844ef6cc773c20025881fecfc59f0e5e7cbf3e3bab8568d",
+          "size_bytes": 108
+        }
+      },
+      "scene": "soho-topdown-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:24:50.332573+00:00"
+    },
+    "switch-diagonal-fast": {
+      "actual_md5": "ae7930e0080289af72bfd9f92234855f",
+      "archive_filename": "switch-diagonal-fast.tar.gz",
+      "archive_size_bytes": 229372456,
+      "converter_schema": 2,
+      "event_count": 40183286,
+      "events_npz": "switch-diagonal-fast/events.npz",
+      "expected_md5": "ae7930e0080289af72bfd9f92234855f",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "8583fe5564e893ec65bccb00deec673b3c604229672a0d26562cb295246ea0b5",
+          "size_bytes": 522383676
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-diagonal-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:00.793001+00:00"
+    },
+    "switch-diagonal-med": {
+      "actual_md5": "a2f7b3fba185b883734ac0f9fd5a0e61",
+      "archive_filename": "switch-diagonal-med.tar.gz",
+      "archive_size_bytes": 124363996,
+      "converter_schema": 2,
+      "event_count": 21138121,
+      "events_npz": "switch-diagonal-med/events.npz",
+      "expected_md5": "a2f7b3fba185b883734ac0f9fd5a0e61",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "c381e478c40c0fb2b34568e288e303a1be146f35cb97d8f0972d87ce9469a489",
+          "size_bytes": 274796531
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-diagonal-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:06.613322+00:00"
+    },
+    "switch-diagonal-slow": {
+      "actual_md5": "64e930aa46f46b1a3f28bb6b7e10a59a",
+      "archive_filename": "switch-diagonal-slow.tar.gz",
+      "archive_size_bytes": 57039197,
+      "converter_schema": 2,
+      "event_count": 9419034,
+      "events_npz": "switch-diagonal-slow/events.npz",
+      "expected_md5": "64e930aa46f46b1a3f28bb6b7e10a59a",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "847f1378525076bc2cad7aae2aa3eeaa98459f7ee956862309cc0f13659919c6",
+          "size_bytes": 122448400
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-diagonal-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:09.261190+00:00"
+    },
+    "switch-perpendicular-fast": {
+      "actual_md5": "021fa22b956caec852ee5befd02baf27",
+      "archive_filename": "switch-perpendicular-fast.tar.gz",
+      "archive_size_bytes": 114450706,
+      "converter_schema": 2,
+      "event_count": 19905086,
+      "events_npz": "switch-perpendicular-fast/events.npz",
+      "expected_md5": "021fa22b956caec852ee5befd02baf27",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "7376b09ee84503d9be553f786f93a43ec98d3fecbda27caf4a57a9b50049fc95",
+          "size_bytes": 258767076
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-perpendicular-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:14.421219+00:00"
+    },
+    "switch-perpendicular-med": {
+      "actual_md5": "6f077cb48be8f2598ce456d224c92543",
+      "archive_filename": "switch-perpendicular-med.tar.gz",
+      "archive_size_bytes": 60347607,
+      "converter_schema": 2,
+      "event_count": 10228857,
+      "events_npz": "switch-perpendicular-med/events.npz",
+      "expected_md5": "6f077cb48be8f2598ce456d224c92543",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "34a111c47af956ba0678d9e8e0ff1db7b8757b145bbf43e3297dda3a06be5b15",
+          "size_bytes": 132976099
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-perpendicular-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:17.268184+00:00"
+    },
+    "switch-perpendicular-slow": {
+      "actual_md5": "498aa6f860bd226384a60c773ee8a8a9",
+      "archive_filename": "switch-perpendicular-slow.tar.gz",
+      "archive_size_bytes": 28320854,
+      "converter_schema": 2,
+      "event_count": 4667918,
+      "events_npz": "switch-perpendicular-slow/events.npz",
+      "expected_md5": "498aa6f860bd226384a60c773ee8a8a9",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "e745ba084d56ca26ddc393aa3801fe71593cc104ba032cf1c3199df808289516",
+          "size_bytes": 60683892
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-perpendicular-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:18.637199+00:00"
+    },
+    "switch-sideon-fast": {
+      "actual_md5": "edf84690e18288673dff80469f4e75d8",
+      "archive_filename": "switch-sideon-fast.tar.gz",
+      "archive_size_bytes": 278938315,
+      "converter_schema": 2,
+      "event_count": 49443640,
+      "events_npz": "switch-sideon-fast/events.npz",
+      "expected_md5": "edf84690e18288673dff80469f4e75d8",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "b6d80b797504f62c8a106f6863336e104e7acd792c49933e85304a94a98111a0",
+          "size_bytes": 642768278
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-sideon-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:31.445590+00:00"
+    },
+    "switch-sideon-med": {
+      "actual_md5": "c4cde43ed301896ed23e240f358b6274",
+      "archive_filename": "switch-sideon-med.tar.gz",
+      "archive_size_bytes": 152566409,
+      "converter_schema": 2,
+      "event_count": 26236942,
+      "events_npz": "switch-sideon-med/events.npz",
+      "expected_md5": "c4cde43ed301896ed23e240f358b6274",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "511d564f91ede71e5d2071ac3cf80203df668f2aed1aae51f197260e60d17438",
+          "size_bytes": 341081204
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-sideon-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:38.515941+00:00"
+    },
+    "switch-sideon-slow": {
+      "actual_md5": "78c2f87e5b4abff5e6238e0803bd56a9",
+      "archive_filename": "switch-sideon-slow.tar.gz",
+      "archive_size_bytes": 72012478,
+      "converter_schema": 2,
+      "event_count": 11984612,
+      "events_npz": "switch-sideon-slow/events.npz",
+      "expected_md5": "78c2f87e5b4abff5e6238e0803bd56a9",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "e3a41bc65d118e7dde2f4dac507f2441da92bede6619c7fd7c2e25413cd138c5",
+          "size_bytes": 155800914
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-sideon-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:41.857881+00:00"
+    },
+    "switch-topdown-fast": {
+      "actual_md5": "ca2037dc3596dd54cfafe7dd1e787fd9",
+      "archive_filename": "switch-topdown-fast.tar.gz",
+      "archive_size_bytes": 165559126,
+      "converter_schema": 2,
+      "event_count": 28749688,
+      "events_npz": "switch-topdown-fast/events.npz",
+      "expected_md5": "ca2037dc3596dd54cfafe7dd1e787fd9",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "c925bda1a14a16948944ad5c0060d98eb78bd08991e6b6d560d2583d941373b5",
+          "size_bytes": 373746902
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-topdown-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:49.235845+00:00"
+    },
+    "switch-topdown-med": {
+      "actual_md5": "bdd2b51be742f5503e03c630bc757d49",
+      "archive_filename": "switch-topdown-med.tar.gz",
+      "archive_size_bytes": 84291198,
+      "converter_schema": 2,
+      "event_count": 14246669,
+      "events_npz": "switch-topdown-med/events.npz",
+      "expected_md5": "bdd2b51be742f5503e03c630bc757d49",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "7e3cba2cbf5d67d0aed5ee6f7607cc951e18f15aabf8066a545507bf36f3a8dc",
+          "size_bytes": 185207655
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-topdown-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:53.086362+00:00"
+    },
+    "switch-topdown-slow": {
+      "actual_md5": "e17662fa7ff7cec93e56d295cade5272",
+      "archive_filename": "switch-topdown-slow.tar.gz",
+      "archive_size_bytes": 39864868,
+      "converter_schema": 2,
+      "event_count": 6612102,
+      "events_npz": "switch-topdown-slow/events.npz",
+      "expected_md5": "e17662fa7ff7cec93e56d295cade5272",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "e2dcab14b90b69511cfa0144a67505953e02efe4e18cd3c3e035e9b60e732de9",
+          "size_bytes": 85958284
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "switch-topdown-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:25:54.982757+00:00"
+    },
+    "tdrs-diagonal-fast": {
+      "actual_md5": "2a5bfc69e6b45bdbe7e1d1c6a49d342b",
+      "archive_filename": "tdrs-diagonal-fast.tar.gz",
+      "archive_size_bytes": 232409578,
+      "converter_schema": 2,
+      "event_count": 39928819,
+      "events_npz": "tdrs-diagonal-fast/events.npz",
+      "expected_md5": "2a5bfc69e6b45bdbe7e1d1c6a49d342b",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "882a3a273e2bee8827b4537f983d8e5d7c3e0b3d704e2a0c1050c3b11aa1dce9",
+          "size_bytes": 519075605
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-diagonal-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:26:05.403637+00:00"
+    },
+    "tdrs-diagonal-med": {
+      "actual_md5": "0af78e0e055b3cdeb817cc41b9f0e15d",
+      "archive_filename": "tdrs-diagonal-med.tar.gz",
+      "archive_size_bytes": 130466939,
+      "converter_schema": 2,
+      "event_count": 21822065,
+      "events_npz": "tdrs-diagonal-med/events.npz",
+      "expected_md5": "0af78e0e055b3cdeb817cc41b9f0e15d",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "1bc7c7148ad8d0608090546b9ac2eecf29607b42e76323c6637a8d127af45818",
+          "size_bytes": 283687803
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-diagonal-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:26:11.305334+00:00"
+    },
+    "tdrs-diagonal-slow": {
+      "actual_md5": "577323fb7023583d3f062595b2cec423",
+      "archive_filename": "tdrs-diagonal-slow.tar.gz",
+      "archive_size_bytes": 64773646,
+      "converter_schema": 2,
+      "event_count": 10562627,
+      "events_npz": "tdrs-diagonal-slow/events.npz",
+      "expected_md5": "577323fb7023583d3f062595b2cec423",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "4075df6aee479905f7a23e8fef373bbee713d97f12aa749260e537a44735e136",
+          "size_bytes": 137315109
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-diagonal-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:26:14.233707+00:00"
+    },
+    "tdrs-perpendicular-fast": {
+      "actual_md5": "ff66535269337b1717c4cfb7ab71c8d2",
+      "archive_filename": "tdrs-perpendicular-fast.tar.gz",
+      "archive_size_bytes": 211859779,
+      "converter_schema": 2,
+      "event_count": 36087532,
+      "events_npz": "tdrs-perpendicular-fast/events.npz",
+      "expected_md5": "ff66535269337b1717c4cfb7ab71c8d2",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "9234f2a60688f16661e9bc2b341a5c8adfbcac954547fdf4dfa1c7312c6c4654",
+          "size_bytes": 469138874
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-perpendicular-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:26:23.667053+00:00"
+    },
+    "tdrs-perpendicular-med": {
+      "actual_md5": "f08310d52d2d8e4bba17b4b18050a387",
+      "archive_filename": "tdrs-perpendicular-med.tar.gz",
+      "archive_size_bytes": 117294306,
+      "converter_schema": 2,
+      "event_count": 19476854,
+      "events_npz": "tdrs-perpendicular-med/events.npz",
+      "expected_md5": "f08310d52d2d8e4bba17b4b18050a387",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "675726cdcf3962c6103183caabe6c191c00f075d18831b796e579d887e558f19",
+          "size_bytes": 253200060
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-perpendicular-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:26:29.020460+00:00"
+    },
+    "tdrs-perpendicular-slow": {
+      "actual_md5": "f1a0f1b73b29feccc4ab81569573f232",
+      "archive_filename": "tdrs-perpendicular-slow.tar.gz",
+      "archive_size_bytes": 56285564,
+      "converter_schema": 2,
+      "event_count": 9133314,
+      "events_npz": "tdrs-perpendicular-slow/events.npz",
+      "expected_md5": "f1a0f1b73b29feccc4ab81569573f232",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "659ef425e7b4c6eb03ae05e77c113d5ac8dd980280bda889abf1afb797955c4c",
+          "size_bytes": 118734040
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-perpendicular-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:26:31.582451+00:00"
+    },
+    "tdrs-sideon-fast": {
+      "actual_md5": "9fb96532f94e35293e3fa21a4be4d716",
+      "archive_filename": "tdrs-sideon-fast.tar.gz",
+      "archive_size_bytes": 250833555,
+      "converter_schema": 2,
+      "event_count": 43142160,
+      "events_npz": "tdrs-sideon-fast/events.npz",
+      "expected_md5": "9fb96532f94e35293e3fa21a4be4d716",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "4183477480b2b46c23d7d5fdb14eea7b32d37b13b715ac993ba46ce608cb10ec",
+          "size_bytes": 560849038
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-sideon-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:26:42.904902+00:00"
+    },
+    "tdrs-sideon-med": {
+      "actual_md5": "3de90dea1a29a24d949ffaa81ed59263",
+      "archive_filename": "tdrs-sideon-med.tar.gz",
+      "archive_size_bytes": 143503029,
+      "converter_schema": 2,
+      "event_count": 24013626,
+      "events_npz": "tdrs-sideon-med/events.npz",
+      "expected_md5": "3de90dea1a29a24d949ffaa81ed59263",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "3bde9d34e02ef4b53c679a5dd42f5f65dd26ef4950caf2295c146e9f2259575f",
+          "size_bytes": 312178096
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-sideon-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:26:49.474215+00:00"
+    },
+    "tdrs-sideon-slow": {
+      "actual_md5": "ecc46f71ac16c2000114c000adad8fb0",
+      "archive_filename": "tdrs-sideon-slow.tar.gz",
+      "archive_size_bytes": 70814135,
+      "converter_schema": 2,
+      "event_count": 11514925,
+      "events_npz": "tdrs-sideon-slow/events.npz",
+      "expected_md5": "ecc46f71ac16c2000114c000adad8fb0",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "acd56b68f7281499cb4a38bccdc6377d86d3fa7dd2d3d9ab4860fef6fa441dc9",
+          "size_bytes": 149694983
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-sideon-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:26:52.698123+00:00"
+    },
+    "tdrs-topdown-fast": {
+      "actual_md5": "aed51f85dc7551d753206e80210788d6",
+      "archive_filename": "tdrs-topdown-fast.tar.gz",
+      "archive_size_bytes": 363466243,
+      "converter_schema": 2,
+      "event_count": 64091111,
+      "events_npz": "tdrs-topdown-fast/events.npz",
+      "expected_md5": "aed51f85dc7551d753206e80210788d6",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "707b0c6a3a5c5220219b19a16074ac1efd5ce9033fc1d67bc8a9015d23484ca6",
+          "size_bytes": 833185401
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-topdown-fast",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:27:09.443955+00:00"
+    },
+    "tdrs-topdown-med": {
+      "actual_md5": "c640157a21ce93db6916b5cb68e87a2b",
+      "archive_filename": "tdrs-topdown-med.tar.gz",
+      "archive_size_bytes": 226444057,
+      "converter_schema": 2,
+      "event_count": 38870679,
+      "events_npz": "tdrs-topdown-med/events.npz",
+      "expected_md5": "c640157a21ce93db6916b5cb68e87a2b",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "cf8a2a4a19c4204e22a4198b6deaf9b15f3532409b3c2e939a14e9ff8d52de3d",
+          "size_bytes": 505319785
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-topdown-med",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:27:19.864831+00:00"
+    },
+    "tdrs-topdown-slow": {
+      "actual_md5": "1a6fef6b395510a913b1024375695eea",
+      "archive_filename": "tdrs-topdown-slow.tar.gz",
+      "archive_size_bytes": 123323714,
+      "converter_schema": 2,
+      "event_count": 20512635,
+      "events_npz": "tdrs-topdown-slow/events.npz",
+      "expected_md5": "1a6fef6b395510a913b1024375695eea",
+      "output_files": {
+        "calib.txt": {
+          "sha256": "cdbe1b14b8d7ec73bd105007995ecc12214dbee088a9caa154f6c14dca9a20ec",
+          "size_bytes": 190
+        },
+        "events.npz": {
+          "sha256": "50dce88aff21558786839175e0cc5b56eb1dd105a235443d8659c1d86f4eb94b",
+          "size_bytes": 266665213
+        },
+        "meta.json": {
+          "sha256": "9b382ffeaa147c52558ae54ece1ef2849e84de8d1daeef128914931faafbafe5",
+          "size_bytes": 118
+        }
+      },
+      "scene": "tdrs-topdown-slow",
+      "verification_status": "archive_md5_verified",
+      "verified": true,
+      "verified_at_utc": "2026-11-23T17:27:25.447634+00:00"
+    }
+  },
+  "schema_version": 2
+}
