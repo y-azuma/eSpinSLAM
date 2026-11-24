@@ -1,27 +1,40 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools==84.2.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "espinslam"
-version = "0.1.0"
-description = "Independent eSpinSLAM reproduction for spinning-object event streams"
+version = "0.2.0"
+description = "Paper-faithful reproduction of Event-based Spinning Object SLAM (eSpinSLAM, ICCVW 2025)"
 requires-python = ">=3.10"
 dependencies = [
-  "numpy>=1.24",
+  # numba (eFAST, bundle adjustment kernels) supports NumPy <= 2.3.
+  "numpy>=1.24,<2.4",
+  "numba>=0.59",
   "scipy>=1.11",
   "opencv-python-headless>=4.8",
   "scikit-learn>=1.4",
   "matplotlib>=3.7",
-  "wandb>=0.17",
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=7"]
+# TOPSPIN: HDF5 event files and CAD meshes (.ply/.obj/.stl).
+topspin = ["h5py>=3.8", "trimesh>=4.0"]
+test = ["pytest>=7", "h5py>=3.8"]
+# W&B is an optional logging sink used only by scripts/evaluate.py.  The
+# paper-reproduction algorithm and its CI do not require network logging.
+wandb = ["wandb>=0.17"]
+# GTSAM 4.2's Python wheel was verified with NumPy 1.26; it segfaulted with
+# NumPy 2.x in the frozen equivalence run, so this executable reference path
+# deliberately narrows the otherwise wider runtime constraint.
+gtsam = ["gtsam==4.2", "numpy>=1.24,<2"]
 
 [tool.setuptools.packages.find]
 include = ["espinslam*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
+filterwarnings = ["ignore::FutureWarning:sklearn"]
+markers = [
+  "slow_diagnostic: opt-in multi-seed characterization, not a portable correctness gate",
+]

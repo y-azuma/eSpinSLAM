@@ -1,9 +1,9 @@
-"""Held-out rotation and 3D point-cloud evaluation."""
+"""Rotation and 3D point-cloud evaluation with explicit profile labels."""
 
 from __future__ import annotations
 
 import csv
-from dataclasses import asdict
+from collections import Counter
 import json
 import math
 from pathlib import Path
@@ -22,6 +22,35 @@ from .plotting import create_report_plots
 
 def _nullable(value: float) -> float | None:
     return float(value) if math.isfinite(float(value)) else None
+
+
+def _method_profile(config: ESpinSLAMConfig) -> tuple[str, list[str]]:
+    """Classify this config using the same frozen profile as TOPSPIN reports."""
+
+    # Local import keeps the generic evaluator independent at import time while
+    # reusing the one authoritative reference-profile definition.
+    from .topspin import _reference_mismatches
+
+    mismatches = _reference_mismatches(config)
+    return (
+        "paper_reference_config" if not mismatches else "experimental_interpretation",
+        mismatches,
+    )
+
+
+def _fallback_summary(reports) -> tuple[int, str]:
+    reasons: Counter[str] = Counter()
+    count = 0
+    for report in reports:
+        count += int(getattr(report, "triangulation_fallback_count", 0))
+        for item in str(getattr(report, "triangulation_fallback_reasons", "")).split(";"):
+            if not item:
+                continue
+            reason, _, amount = item.rpartition(":")
+            reasons[reason or item] += int(amount) if reason else 1
+    return count, ";".join(
+        f"{reason}:{amount}" for reason, amount in sorted(reasons.items())
+    )
 
 
 def rotation_metrics(truth: np.ndarray, prediction: np.ndarray,
@@ -161,6 +190,7 @@ def evaluate(
         )
         result = model.process(sequence, reconstruct_structure=True)
         prediction = result.omega_rad_s if result.valid else math.nan
+        fallback_count, fallback_reasons = _fallback_summary(result.optimizations)
         predictions.append({
             "sequence_id": sequence.sequence_id,
             "omega_true_rad_s": sequence.omega_rad_s,
@@ -172,27 +202,34 @@ def evaluate(
             "percentage_error": _nullable(
                 abs(prediction - sequence.omega_rad_s) / max(sequence.omega_rad_s, 1e-9) * 100.0,
             ),
-            "frequency_hz": _nullable(result.frequency.frequency_hz),
-            "frequency_confidence": result.frequency.confidence,
+            "frequency_hz": _nullable(result.frequency_hz),
+            "latest_unconfirmed_frequency_hz": _nullable(result.frequency.frequency_hz),
+            "loop_closed": result.loop_closed,
+            "loop_closure_time_s": _nullable(result.loop_closure_time),
             "valid": result.valid,
-            "failure_reason": result.frequency.reason,
+            "failure_reason": "" if result.valid else (
+                result.frequency.reason or "loop closure was not detected"),
             "event_count": sequence.event_count,
-            "track_count": len(result.tracks),
+            "track_count": result.track_count,
             "landmark_count": int(result.reconstruction.points.shape[0]),
             "reprojection_error_px": _nullable(result.reconstruction.mean_reprojection_error_px),
+            "runtime_s": result.runtime_seconds,
+            "throughput_ev_s": _nullable(result.throughput_events_per_second),
+            "triangulation_fallback_count": fallback_count,
+            "triangulation_fallback_reasons": fallback_reasons,
         })
         for observation_seconds in config.evaluation.observation_times_seconds:
-            prefix = sequence.before(observation_seconds)
-            estimate = model.estimate_frequency(prefix)
+            # The online system's causal output at this time (no re-run, no labels).
+            confirmed, latest = result.frequency_at(observation_seconds)
             time_predictions.append({
                 "sequence_id": sequence.sequence_id,
                 "observation_seconds": float(observation_seconds),
-                "available_seconds": prefix.duration_seconds,
+                "available_seconds": min(float(observation_seconds), sequence.duration_seconds),
                 "omega_true_rad_s": sequence.omega_rad_s,
-                "omega_pred_rad_s": _nullable(estimate.omega_rad_s),
-                "confidence": estimate.confidence,
-                "valid": estimate.valid,
-                "failure_reason": estimate.reason,
+                "omega_pred_rad_s": _nullable(2.0 * math.pi * confirmed),
+                "omega_unconfirmed_rad_s": _nullable(2.0 * math.pi * latest),
+                "valid": math.isfinite(confirmed),
+                "failure_reason": "" if math.isfinite(confirmed) else "loop not yet detected",
             })
         alignment = (
             align_similarity_icp(result.reconstruction.points, reference)
@@ -224,7 +261,7 @@ def evaluate(
                 representative = (alignment.icp_rmse_m, sequence.sequence_id, alignment)
         print(
             f"[{index}/{len(rows)}] {sequence.sequence_id}: "
-            f"omega={prediction:.6g} tracks={len(result.tracks)} "
+            f"omega={prediction:.6g} tracks={result.track_count} "
             f"points={result.reconstruction.points.shape[0]}",
             flush=True,
         )
@@ -260,9 +297,18 @@ def evaluate(
     _write_csv(output_dir / "time_predictions.csv", time_predictions)
     _write_csv(output_dir / "time_accuracy.csv", time_summary)
     _write_csv(output_dir / "pointcloud_metrics.csv", pointcloud_rows)
+    method_profile, reference_mismatches = _method_profile(config)
     report = {
-        "method": "Independent paper-guided eSpinSLAM reproduction",
+        "method": "eSpinSLAM reproduction candidate",
         "paper": "Event-based Spinning Object SLAM, ICCVW 2025",
+        "method_profile": method_profile,
+        "evaluation_classification": (
+            "reference_profile_domain_robustness"
+            if method_profile == "paper_reference_config"
+            else "experimental_interpretation_domain_robustness"
+        ),
+        "paper_comparison_eligible": False,
+        "reference_config_mismatches": reference_mismatches,
         "evaluation_split": config.data.evaluation_split,
         "data_leakage_controls": {
             "inference_inputs": ["events", "sensor geometry", "camera intrinsics"],
@@ -273,14 +319,29 @@ def evaluate(
             "The debris dataset includes slow camera closing/orbit motion; the paper assumes "
             "a static event camera and constant single-axis object spin."
         ),
-        "implementation_differences": [
-            "OpenCV FAST on polarity time surfaces replaces the unpublished native eFAST code.",
-            "Sparse eFAST/HDBSCAN output falls back to event-frame Lucas-Kanade tracks.",
-            "SciPy robust least-squares replaces the paper's GTSAM backend.",
-            "Raw-event loop alignment is a bounded fallback when Python feature tracks are sparse.",
+        "implementation_notes": [
+            "Front-end: numba eFAST (rpg_corner_events criterion), Eq. (6) density filter, "
+            "HDBSCAN tracklets, tracks store events (sigma_retain circular buffer).",
+            "Back-end: GTSAM replaced by Levenberg-Marquardt with Huber IRLS and analytic "
+            "Jacobians; every retained track event is an observation (Eq. 11).",
+            "Frequency: Eq. (9) with 1-D ICP and loop detection (aleph, sigma); time curves "
+            "report the causal online output (f* only after loop closure).",
+            "No frame-based or raw-event fallbacks: sequences without loop closure abstain.",
         ],
         "rotation": final_metrics,
         "pointcloud": _pointcloud_metrics(pointcloud_rows, len(rows)),
+        "backend_diagnostics": {
+            "triangulation_fallback_count": sum(
+                int(row["triangulation_fallback_count"]) for row in predictions
+            ),
+            "sequences_with_triangulation_fallback": sum(
+                int(row["triangulation_fallback_count"]) > 0 for row in predictions
+            ),
+            "reason_summaries": sorted({
+                row["triangulation_fallback_reasons"] for row in predictions
+                if row["triangulation_fallback_reasons"]
+            }),
+        },
         "runtime_seconds": time.monotonic() - started,
         "sequence_count": len(rows),
         "reference_pointcloud_available": reference is not None,

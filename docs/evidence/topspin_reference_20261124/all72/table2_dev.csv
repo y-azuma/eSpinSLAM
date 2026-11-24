@@ -1,0 +1,4 @@
+object,scenes,valid_reconstructions,paper_metric_eligible_reconstructions,geometrically_valid_reconstructions,reprojection_mean_px,reprojection_std_px,landmark_reprojection_mean_px,landmark_reprojection_std_px,icp_mean_mm,icp_std_mm
+Hubble,1,0,0,0,,,,,,
+TDRS,1,0,0,0,,,,,,
+Camera,1,0,0,0,,,,,,

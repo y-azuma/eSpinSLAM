@@ -1,0 +1,7 @@
+event_time_s,wall_s,frequency_hz,loop_closed,period_seconds,alignment_cost,grid_seed_seconds,grid_seed_cost,icp_iterations_used,icp_termination,icp_clipped_to_search_interval,observation_span_seconds,period_over_span,at_search_boundary,near_half_span,loop_artefact_suspected,loop_artefact_reason
+0.0026449999999999998,0.05335508901043795,,False,,,,,0,not_run,False,,,False,False,False,
+44.092292,9.88952449001954,,False,,,,,0,not_run,False,0.0030959999999993215,,False,False,False,
+44.600915,10.020175935002044,,False,,,,,0,not_run,False,0.5116630000000058,,False,False,False,
+44.803962,10.067789846012602,,False,,,,,0,not_run,False,0.7146710000000027,,False,False,False,
+57.878654,13.208157436019974,,False,,,,,0,not_run,False,13.789016000000004,,False,False,False,
+58.457892,13.28236378202564,,False,,,,,0,not_run,False,14.368648,,False,False,False,

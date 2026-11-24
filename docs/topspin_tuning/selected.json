@@ -1,0 +1,63 @@
+{
+  "classification": "historical_performance_tuning_excluded_from_reference",
+  "paper_reference_eligible": false,
+  "dev_scenes": [
+    "camera-topdown-fast",
+    "hubble-perpendicular-slow",
+    "tdrs-sideon-med"
+  ],
+  "reprojection_bound_px": 10.0,
+  "start": {
+    "cluster_min_size": 5,
+    "cluster_min_samples": 3,
+    "association_radius_px": 5.0,
+    "association_max_gap_seconds": 0.05,
+    "density_radius_px": 3.0
+  },
+  "start_score": 41.0,
+  "selected": {
+    "cluster_min_size": 3,
+    "cluster_min_samples": 2,
+    "association_radius_px": 5.0,
+    "association_max_gap_seconds": 0.1,
+    "density_radius_px": 5.0
+  },
+  "stages": [
+    {
+      "stage": "clustering",
+      "selected": {
+        "cluster_min_size": 3,
+        "cluster_min_samples": 2,
+        "association_radius_px": 5.0,
+        "association_max_gap_seconds": 0.05,
+        "density_radius_px": 3.0
+      },
+      "score": 401.5,
+      "mean_reprojection_px": 4.235501080308299
+    },
+    {
+      "stage": "association",
+      "selected": {
+        "cluster_min_size": 3,
+        "cluster_min_samples": 2,
+        "association_radius_px": 5.0,
+        "association_max_gap_seconds": 0.1,
+        "density_radius_px": 3.0
+      },
+      "score": 452.5,
+      "mean_reprojection_px": 4.204903966057176
+    },
+    {
+      "stage": "density",
+      "selected": {
+        "cluster_min_size": 3,
+        "cluster_min_samples": 2,
+        "association_radius_px": 5.0,
+        "association_max_gap_seconds": 0.1,
+        "density_radius_px": 5.0
+      },
+      "score": 678.0,
+      "mean_reprojection_px": 3.9290289031377106
+    }
+  ]
+}

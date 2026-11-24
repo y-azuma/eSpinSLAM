@@ -1,0 +1,80 @@
+// eSpinSLAM on TOPSPIN (Prophesee EVK4, 1280x720), paper Sec. 5.
+// All Table 1 hyperparameters are the paper's values. Front-end settings the
+// paper does not give were set on three dev scenes (examples/splits/topspin_dev.txt;
+// docs/reproduction_report.md Sec. 13, records in docs/topspin_tuning/).
+// Camera intrinsics are deliberately null: put the TOPSPIN calibration in the
+// manifest (fx, fy, cx, cy and optionally k1, k2, p1, p2, k3) or fill them in
+// here. The evaluation refuses to run without them.
+{
+  "data": {
+    "sensor_size": [1280, 720],
+    "max_duration_seconds": null,
+    "time_unit": "auto",
+    "text_columns": "txyp"
+  },
+  "camera": {
+    "fx": null,
+    "fy": null,
+    "cx": null,
+    "cy": null,
+    "distortion": []
+  },
+  "frontend": {
+    "interpretation_mode": "experimental", // historical tuned result replay only
+    "chunk_events": 1000,                    // |C| ~ 1000 (Metavision driver)
+    "density_radius_px": 5.0,  // lambda in Eq. (6); tuned on dev scenes (docs Sec. 13)
+    "density_mean_per_polarity": false,
+    "cluster_min_size": 3,  // tuned on dev scenes (docs Sec. 13)
+    "cluster_min_samples": 2,  // tuned on dev scenes (docs Sec. 13)
+    "cluster_selection_epsilon": 0.0,
+    "cluster_time_scale_px_per_second": 1000.0,
+    "cluster_by_polarity": true,
+    "association_radius_px": 5.0,  // tuned on dev scenes (docs Sec. 13)
+    "association_max_gap_seconds": 0.1,  // tuned on dev scenes (docs Sec. 13)
+    "association_head_events": 5,
+    "retain_events_per_track": 1000          // sigma_retain
+  },
+  "frequency": {
+    "method": "loop_closure",
+    "alignment_mode": "experimental",
+    "update_interval_seconds": 0.1,
+    // TOPSPIN turntable speeds are ~0.04-0.16 Hz (paper Fig. 6).
+    "min_period_seconds": 2.0,
+    "max_period_seconds": 60.0,
+    "time_scale_px_per_second": 100.0,
+    "max_alignment_samples": 10000,
+    "coarse_alignment_samples": 2000,
+    "coarse_relative_step": 0.01,
+    "icp_iterations": 30,
+    "harmonic_tolerance": 0.15,
+    "loop_std_threshold_hz": 0.001,          // sigma
+    "loop_history": 20                       // aleph
+  },
+  "backend": {
+    "interpretation_mode": "experimental",
+    "solver_backend": "equivalent_custom",
+    "orbit_radius": 10.0,                    // r
+    "min_track_events": 3,                   // N_match
+    "huber_threshold_px": 2.0,               // inlier threshold of rho
+    "max_mean_reprojection_error_px": 10.0,  // gamma
+    "landmark_merge_radius": 0.01,           // delta_fuse
+    "optimization_cadence_revolutions": 0.1, // epsilon
+    "forget_revolutions": 3.0,               // sigma_forget
+    "max_iterations": 100,
+    "min_triangulation_angle_deg": 1.5,
+    "max_observations_per_track": 0,
+    "optimize_frequency": false,
+    "landmark_association": true,
+    "final_offline_refinement": true
+  },
+  "evaluation": {
+    "pointcloud_max_reference_points": 30000
+  },
+  "logging": {
+    "wandb": false,
+    "wandb_mode": "online",
+    "wandb_project": "snn-research",
+    "wandb_run_name": "espinslam-topspin",
+    "wandb_tags": ["espinslam", "paper-faithful-reproduction", "topspin"]
+  }
+}

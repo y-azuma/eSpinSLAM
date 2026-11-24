@@ -1,0 +1,86 @@
+// Paper-reference eSpinSLAM reproduction on public TOPSPIN.
+//
+// Values in eSpinSLAM Table 1 are copied directly. Front-end values omitted
+// by eSpinSLAM are taken from its cited eSfO front-end (eSfO Table 2):
+// lambda=7, HDBSCAN minPts=10/epsilon=5, phi=30, N_sigma=5. Timestamp
+// scaling, finite Eq. (9) bounds/grid, update batching, and robust-kernel type
+// remain declared interpretations; see docs/traceability_matrix.md.
+{
+  "data": {
+    "sensor_size": [1280, 720],
+    "max_duration_seconds": null,
+    "time_unit": "auto",
+    "text_columns": "txyp",
+    "evaluation_split": "test"
+  },
+  "camera": {
+    "fx": null,
+    "fy": null,
+    "cx": null,
+    "cy": null,
+    "distortion": []
+  },
+  "frontend": {
+    "interpretation_mode": "paper",
+    "chunk_events": 1000,
+    "density_radius_px": 7.0,
+    "density_mean_per_polarity": true,
+    "cluster_min_size": 10,
+    "cluster_min_samples": null,
+    "cluster_selection_epsilon": 5.0,
+    "cluster_time_scale_px_per_second": 1.0,
+    "cluster_by_polarity": false,
+    "association_radius_px": 30.0,
+    // Schema-compatible placeholder only: paper-mode association uses the
+    // cited forward spatio-temporal hemisphere and never reads this gap.
+    "association_max_gap_seconds": 0.05,
+    "association_head_events": 5,
+    "retain_events_per_track": 1000
+  },
+  "frequency": {
+    "method": "loop_closure",
+    "alignment_mode": "paper",
+    "update_interval_seconds": 0.1,
+    "min_period_seconds": 0.1,
+    "max_period_seconds": null,
+    "time_scale_px_per_second": 1.0,
+    "max_alignment_samples": 10000,
+    "coarse_alignment_samples": 2000,
+    "coarse_relative_step": 0.01,
+    "icp_iterations": 30,
+    "icp_tolerance_seconds": 0.00001,
+    "harmonic_tolerance": 0.0,
+    "min_samples_per_half": 50,
+    "loop_std_threshold_hz": 0.001,
+    "loop_history": 20,
+    "fft_bin_seconds": 0.01
+  },
+  "backend": {
+    "interpretation_mode": "paper",
+    "solver_backend": "equivalent_custom",
+    "orbit_radius": 10.0,
+    "min_track_events": 3,
+    "huber_threshold_px": 2.0,
+    "max_mean_reprojection_error_px": 10.0,
+    "landmark_merge_radius": 0.01,
+    "optimization_cadence_revolutions": 0.1,
+    "forget_revolutions": 3.0,
+    "max_iterations": 100,
+    "min_triangulation_angle_deg": 0.0,
+    "max_observations_per_track": 0,
+    "optimize_frequency": false,
+    "landmark_association": true,
+    "final_offline_refinement": false
+  },
+  "evaluation": {
+    "pointcloud_max_reference_points": 30000,
+    "failure_policy": "report_and_mark_invalid"
+  },
+  "logging": {
+    "wandb": false,
+    "wandb_mode": "online",
+    "wandb_project": "snn-research",
+    "wandb_run_name": "espinslam-topspin-paper-reference",
+    "wandb_tags": ["espinslam", "paper-reference", "topspin", "exploratory"]
+  }
+}

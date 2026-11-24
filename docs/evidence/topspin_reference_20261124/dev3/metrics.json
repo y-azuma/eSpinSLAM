@@ -1,0 +1,306 @@
+{
+  "method": "eSpinSLAM reproduction candidate",
+  "paper": "Event-based Spinning Object SLAM, ICCVW 2025",
+  "setting": "eSpinSLAM",
+  "dataset": "TOPSPIN",
+  "method_profile": "paper_reference_config",
+  "evaluation_classification": "exploratory_retrospective",
+  "paper_comparison_requested": false,
+  "paper_comparison_eligible": false,
+  "paper_comparison_ineligibility_reasons": [
+    "selection is not exactly all 72 TOPSPIN scenes"
+  ],
+  "run_fingerprint": "b7930756ecd5454a5d00645a9594122e1e04ba8109642698fdaa783df1aa3885",
+  "reference_config_mismatches": [],
+  "evidence_scope": "exploratory_retrospective",
+  "public_data_limitations": {
+    "authoritative_frequency_ground_truth_count": 0,
+    "authoritative_frequency_ground_truth_total": 3,
+    "authoritative_frequency_ground_truth_all": false,
+    "authoritative_cad_count": 0,
+    "authoritative_cad_total": 3,
+    "authoritative_cad_all": false,
+    "note": "Public TOPSPIN lacks authoritative frequency labels and CAD. Null true-error/ICP fields are unavailable, not zero."
+  },
+  "sequence_count": 3,
+  "paper_metric_eligible_sequence_count": 0,
+  "geometrically_valid_sequence_count": 0,
+  "d003_viability": {
+    "scope": "canonical three dev scenes only",
+    "scene_count": 3,
+    "reference_profile": true,
+    "verified_acquisition": true,
+    "canonical_selection_complete": true,
+    "qualification_reasons": [],
+    "canonical_scene_ids": [
+      "camera-topdown-fast",
+      "hubble-perpendicular-slow",
+      "tdrs-sideon-med"
+    ],
+    "selected_dev_scene_ids": [
+      "hubble-perpendicular-slow",
+      "tdrs-sideon-med",
+      "camera-topdown-fast"
+    ],
+    "missing_canonical_scenes": [],
+    "unexpected_dev_scenes": [],
+    "required_eligible_scenes": 2,
+    "eligible_scene_count": 0,
+    "complete": true,
+    "passed": false,
+    "artefact_suspected_sequences": [],
+    "note": "Raw loop detections remain reported. A preregistered search-boundary or span/2 artefact does not count toward the D-003 two-of-three gate."
+  },
+  "backend_diagnostics": {
+    "triangulation_fallback_count": 0,
+    "sequences_with_triangulation_fallback": 0,
+    "reason_summaries": []
+  },
+  "split_counts": {
+    "dev": 3,
+    "test": 0
+  },
+  "summary_scope": "test-labelled non-dev exploratory scenes",
+  "loop_closure_rate": null,
+  "frequency_authoritative_median_relative_error_percent": null,
+  "frequency_same_speed_consistency_median_absolute_deviation_percent": null,
+  "frequency_same_speed_consistency_source": "frequency_loop_closure_hz",
+  "frequency_by_speed_hz": {},
+  "mean_throughput_ev_s": null,
+  "mean_frontend_throughput_ev_s": null,
+  "mean_scene_event_rate_ev_s": null,
+  "real_time_rate": null,
+  "table2": [],
+  "table2_dev": [
+    {
+      "object": "Hubble",
+      "scenes": 1,
+      "valid_reconstructions": 0,
+      "paper_metric_eligible_reconstructions": 0,
+      "geometrically_valid_reconstructions": 0,
+      "reprojection_mean_px": null,
+      "reprojection_std_px": null,
+      "landmark_reprojection_mean_px": null,
+      "landmark_reprojection_std_px": null,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "TDRS",
+      "scenes": 1,
+      "valid_reconstructions": 0,
+      "paper_metric_eligible_reconstructions": 0,
+      "geometrically_valid_reconstructions": 0,
+      "reprojection_mean_px": null,
+      "reprojection_std_px": null,
+      "landmark_reprojection_mean_px": null,
+      "landmark_reprojection_std_px": null,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "Camera",
+      "scenes": 1,
+      "valid_reconstructions": 0,
+      "paper_metric_eligible_reconstructions": 0,
+      "geometrically_valid_reconstructions": 0,
+      "reprojection_mean_px": null,
+      "reprojection_std_px": null,
+      "landmark_reprojection_mean_px": null,
+      "landmark_reprojection_std_px": null,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    }
+  ],
+  "table2_all": [
+    {
+      "object": "Hubble",
+      "scenes": 1,
+      "valid_reconstructions": 0,
+      "paper_metric_eligible_reconstructions": 0,
+      "geometrically_valid_reconstructions": 0,
+      "reprojection_mean_px": null,
+      "reprojection_std_px": null,
+      "landmark_reprojection_mean_px": null,
+      "landmark_reprojection_std_px": null,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "TDRS",
+      "scenes": 1,
+      "valid_reconstructions": 0,
+      "paper_metric_eligible_reconstructions": 0,
+      "geometrically_valid_reconstructions": 0,
+      "reprojection_mean_px": null,
+      "reprojection_std_px": null,
+      "landmark_reprojection_mean_px": null,
+      "landmark_reprojection_std_px": null,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    },
+    {
+      "object": "Camera",
+      "scenes": 1,
+      "valid_reconstructions": 0,
+      "paper_metric_eligible_reconstructions": 0,
+      "geometrically_valid_reconstructions": 0,
+      "reprojection_mean_px": null,
+      "reprojection_std_px": null,
+      "landmark_reprojection_mean_px": null,
+      "landmark_reprojection_std_px": null,
+      "icp_mean_mm": null,
+      "icp_std_mm": null
+    }
+  ],
+  "paper_comparison_table_all72": null,
+  "runtime_seconds": 120.09187317601754,
+  "scene_runtime_sum_seconds": 120.09187317601754,
+  "invocation_wall_seconds": 123.76526843997999,
+  "runtime_provenance": {
+    "hostname": "azumayudai-B660M-Pro-RS",
+    "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "processor": "x86_64",
+    "python": "3.10.14 (main, Nov 10 2024, 21:07:22) [GCC 12.3.0]",
+    "python_executable": "/home/azumayudai/Desktop/ws_snn/eSpinSLAM_paper_faithful_20261124/.venv/bin/python",
+    "command": [
+      "scripts/evaluate_topspin.py",
+      "--config",
+      "examples/configs/topspin_reference.jsonc",
+      "--data-root",
+      "/home/azumayudai/Desktop/ws_snn/datasets/TOPSPIN_v1/raw_paper_verified",
+      "--manifest",
+      "/home/azumayudai/Desktop/ws_snn/datasets/TOPSPIN_v1/raw_paper_verified/manifest.csv",
+      "--output-dir",
+      "runs/20261124_topspin_reference_dev3_r1r2_6b4868a",
+      "--scene-list",
+      "examples/splits/topspin_dev.txt",
+      "--require-reference",
+      "--require-verified-topspin"
+    ],
+    "logical_cpu_count": 16,
+    "memory_bytes": 33475567616,
+    "gpu": "NVIDIA GeForce RTX 4070, 12282 MiB, 565.57.01",
+    "git_revision": "6b4868a474fc2b79eed66552d11b14811a0aecd8",
+    "git_dirty": false,
+    "source_tree_sha256": "206875ef7da611d9e614b7e73126375b42b1ab28c8b1c1e46769389150e7fcc2",
+    "lock_sha256": "3e90af4a5ed0c2cc58f3250e2c68394fa785530d4016b017266e1b2927859d1e",
+    "packages": {
+      "numpy": "2.2.6",
+      "scipy": "1.15.3",
+      "scikit-learn": "1.7.2",
+      "numba": "0.68.1",
+      "opencv-python-headless": "4.12.0.88",
+      "matplotlib": "3.10.9",
+      "h5py": "3.16.0",
+      "trimesh": "5.2.2",
+      "gtsam": null
+    }
+  },
+  "implementation_notes": [
+    "The headline/Table-2 reprojection metric is the mean over every inlier observation; the equally weighted landmark mean is reported separately.",
+    "A geometrically non-empty reconstruction whose last optimizer status is max_iterations is preserved per scene but excluded from Table-2 aggregates. Direct-GTSAM converged/stalled vocabulary is not fully equivalent, so this gate deliberately guarantees only the unambiguous max_iterations exclusion.",
+    "Reference Eq. (9) uses every retained left event against every right event, sum Euclidean distance, with no overlap mask or subsampling.",
+    "The in-tree LM passed the preregistered direct-GTSAM equivalence gate; backend.solver_backend records the selected path.",
+    "No terminal offline BA or paper-unreported parallax guard is used in the paper_reference classification.",
+    "True frequency error and CAD ICP millimetres require explicit authoritative manifest provenance; public TOPSPIN supplies neither."
+  ],
+  "config": {
+    "data": {
+      "sensor_size": [
+        1280,
+        720
+      ],
+      "max_duration_seconds": null,
+      "time_unit": "auto",
+      "text_columns": "txyp",
+      "evaluation_split": "test"
+    },
+    "camera": {
+      "fx": null,
+      "fy": null,
+      "cx": null,
+      "cy": null,
+      "distortion": []
+    },
+    "frontend": {
+      "interpretation_mode": "paper",
+      "chunk_events": 1000,
+      "density_radius_px": 7.0,
+      "density_mean_per_polarity": true,
+      "cluster_min_size": 10,
+      "cluster_min_samples": null,
+      "cluster_selection_epsilon": 5.0,
+      "cluster_time_scale_px_per_second": 1.0,
+      "cluster_by_polarity": false,
+      "association_radius_px": 30.0,
+      "association_max_gap_seconds": 0.05,
+      "association_head_events": 5,
+      "retain_events_per_track": 1000
+    },
+    "frequency": {
+      "method": "loop_closure",
+      "alignment_mode": "paper",
+      "update_interval_seconds": 0.1,
+      "min_period_seconds": 0.1,
+      "max_period_seconds": null,
+      "time_scale_px_per_second": 1.0,
+      "max_alignment_samples": 10000,
+      "coarse_alignment_samples": 2000,
+      "coarse_relative_step": 0.01,
+      "icp_iterations": 30,
+      "icp_tolerance_seconds": 1e-05,
+      "harmonic_tolerance": 0.0,
+      "min_samples_per_half": 50,
+      "loop_std_threshold_hz": 0.001,
+      "loop_history": 20,
+      "fft_bin_seconds": 0.01
+    },
+    "backend": {
+      "orbit_radius": 10.0,
+      "interpretation_mode": "paper",
+      "solver_backend": "equivalent_custom",
+      "min_track_events": 3,
+      "huber_threshold_px": 2.0,
+      "max_mean_reprojection_error_px": 10.0,
+      "landmark_merge_radius": 0.01,
+      "optimization_cadence_revolutions": 0.1,
+      "forget_revolutions": 3.0,
+      "max_iterations": 100,
+      "min_triangulation_angle_deg": 0.0,
+      "max_observations_per_track": 0,
+      "optimize_frequency": false,
+      "landmark_association": true,
+      "final_offline_refinement": false
+    },
+    "evaluation": {
+      "observation_times_seconds": [
+        0.25,
+        0.5,
+        0.75,
+        1.0,
+        1.5,
+        2.0,
+        3.0,
+        4.0,
+        5.0
+      ],
+      "pointcloud_max_reference_points": 30000,
+      "failure_policy": "report_and_mark_invalid"
+    },
+    "logging": {
+      "wandb": false,
+      "wandb_mode": "online",
+      "wandb_project": "snn-research",
+      "wandb_entity": null,
+      "wandb_run_name": "espinslam-topspin-paper-reference",
+      "wandb_tags": [
+        "espinslam",
+        "paper-reference",
+        "topspin",
+        "exploratory"
+      ]
+    }
+  }
+}

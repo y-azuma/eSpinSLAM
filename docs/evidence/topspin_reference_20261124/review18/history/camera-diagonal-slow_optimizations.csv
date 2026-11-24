@@ -1,0 +1,7 @@
+event_time_s,frequency_hz,landmarks,observations,mean_observation_error_px,mean_landmark_reprojection_error_px,removed_short,removed_reprojection,removed_radius,fused,iterations,triangulation_fallback_count,triangulation_fallback_reasons,termination_status
+44.658021999999995,0.037206187383739646,1,2197,6.038304740054979,6.03830474005498,0,46,13,0,100,0,,max_iterations
+47.35809,0.037206187383739646,1,291,8.755009193044124,8.755009193044124,0,4,5,0,60,0,,converged
+50.048156999999996,0.037206187383739646,0,223,,,0,4,2,0,69,0,,converged
+52.736520999999996,0.037206187383739646,0,0,,,0,0,0,0,0,0,,not_run
+55.427820999999994,0.037206187383739646,0,0,,,0,0,0,0,0,0,,not_run
+58.119958999999994,0.037206187383739646,0,0,,,0,0,0,0,0,0,,not_run

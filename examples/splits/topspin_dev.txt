@@ -1,0 +1,8 @@
+# TOPSPIN scenes reserved for predeclared viability checks of mandatory values
+# absent from the paper/citations. They are never used to optimize accuracy,
+# reprojection error, landmark count, or any other performance measure.
+# One scene per speed, three different objects and perspectives. The paper's
+# Fig. 8 scene (soho-perpendicular-fast) is deliberately kept out of this set.
+hubble-perpendicular-slow
+tdrs-sideon-med
+camera-topdown-fast

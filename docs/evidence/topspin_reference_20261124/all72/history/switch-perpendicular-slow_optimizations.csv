@@ -1,0 +1,4 @@
+event_time_s,frequency_hz,landmarks,observations,mean_observation_error_px,mean_landmark_reprojection_error_px,removed_short,removed_reprojection,removed_radius,fused,iterations,triangulation_fallback_count,triangulation_fallback_reasons,termination_status
+53.874762,0.036722344650796636,3,2657,4.398847526446459,5.74016136044915,0,31,8,0,44,0,,converged
+56.603049999999996,0.036722344650796636,2,147,5.088117653421613,6.544602172163758,0,1,1,0,74,0,,converged
+59.326240999999996,0.036722344650796636,2,124,4.638870733014323,6.33469558849961,0,0,1,0,41,0,,converged

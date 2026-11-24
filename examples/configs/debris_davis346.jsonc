@@ -1,7 +1,13 @@
+// eSpinSLAM on the synthetic DAVIS346 debris dataset (comparison with the
+// proposed method). Paper hyperparameters (Table 1) are kept; only the sensor,
+// calibration and admissible period band differ from TOPSPIN.
 {
   "data": {
     "sensor_size": [346, 260],
+    // Sequences are truncated to 5 s for the event_snn_torch comparison. Loop
+    // closure needs roughly two revolutions, so periods above ~2.5 s abstain.
     "max_duration_seconds": 5.0,
+    "time_unit": "auto",
     "evaluation_split": "test"
   },
   "camera": {
@@ -11,38 +17,47 @@
     "cy": 130.0
   },
   "frontend": {
+    "interpretation_mode": "experimental",
     "chunk_events": 1000,
-    "surface_decay_seconds": 0.030,
-    "fast_threshold": 18,
-    "max_corners_per_chunk": 100,
-    "density_radius_px": 6.0,
+    "density_radius_px": 3.0,
+    "density_mean_per_polarity": false,
+    "cluster_min_size": 5,
     "cluster_min_samples": 3,
-    "track_merge_radius_px": 9.0,
-    "track_max_gap_seconds": 0.080,
-    "max_tracks": 500,
-    "retain_observations_per_track": 1000,
-    "fallback_frame_seconds": 0.020,
-    "fallback_max_features": 300
+    "cluster_selection_epsilon": 0.0,
+    "cluster_time_scale_px_per_second": 1000.0,
+    "cluster_by_polarity": true,
+    "association_radius_px": 5.0,
+    "association_max_gap_seconds": 0.05,
+    "association_head_events": 5,
+    "retain_events_per_track": 1000          // sigma_retain
   },
   "frequency": {
-    "min_hz": 0.10,
-    "max_hz": 1.00,
-    "candidate_count": 91,
-    "max_alignment_samples": 4000,
-    "spatial_tolerance_px": 6.0,
-    "temporal_tolerance_seconds": 0.030,
-    "loop_std_threshold_hz": 0.001,
-    "loop_history": 20
+    "method": "loop_closure",
+    "alignment_mode": "experimental",
+    "update_interval_seconds": 0.1,
+    "min_period_seconds": 1.0,
+    "max_period_seconds": 10.0,
+    "time_scale_px_per_second": 200.0,
+    "harmonic_tolerance": 0.15,
+    "loop_std_threshold_hz": 0.001,          // sigma
+    "loop_history": 20                       // aleph
   },
   "backend": {
-    "orbit_radius": 10.0,
-    "min_track_observations": 3,
-    "max_landmarks": 250,
-    "huber_scale_px": 2.0,
-    "max_mean_reprojection_error_px": 10.0,
-    "landmark_merge_radius": 0.01,
-    "optimization_cadence_revolutions": 0.1,
-    "optimization_iterations": 60
+    "interpretation_mode": "experimental",
+    "solver_backend": "equivalent_custom",
+    "orbit_radius": 10.0,                    // r
+    "min_track_events": 3,                   // N_match
+    "huber_threshold_px": 2.0,               // inlier threshold of rho
+    "max_mean_reprojection_error_px": 10.0,  // gamma
+    "landmark_merge_radius": 0.01,           // delta_fuse
+    "optimization_cadence_revolutions": 0.1, // epsilon
+    "forget_revolutions": 3.0,               // sigma_forget
+    "max_iterations": 100,
+    "min_triangulation_angle_deg": 1.5,
+    "max_observations_per_track": 0,
+    "optimize_frequency": false,
+    "landmark_association": true,
+    "final_offline_refinement": true
   },
   "evaluation": {
     "observation_times_seconds": [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0],
@@ -54,7 +69,7 @@
     "wandb_mode": "online",
     "wandb_project": "snn-research",
     "wandb_entity": "2075905828-the-university-of-tokyo",
-    "wandb_run_name": "espinslam-debris-1110",
-    "wandb_tags": ["espinslam", "independent-reproduction", "held-out-test"]
+    "wandb_run_name": "espinslam-debris",
+    "wandb_tags": ["espinslam", "paper-faithful-reproduction", "held-out-test"]
   }
 }
