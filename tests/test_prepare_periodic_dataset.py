@@ -31,6 +31,14 @@ def _write_source(tmp_path):
         "sequence_id", "event_path", "split", "object_id", "scene_id",
         "reference_pointcloud_path", "reference_mesh_path", "cache_sha256",
         "cache_events", "provenance.generator.sample_index",
+        "provenance.target.debris_type",
+        "provenance.target.periodic_order",
+        "provenance.target.initial_spin_phase_deg",
+        "provenance.camera.initial_range_m",
+        "provenance.lighting.sun_elevation_deg",
+        "provenance.rotation.axis_body.x",
+        "provenance.rotation.axis_body.y",
+        "provenance.rotation.axis_body.z",
         "provenance.camera_intrinsics.fx_px",
         "provenance.camera_intrinsics.fy_px",
         "provenance.camera_intrinsics.cx_px",
@@ -53,6 +61,14 @@ def _write_source(tmp_path):
         "cache_sha256": "abc",
         "cache_events": "2",
         "provenance.generator.sample_index": "3",
+        "provenance.target.debris_type": "periodic_logo_cylinder",
+        "provenance.target.periodic_order": "4",
+        "provenance.target.initial_spin_phase_deg": "137.5",
+        "provenance.camera.initial_range_m": "12.5",
+        "provenance.lighting.sun_elevation_deg": "20.0",
+        "provenance.rotation.axis_body.x": "0.0",
+        "provenance.rotation.axis_body.y": "0.0",
+        "provenance.rotation.axis_body.z": "1.0",
         "provenance.camera_intrinsics.fx_px": "528.0",
         "provenance.camera_intrinsics.fy_px": "526.0",
         "provenance.camera_intrinsics.cx_px": "173.0",
@@ -102,6 +118,12 @@ def test_prepare_dataset_links_exact_events_and_matching_cad(tmp_path):
     rows = list(csv.DictReader((output / "manifest.csv").open()))
     assert rows[0]["split"] == "train"
     assert rows[0]["reference_pointcloud_path"].endswith("reference_points.npz")
+    assert rows[0]["provenance.target.debris_type"] == "periodic_logo_cylinder"
+    assert rows[0]["provenance.target.periodic_order"] == "4"
+    assert rows[0]["provenance.target.initial_spin_phase_deg"] == "137.5"
+    assert rows[0]["provenance.camera.initial_range_m"] == "12.5"
+    assert rows[0]["provenance.lighting.sun_elevation_deg"] == "20.0"
+    assert rows[0]["provenance.rotation.axis_body.z"] == "1.0"
     with pytest.raises(FileExistsError):
         prepare_dataset(events, cad, output, link_mode="hardlink")
 

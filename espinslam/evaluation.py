@@ -14,7 +14,7 @@ from typing import Any
 import numpy as np
 
 from .config import ESpinSLAMConfig
-from .data import load_event_sequence, read_manifest
+from .data import evaluation_condition_fields, load_event_sequence, read_manifest
 from .geometry import PointCloudAlignment, align_similarity_icp
 from .pipeline import ESpinSLAM
 from .plotting import create_report_plots
@@ -210,6 +210,9 @@ def evaluate(
             max_duration_seconds=config.data.max_duration_seconds,
         )
         result = model.process(sequence, reconstruct_structure=True)
+        # Attach scene conditions only after inference has completed. They are
+        # audit fields for stratified error analysis, never estimator inputs.
+        conditions = evaluation_condition_fields(sequence.metadata)
         prediction = result.omega_rad_s if result.valid else math.nan
         latest_frequency = result.frequency.frequency_hz
         forced_prediction = (
@@ -220,6 +223,7 @@ def evaluate(
         fallback_count, fallback_reasons = _fallback_summary(result.optimizations)
         predictions.append({
             "sequence_id": sequence.sequence_id,
+            **conditions,
             "omega_true_rad_s": sequence.omega_rad_s,
             "omega_pred_rad_s": _nullable(prediction),
             "omega_true_deg_s": math.degrees(sequence.omega_rad_s),
@@ -258,6 +262,7 @@ def evaluate(
             confirmed, latest = result.frequency_at(observation_seconds)
             time_predictions.append({
                 "sequence_id": sequence.sequence_id,
+                **conditions,
                 "observation_seconds": float(observation_seconds),
                 "available_seconds": min(float(observation_seconds), sequence.duration_seconds),
                 "omega_true_rad_s": sequence.omega_rad_s,
@@ -282,6 +287,7 @@ def evaluate(
         )
         pointcloud_rows.append({
             "sequence_id": sequence.sequence_id,
+            **conditions,
             "valid": alignment.valid,
             "landmark_count": int(result.reconstruction.points.shape[0]),
             "reprojection_error_px": _nullable(result.reconstruction.mean_reprojection_error_px),

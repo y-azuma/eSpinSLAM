@@ -25,6 +25,63 @@ from numba import njit
 import numpy as np
 
 
+# Audit-only scene conditions that may be copied into evaluation artifacts.
+# These fields are never consumed by the front-end, frequency estimator, or
+# reconstruction backend. Labels, event paths, bounding boxes, and CAD paths
+# are deliberately absent from this allowlist.
+EVALUATION_CONDITION_FIELDS = (
+    "object_id",
+    "physical_object_id",
+    "scene_id",
+    "source_group_id",
+    "periodic_order",
+    "perspective",
+    "speed_class",
+    "speed",
+    "frequency_source",
+    "provenance.label_status",
+    "provenance.generator.sample_index",
+    "provenance.target.debris_type",
+    "provenance.target.periodic_order",
+    "provenance.target.initial_spin_phase_deg",
+    "provenance.target.initial_euler_deg.x",
+    "provenance.target.initial_euler_deg.y",
+    "provenance.target.initial_euler_deg.z",
+    "provenance.target.body_dims_m.x",
+    "provenance.target.body_dims_m.y",
+    "provenance.target.body_dims_m.z",
+    "provenance.camera.initial_range_m",
+    "provenance.camera.closing_rate_mps",
+    "provenance.camera.orbit_rate_deg_s",
+    "provenance.camera.jitter_std_deg",
+    "provenance.lighting.sun_azimuth_deg",
+    "provenance.lighting.sun_elevation_deg",
+    "provenance.lighting.sun_energy",
+    "provenance.lighting.earthshine_energy",
+    "provenance.lighting.world_strength",
+    "provenance.environment.earth_visible",
+    "provenance.environment.star_count",
+    "provenance.rotation.axis_body.x",
+    "provenance.rotation.axis_body.y",
+    "provenance.rotation.axis_body.z",
+    "provenance.time.duration_s",
+)
+
+
+def evaluation_condition_fields(metadata: dict[str, Any]) -> dict[str, Any]:
+    """Return only post-inference diagnostic conditions from ``metadata``."""
+
+    result: dict[str, Any] = {}
+    for name in EVALUATION_CONDITION_FIELDS:
+        if name not in metadata:
+            continue
+        value = metadata[name]
+        if value is None or (isinstance(value, str) and not value):
+            continue
+        result[name] = value
+    return result
+
+
 @dataclass(frozen=True)
 class EventSequence:
     """One validated raw-event sequence and an evaluation-only label."""

@@ -196,6 +196,12 @@ history CSV files, figures, protocol metadata, execution-hardware provenance,
 and aggregate Markdown/JSON summaries. Missing authoritative metrics remain
 null with a reason; they are never filled with zero or a proxy value.
 
+Evaluation artifacts may retain an explicit allowlist of scene conditions
+(object/scene identity, viewpoint, periodic order, camera, lighting, and
+rotation-axis provenance) for failure stratification. These values are attached
+only after inference. Rotation labels, event/BBox paths, and CAD paths are not
+part of this condition allowlist and are never estimator inputs.
+
 The fixed review list is
 [`examples/splits/topspin_review18.txt`](examples/splits/topspin_review18.txt).
 Resume reuses a checkpoint only when its manifest row, setting, complete

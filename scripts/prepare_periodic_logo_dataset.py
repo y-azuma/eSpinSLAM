@@ -21,6 +21,8 @@ import shutil
 from typing import Any
 import zipfile
 
+from espinslam.data import EVALUATION_CONDITION_FIELDS
+
 
 EVENT_KEYS = {
     "x.npy", "y.npy", "t_us.npy", "p01.npy", "omega_rad_s.npy",
@@ -210,6 +212,11 @@ def prepare_dataset(
             actual_mode = _link_or_copy(source, partial / relative, link_mode)
             link_counts[actual_mode] += 1
 
+        conditions = {
+            name: row[name]
+            for name in EVALUATION_CONDITION_FIELDS
+            if row.get(name, "") != ""
+        }
         output_rows.append({
             "sequence_id": sequence_id,
             "event_path": event_relative.as_posix(),
@@ -223,6 +230,7 @@ def prepare_dataset(
             "source_sample_index": row.get(
                 "provenance.generator.sample_index", ""
             ),
+            **conditions,
         })
 
     expected_splits = summary.get("split_counts")
